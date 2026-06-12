@@ -78,3 +78,13 @@ pub fn new_jwt(
 ) -> JWT {
   { header, payload, signature }
 }
+
+///| Represents the precise errors that can occur during JWT validation.
+pub enum ValidationError {
+  InvalidSignature
+  InvalidFormat
+  TokenExpired(Int64, Int64)     // 包含 (当前时间, 过期时间)
+  TokenNotYetValid(Int64, Int64) // 包含 (当前时间, 生效时间)
+  InvalidIssuer(String)          // 包含不匹配的 Issuer 名字
+  InvalidAudience(String)        // 包含不匹配的 Audience 名字
+} derive(Debug, Eq)

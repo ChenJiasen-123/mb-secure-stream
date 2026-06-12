@@ -429,3 +429,68 @@ test "JWT constructor with minimal claims" {
   assert_true(jwt_obj.payload.sub == Some("minimal-user"))
   assert_true(jwt_obj.payload.iss == None)
 }
+
+// --- JWT Claims Validation Tests ---
+
+test "JWT Claims validation - expiration and timing flags" {
+  // 创建一个 2026 年过期的 mock payload
+  let payload = new_jwt_payload(
+    Some("auth.sustech.edu.cn"),
+    Some("user_123"),
+    None,
+    Some(1767225600L), // exp: 2026-01-01
+    Some(1735689600L), // nbf: 2025-01-01
+    None,
+    None,
+  )
+
+  // 场景 A：在 2025 年访问 —— 完美通过
+  let valid_res = validate_claims(payload, 1750000000L, None, None)
+  assert_true(valid_res is Ok(_))
+
+  // 场景 B：在 2027 年访问 —— 应该拦截并报 TokenExpired 错误
+  let expired_res = validate_claims(payload, 1800000000L, None, None)
+  match expired_res {
+    Err(ValidationError::TokenExpired(curr, exp)) => {
+      assert_eq(curr, 1800000000L)
+      assert_eq(exp, 1767225600L)
+    }
+    _ => assert_true(false)
+  }
+
+  // 场景 C：在 2024 年访问 —— 应该拦截并报 TokenNotYetValid 错误
+  let premature_res = validate_claims(payload, 1700000000L, None, None)
+  match premature_res {
+    Err(ValidationError::TokenNotYetValid(curr, nbf)) => {
+      assert_eq(curr, 1700000000L)
+      assert_eq(nbf, 1735689600L)
+    }
+    _ => assert_true(false)
+  }
+}
+
+test "JWT Claims validation - metadata mismatch" {
+  let payload = new_jwt_payload(
+    Some("trusted-issuer"),
+    Some("user"),
+    Some("expected-audience"),
+    None,
+    None,
+    None,
+    None,
+  )
+
+  // 场景 A：Issuer 不匹配
+  let iss_res = validate_claims(payload, 0L, Some("hacker-issuer"), None)
+  match iss_res {
+    Err(ValidationError::InvalidIssuer(name)) => assert_eq(name, "trusted-issuer")
+    _ => assert_true(false)
+  }
+
+  // 场景 B：Audience 不匹配
+  let aud_res = validate_claims(payload, 0L, None, Some("wrong-audience"))
+  match aud_res {
+    Err(ValidationError::InvalidAudience(name)) => assert_eq(name, "expected-audience")
+    _ => assert_true(false)
+  }
+}

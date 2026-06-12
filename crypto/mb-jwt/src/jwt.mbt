@@ -202,3 +202,58 @@ pub fn verify_es256(
     }
   }
 }
+
+///| Validates standard JWT claims against the current time and expected metadata.
+///|
+///| This function checks:
+///| 1. Token expiration time (exp)
+///| 2. Token not-before time (nbf)
+///| 3. Token issuer (iss)
+///| 4. Token audience (aud)
+///|
+///| Returns Ok(()) if all validations pass, or Err(ValidationError) otherwise.
+pub fn validate_claims(
+  payload : JWTPayload,
+  current_time : Int64,
+  expected_iss : Option[String],
+  expected_aud : Option[String],
+) -> Result[Unit, ValidationError] {
+  // 1. 校验过期时间 (Expiration Time)
+  match payload.exp {
+    Some(exp_time) =>
+      if current_time >= exp_time {
+        return Err(ValidationError::TokenExpired(current_time, exp_time))
+      }
+    None => ()
+  }
+
+  // 2. 校验生效时间 (Not Before)
+  match payload.nbf {
+    Some(nbf_time) =>
+      if current_time < nbf_time {
+        return Err(ValidationError::TokenNotYetValid(current_time, nbf_time))
+      }
+    None => ()
+  }
+
+  // 3. 校验颁发者 (Issuer)
+  match (payload.iss, expected_iss) {
+    (Some(actual), Some(expected)) =>
+      if actual != expected {
+        return Err(ValidationError::InvalidIssuer(actual))
+      }
+    _ => ()
+  }
+
+  // 4. 校验受众 (Audience)
+  match (payload.aud, expected_aud) {
+    (Some(actual), Some(expected)) =>
+      if actual != expected {
+        return Err(ValidationError::InvalidAudience(actual))
+      }
+    _ => ()
+  }
+
+  // 全部通过
+  Ok(())
+}

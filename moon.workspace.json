@@ -1,0 +1,6 @@
+{
+  "members": [
+    "crypto/mb-jwt",
+    "gateway"
+  ]
+}

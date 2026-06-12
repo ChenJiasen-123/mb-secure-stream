@@ -63,23 +63,20 @@ Where:
 This project sits at the apex of your cryptographic subsystem. The layout of the workspace components is structured as follows:
 
 ```text
-crypto/
-├── mb-aead/           # Poly1305 MAC and authenticated encryption mechanics
-├── mb-chacha/         # ChaCha20 stream encryption core
-├── mb-getrandom/      # Cryptographically secure pseudorandom number generator (CSPRNG)
-├── mb-hash/           # SHA256 / SHA512 hashing primitives
-│   └── src/
-│       └── sha2/      # Structural SHA2 core implementations
-├── mb-hkdf/           # HMAC-based Extract-and-Expand Key Derivation Function
-├── mb-hmac/           # Keyed-Hashing for Message Authentication primitives
-├── mb-jwt/            # Pre-stream node authentication token mechanism
-└── mb-secure-stream/  # ──► Main streaming engine package
-    ├── moon.pkg.json  # Declares local imports of the sub-modules
-    └── src/
-        ├── protocol.mbt  # Binary packet serialization/deserialization
-        ├── encrypt.mbt   # Chunked encryption sliding-window machine
-        ├── decrypt.mbt   # Chunked decryption sliding-window machine
-        └── stream_test.mbt
+mb-secure-stream/
+├── crypto/
+│   └── mb-jwt/          
+│       ├── src/
+│       │   ├── jwt.mbt
+│       │   └── types.mbt
+│       └── moon.mod.json
+└── gateway/             
+    ├── src/
+    │   ├── middleware.mbt  
+    │   ├── payload.mbt     
+    │   └── gateway_test.mbt
+    ├── moon.pkg.json
+    └── moon.mod.json
 ```
 
 ---

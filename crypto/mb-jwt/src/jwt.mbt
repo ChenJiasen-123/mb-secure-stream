@@ -40,7 +40,6 @@ fn string_to_bytes_filtered_jwt(s: String) -> Array[Int] {
   result
 }
 
-///| 针对流式加密场景优化的高性能安全切分函数
 fn split_token(token: String) -> Result[Array[String], String] {
   let chars = token.to_array()
   let parts : Array[String] = []
@@ -91,7 +90,6 @@ pub fn sign(payload: String, secret: String) -> String {
   signing_input + "." + signature_encoded
 }
 
-///| 完备修复的 HS256 验证函数
 pub fn verify(token: String, secret: String) -> Result[String, String] {
   let parts = match split_token(token) {
     Ok(p) => p
@@ -102,7 +100,6 @@ pub fn verify(token: String, secret: String) -> Result[String, String] {
   let payload_encoded = parts[1]
   let signature_encoded = parts[2]
 
-  // 顺应 base64url_decode_to_string 直接返回 String 的事实，不再使用 match 拆包
   let header_json = base64url_decode_to_string(header_encoded)
 
   match validate_header_algorithm(header_json, "HS256") {
@@ -118,7 +115,6 @@ pub fn verify(token: String, secret: String) -> Result[String, String] {
     return Err("Invalid signature")
   }
 
-  // 直接获取 payload 的 String
   let payload_json = base64url_decode_to_string(payload_encoded)
   Ok(payload_json)
 }
@@ -165,14 +161,12 @@ pub fn sign_es256(payload : String, private_key : Array[UInt]) -> Result[String,
       let sig_bytes : Array[UInt] = []
       for v in sig.r { sig_bytes.push(v) }
       for v in sig.s { sig_bytes.push(v) }
-      // 修复未定义标识符错误：改用正确的 base64url_encode
       let signature_encoded = base64url_encode(sig_bytes)
       Ok(signing_input + "." + signature_encoded)
     }
   }
 }
 
-///| 完备修复的 ES256 验证函数
 pub fn verify_es256(
   token : String,
   public_key : Array[UInt],
@@ -186,7 +180,6 @@ pub fn verify_es256(
   let payload_encoded = parts[1]
   let signature_encoded = parts[2]
 
-  // 直接获取解密后的 Header 字符串
   let header_json = base64url_decode_to_string(header_encoded)
 
   match validate_header_algorithm(header_json, "ES256") {
@@ -231,7 +224,7 @@ pub fn validate_claims(
   expected_iss : Option[String],
   expected_aud : Option[String],
 ) -> Result[Unit, ValidationError] {
-  // 1. 校验过期时间 (Expiration Time)
+  // Expiration Time
   match payload.exp {
     Some(exp_time) =>
       if current_time >= exp_time {
@@ -240,7 +233,7 @@ pub fn validate_claims(
     None => ()
   }
 
-  // 2. 校验生效时间 (Not Before)
+  // Not Before
   match payload.nbf {
     Some(nbf_time) =>
       if current_time < nbf_time {
@@ -249,7 +242,7 @@ pub fn validate_claims(
     None => ()
   }
 
-  // 3. 校验颁发者 (Issuer)
+  // Issuer
   match (payload.iss, expected_iss) {
     (Some(actual), Some(expected)) =>
       if actual != expected {
@@ -258,7 +251,7 @@ pub fn validate_claims(
     _ => ()
   }
 
-  // 4. 校验受众 (Audience)
+  // Audience
   match (payload.aud, expected_aud) {
     (Some(actual), Some(expected)) =>
       if actual != expected {

@@ -380,32 +380,31 @@ test "ES256 header is different from HS256" {
 // --- Direct Type Validation for JWT Structures ---
 
 test "Direct Type Validation for JWT Structures" {
-  // 1. 使用构造函数创建 JWT Header，测试 pub 字段的可访问性与强类型约束
+  
   let header = new_jwt_header("HS256", "JWT")
   assert_eq(header.alg, "HS256")
   assert_eq(header.typ, "JWT")
 
-  // 2. 使用构造函数创建复杂的 Payload 结构体
   let payload = new_jwt_payload(
     Some("auth.sustech.edu.cn"),
     Some("copernicus_123"),
-    None,              // 测试 Option 包装器的缺省表现
-    Some(1783928400L), // 测试 Int64 长整型
+    None,              
+    Some(1783928400L), 
     None,
     Some(1773928400L),
     None,
   )
 
-  // 验证 payload 字段 (针对 Option 类型，改用更地道的 assert_true! 配合 == 运算符)
+  
   assert_true(payload.iss == Some("auth.sustech.edu.cn"))
   assert_true(payload.sub == Some("copernicus_123"))
   assert_true(payload.aud == None)
   assert_true(payload.exp == Some(1783928400L))
 
-  // 3. 验证 new_jwt 构造函数是否正常工作
+
   let jwt_obj = new_jwt(header, payload, "mock_signature_string")
 
-  // 4. 直接利用 derive(Eq) 进行对象级别的断言
+ 
   assert_eq(jwt_obj.header.alg, "HS256")
   assert_eq(jwt_obj.header.typ, "JWT")
   assert_true(jwt_obj.payload.sub == Some("copernicus_123"))
@@ -433,7 +432,7 @@ test "JWT constructor with minimal claims" {
 // --- JWT Claims Validation Tests ---
 
 test "JWT Claims validation - expiration and timing flags" {
-  // 创建一个 2026 年过期的 mock payload
+  
   let payload = new_jwt_payload(
     Some("auth.sustech.edu.cn"),
     Some("user_123"),
@@ -444,11 +443,9 @@ test "JWT Claims validation - expiration and timing flags" {
     None,
   )
 
-  // 场景 A：在 2025 年访问 —— 完美通过
   let valid_res = validate_claims(payload, 1750000000L, None, None)
   assert_true(valid_res is Ok(_))
 
-  // 场景 B：在 2027 年访问 —— 应该拦截并报 TokenExpired 错误
   let expired_res = validate_claims(payload, 1800000000L, None, None)
   match expired_res {
     Err(ValidationError::TokenExpired(curr, exp)) => {
@@ -458,7 +455,6 @@ test "JWT Claims validation - expiration and timing flags" {
     _ => assert_true(false)
   }
 
-  // 场景 C：在 2024 年访问 —— 应该拦截并报 TokenNotYetValid 错误
   let premature_res = validate_claims(payload, 1700000000L, None, None)
   match premature_res {
     Err(ValidationError::TokenNotYetValid(curr, nbf)) => {
@@ -480,14 +476,14 @@ test "JWT Claims validation - metadata mismatch" {
     None,
   )
 
-  // 场景 A：Issuer 不匹配
+  // Issuer mismatch
   let iss_res = validate_claims(payload, 0L, Some("hacker-issuer"), None)
   match iss_res {
     Err(ValidationError::InvalidIssuer(name)) => assert_eq(name, "trusted-issuer")
     _ => assert_true(false)
   }
 
-  // 场景 B：Audience 不匹配
+  // Audience mismatch
   let aud_res = validate_claims(payload, 0L, None, Some("wrong-audience"))
   match aud_res {
     Err(ValidationError::InvalidAudience(name)) => assert_eq(name, "expected-audience")
@@ -512,8 +508,7 @@ test "Benchmark JWT HS256 verification speed" {
   let secret = "production_secure_channel_secret_key_2026"
   let payload = "{\"sub\":\"user_999\",\"role\":\"admin\",\"iss\":\"stream_gateway\"}"
   let token = sign(payload, secret)
-  
-  // 模拟流网关高频请求核验
+
   for i = 0; i < 10000; i = i + 1 {
     let _ = verify(token, secret)
   }

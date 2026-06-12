@@ -9,11 +9,11 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
-name = "ChenJiasen-123/moon_jwt"
+name = "ChenJiasen-123/mb-secure-stream"
 
 version = "0.1.0"
 
-readme = "README.mbt.md"
+readme = "README.md"
 
 repository = ""
 

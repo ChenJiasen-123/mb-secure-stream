@@ -1,5 +1,5 @@
 {
-  "name": "ChenJiasen-123/moon_jwt/crypto/mb-poly1305",
+  "name": "ChenJiasen-123/mb-secure-stream/crypto/mb-poly1305",
   "version": "0.1.0",
   "description": "Poly1305 message authentication code for MoonBit (RFC 8439)",
   "repository": "https://github.com/moonbit-crypto/mb-crypto",

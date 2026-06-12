@@ -1,0 +1,8 @@
+{
+  "is-main": false,
+  "import": [
+    { "path": "Tigls/mb-hmac", "alias": "hmac" },
+    { "path": "Tigls/mb-p256", "alias": "p256" },
+    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }
+  ]
+}

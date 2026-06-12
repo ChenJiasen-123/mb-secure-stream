@@ -494,3 +494,27 @@ test "JWT Claims validation - metadata mismatch" {
     _ => assert_true(false)
   }
 }
+
+test "JWT HS256 Sign and Verify Success" {
+  let secret = "my_super_secret_key_123"
+  let payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\",\"admin\":true}"
+  
+  let token = sign(payload, secret)
+  let result = verify(token, secret)
+  
+  match result {
+  Ok(p) => assert_eq(p, payload)
+  Err(e) => fail("Expected Ok, but got Err: \{e}")
+}
+}
+
+test "Benchmark JWT HS256 verification speed" {
+  let secret = "production_secure_channel_secret_key_2026"
+  let payload = "{\"sub\":\"user_999\",\"role\":\"admin\",\"iss\":\"stream_gateway\"}"
+  let token = sign(payload, secret)
+  
+  // 模拟流网关高频请求核验
+  for i = 0; i < 10000; i = i + 1 {
+    let _ = verify(token, secret)
+  }
+}

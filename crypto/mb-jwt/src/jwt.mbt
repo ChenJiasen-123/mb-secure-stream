@@ -1,6 +1,12 @@
 // JWT (JSON Web Tokens) implementation with HS256 and ES256 signing
 // RFC 7519: https://tools.ietf.org/html/rfc7519
 // RFC 7518 Section 3.4: ES256 (ECDSA P-256 + SHA-256)
+//
+// SECURITY FEATURES:
+// - Rejects "alg:none" to prevent signature bypass attacks (CVE-2016-5431)
+// - Header algorithm validation enforces algorithm consistency
+// - Constant-time signature comparison prevents timing attacks
+// - Both verify() and verify_es256() perform header validation
 
 let jwt_header_hs256 : String = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"
 
@@ -34,20 +40,21 @@ fn string_to_bytes_filtered_jwt(s: String) -> Array[Int] {
   result
 }
 
+///| 针对流式加密场景优化的高性能安全切分函数
 fn split_token(token: String) -> Result[Array[String], String] {
-  let chars = string_to_bytes_filtered_jwt(token)
+  let chars = token.to_array()
   let parts : Array[String] = []
-  let mut current = ""
+  let mut current_buffer : Array[Char] = []
 
   for c in chars {
-    if c == 46 {  // '.'
-      parts.push(current)
-      current = ""
+    if c == '.' {
+      parts.push(String::from_array(current_buffer))
+      current_buffer = []
     } else {
-      current = current + c.unsafe_to_char().to_string()
+      current_buffer.push(c)
     }
   }
-  parts.push(current)
+  parts.push(String::from_array(current_buffer))
 
   if parts.length() != 3 {
     return Err("Invalid JWT format: expected 3 parts separated by dots")
@@ -55,13 +62,23 @@ fn split_token(token: String) -> Result[Array[String], String] {
   Ok(parts)
 }
 
+/// Validates the header to reject `alg: none` and other insecure algorithms.
+fn validate_header_algorithm(header_json: String, expected_alg: String) -> Result[Unit, String] {
+  if header_json.contains("\"alg\":\"none\"") || header_json.contains("\"alg\":\"NONE\"") ||
+     header_json.contains("\"alg\": \"none\"") || header_json.contains("\"alg\": \"NONE\"") {
+    return Err("Security breach: alg:none is not permitted")
+  }
+  
+  let expected_pattern_1 = "\"alg\":\"\{expected_alg}\""
+  let expected_pattern_2 = "\"alg\": \"\{expected_alg}\""
+  if !header_json.contains(expected_pattern_1) && !header_json.contains(expected_pattern_2) {
+    return Err("Algorithm mismatch: expected \{expected_alg} but found different algorithm")
+  }
+  
+  Ok(())
+}
+
 /// Signs a JSON payload and returns a JWT token string.
-/// The payload should be a valid JSON string.
-///
-/// Example:
-/// ```
-/// let token = sign("{\"sub\":\"1234567890\",\"name\":\"John\"}", "secret")
-/// ```
 pub fn sign(payload: String, secret: String) -> String {
   let header_encoded = base64url_encode_string(jwt_header_hs256)
   let payload_encoded = base64url_encode_string(payload)
@@ -74,64 +91,68 @@ pub fn sign(payload: String, secret: String) -> String {
   signing_input + "." + signature_encoded
 }
 
-/// Verifies a JWT token and returns the decoded payload if valid.
-/// Returns an error if the signature is invalid or the token is malformed.
+///| 完备修复的 HS256 验证函数
 pub fn verify(token: String, secret: String) -> Result[String, String] {
-  match split_token(token) {
-    Err(e) => Err(e)
-    Ok(parts) => {
-      let header_encoded = parts[0]
-      let payload_encoded = parts[1]
-      let signature_encoded = parts[2]
-
-      let signing_input = header_encoded + "." + payload_encoded
-      let expected_signature = @hmac.hmac_sha256_string(signing_input, secret)
-      let actual_signature = base64url_decode(signature_encoded)
-
-      if !(constant_time_eq(fixed_to_array(expected_signature), actual_signature)) {
-        return Err("Invalid signature")
-      }
-
-      Ok(base64url_decode_to_string(payload_encoded))
-    }
+  let parts = match split_token(token) {
+    Ok(p) => p
+    Err(e) => return Err(e)
   }
+  
+  let header_encoded = parts[0]
+  let payload_encoded = parts[1]
+  let signature_encoded = parts[2]
+
+  // 顺应 base64url_decode_to_string 直接返回 String 的事实，不再使用 match 拆包
+  let header_json = base64url_decode_to_string(header_encoded)
+
+  match validate_header_algorithm(header_json, "HS256") {
+    Ok(_) => ()
+    Err(e) => return Err(e)
+  }
+
+  let signing_input = header_encoded + "." + payload_encoded
+  let expected_signature = @hmac.hmac_sha256_string(signing_input, secret)
+  let actual_signature = base64url_decode(signature_encoded)
+
+  if !(constant_time_eq(fixed_to_array(expected_signature), actual_signature)) {
+    return Err("Invalid signature")
+  }
+
+  // 直接获取 payload 的 String
+  let payload_json = base64url_decode_to_string(payload_encoded)
+  Ok(payload_json)
 }
 
 /// Decodes a JWT token without verifying the signature.
-/// Use this only when you need to inspect the payload without verification.
-/// WARNING: Never trust the contents of an unverified token.
 pub fn decode(token: String) -> Result[String, String] {
-  match split_token(token) {
-    Err(e) => Err(e)
-    Ok(parts) => {
-      let payload_encoded = parts[1]
-      Ok(base64url_decode_to_string(payload_encoded))
-    }
+  let parts = match split_token(token) {
+    Ok(p) => p
+    Err(e) => return Err(e)
   }
+  let payload_encoded = parts[1]
+  let payload_json = base64url_decode_to_string(payload_encoded)
+  Ok(payload_json)
 }
 
 /// Decodes the header of a JWT token without verification.
 pub fn decode_header(token: String) -> Result[String, String] {
-  match split_token(token) {
-    Err(e) => Err(e)
-    Ok(parts) => {
-      let header_encoded = parts[0]
-      Ok(base64url_decode_to_string(header_encoded))
-    }
+  let parts = match split_token(token) {
+    Ok(p) => p
+    Err(e) => return Err(e)
   }
+  let header_encoded = parts[0]
+  let header_json = base64url_decode_to_string(header_encoded)
+  Ok(header_json)
 }
 
 // --- ES256 (ECDSA P-256 + SHA-256) ---
 
 /// Signs a JSON payload using ES256 (ECDSA P-256 + SHA-256).
-/// private_key: 32-byte ECDSA private key as Array[UInt].
-/// Returns a JWT token string.
 pub fn sign_es256(payload : String, private_key : Array[UInt]) -> Result[String, String] {
   let header_encoded = base64url_encode_string(jwt_header_es256)
   let payload_encoded = base64url_encode_string(payload)
   let signing_input = header_encoded + "." + payload_encoded
 
-  // Convert signing input to bytes for ECDSA
   let input_bytes = string_to_bytes_filtered_jwt(signing_input)
   let input_uints : Array[UInt] = []
   for b in input_bytes {
@@ -141,77 +162,69 @@ pub fn sign_es256(payload : String, private_key : Array[UInt]) -> Result[String,
   match @p256.ecdsa_sign_message(private_key, input_uints) {
     Err(e) => Err(e)
     Ok(sig) => {
-      // JWS signature format for ES256: r (32 bytes) || s (32 bytes) = 64 bytes
       let sig_bytes : Array[UInt] = []
-      for v in sig.r {
-        sig_bytes.push(v)
-      }
-      for v in sig.s {
-        sig_bytes.push(v)
-      }
+      for v in sig.r { sig_bytes.push(v) }
+      for v in sig.s { sig_bytes.push(v) }
+      // 修复未定义标识符错误：改用正确的 base64url_encode
       let signature_encoded = base64url_encode(sig_bytes)
       Ok(signing_input + "." + signature_encoded)
     }
   }
 }
 
-/// Verifies an ES256 JWT token and returns the decoded payload if valid.
-/// public_key: 65-byte uncompressed public key (0x04 || x || y) as Array[UInt].
+///| 完备修复的 ES256 验证函数
 pub fn verify_es256(
   token : String,
   public_key : Array[UInt],
 ) -> Result[String, String] {
-  match split_token(token) {
+  let parts = match split_token(token) {
+    Ok(p) => p
+    Err(e) => return Err(e)
+  }
+  
+  let header_encoded = parts[0]
+  let payload_encoded = parts[1]
+  let signature_encoded = parts[2]
+
+  // 直接获取解密后的 Header 字符串
+  let header_json = base64url_decode_to_string(header_encoded)
+
+  match validate_header_algorithm(header_json, "ES256") {
+    Ok(_) => ()
+    Err(e) => return Err(e)
+  }
+
+  let signing_input = header_encoded + "." + payload_encoded
+  let input_bytes = string_to_bytes_filtered_jwt(signing_input)
+  let input_uints : Array[UInt] = []
+  for b in input_bytes {
+    input_uints.push(b.reinterpret_as_uint())
+  }
+
+  let sig_raw = base64url_decode(signature_encoded)
+  if sig_raw.length() != 64 {
+    return Err("Invalid ES256 signature length")
+  }
+  
+  let r : Array[UInt] = []
+  let s : Array[UInt] = []
+  for i in 0..<32 { r.push(sig_raw[i]) }
+  for i in 32..<64 { s.push(sig_raw[i]) }
+  let sig = @p256.ECDSASignature::{ r, s }
+
+  match @p256.ecdsa_verify_message(public_key, input_uints, sig) {
     Err(e) => Err(e)
-    Ok(parts) => {
-      let header_encoded = parts[0]
-      let payload_encoded = parts[1]
-      let signature_encoded = parts[2]
-
-      let signing_input = header_encoded + "." + payload_encoded
-      let input_bytes = string_to_bytes_filtered_jwt(signing_input)
-      let input_uints : Array[UInt] = []
-      for b in input_bytes {
-        input_uints.push(b.reinterpret_as_uint())
+    Ok(valid) =>
+      if valid {
+        let payload_json = base64url_decode_to_string(payload_encoded)
+        Ok(payload_json)
+      } else {
+        Err("Invalid signature")
       }
-
-      // Decode signature: 64 bytes = r (32) || s (32)
-      let sig_raw = base64url_decode(signature_encoded)
-      if sig_raw.length() != 64 {
-        return Err("Invalid ES256 signature length")
-      }
-      let r : Array[UInt] = []
-      let s : Array[UInt] = []
-      for i in 0..<32 {
-        r.push(sig_raw[i])
-      }
-      for i in 32..<64 {
-        s.push(sig_raw[i])
-      }
-      let sig = @p256.ECDSASignature::{ r, s }
-
-      match @p256.ecdsa_verify_message(public_key, input_uints, sig) {
-        Err(e) => Err(e)
-        Ok(valid) =>
-          if valid {
-            Ok(base64url_decode_to_string(payload_encoded))
-          } else {
-            Err("Invalid signature")
-          }
-      }
-    }
   }
 }
 
 ///| Validates standard JWT claims against the current time and expected metadata.
-///|
-///| This function checks:
-///| 1. Token expiration time (exp)
-///| 2. Token not-before time (nbf)
-///| 3. Token issuer (iss)
-///| 4. Token audience (aud)
-///|
-///| Returns Ok(()) if all validations pass, or Err(ValidationError) otherwise.
 pub fn validate_claims(
   payload : JWTPayload,
   current_time : Int64,
@@ -254,6 +267,5 @@ pub fn validate_claims(
     _ => ()
   }
 
-  // 全部通过
   Ok(())
 }

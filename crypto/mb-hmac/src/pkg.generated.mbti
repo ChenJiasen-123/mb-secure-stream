@@ -1,0 +1,44 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "ChenJiasen-123/moon_jwt/crypto/mb-hmac"
+
+// Values
+pub fn generateMAC(Array[UInt], Array[UInt]) -> FixedArray[UInt]
+
+pub fn generateMAC_bytes(Bytes, Bytes) -> FixedArray[UInt]
+
+pub fn generateMAC_string(String, String) -> FixedArray[UInt]
+
+pub fn hmac_sha256(Array[UInt], Array[UInt]) -> FixedArray[UInt]
+
+pub fn hmac_sha256_bytes(Bytes, Bytes) -> FixedArray[UInt]
+
+pub fn hmac_sha256_string(String, String) -> FixedArray[UInt]
+
+pub fn hmac_sha512(Array[UInt], Array[UInt]) -> FixedArray[UInt]
+
+pub fn hmac_sha512_bytes(Bytes, Bytes) -> FixedArray[UInt]
+
+pub fn hmac_sha512_string(String, String) -> FixedArray[UInt]
+
+pub fn verifyMAC(Array[UInt], Array[UInt], Array[UInt]) -> Bool
+
+pub fn verifyMAC_bytes(Bytes, Bytes, Array[UInt]) -> Bool
+
+pub fn verifyMAC_string(String, String, Array[UInt]) -> Bool
+
+pub fn verify_hmac_sha256(Array[UInt], Array[UInt], Array[UInt]) -> Bool
+
+pub fn verify_hmac_sha256_bytes(Bytes, Bytes, Array[UInt]) -> Bool
+
+pub fn verify_hmac_sha512(Array[UInt], Array[UInt], Array[UInt]) -> Bool
+
+pub fn verify_hmac_sha512_bytes(Bytes, Bytes, Array[UInt]) -> Bool
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

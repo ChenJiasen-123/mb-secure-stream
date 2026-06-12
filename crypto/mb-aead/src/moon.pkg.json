@@ -1,0 +1,10 @@
+{
+  "is_main": false,
+  "import": [
+    { "path": "ChenJiasen-123/moon_jwt/crypto/mb-chacha/src", "alias": "chacha" },
+    { "path": "ChenJiasen-123/moon_jwt/crypto/mb-poly1305", "alias": "poly1305" }
+  ],
+  "test-import": [
+    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }
+  ]
+}

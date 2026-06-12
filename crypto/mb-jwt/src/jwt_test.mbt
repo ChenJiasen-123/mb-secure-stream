@@ -265,70 +265,167 @@ test "ES256 decode header shows ES256 algorithm" {
   }
 }
 
-test "JWTHeader serialization and deserialization" {
-  // 1. Create a mock JWT Header conforming to RFC 7515
-  let header : JWTHeader = {
-    alg: "HS256",
-    typ: "JWT",
+// --- Tests for types serialization/deserialization ---
+
+test "JWTHeader JSON structure via decode_header" {
+  let payload = "{\"test\":true}"
+  let secret = "secret"
+  let token = sign(payload, secret)
+
+  // Verify header decodes correctly
+  match decode_header(token) {
+    Ok(header_json) => {
+      assert_eq(header_json, "{\"alg\":\"HS256\",\"typ\":\"JWT\"}")
+    }
+    Err(_) => assert_true(false)
   }
-
-  // 2. Test serialization to JSON string
-  let json_str = @json.stringify(header.to_json())
-  // Assert that the produced JSON contains the necessary keys and values
-  assert_eq!(json_str, "{\"alg\":\"HS256\",\"typ\":\"JWT\"}")
-
-  // 3. Test deserialization back into the strongly-typed struct
-  let parsed_json = @json.parse(json_str).unwrap()
-  let decoded_header : JWTHeader = @json.from_json!(parsed_json)
-  
-  assert_eq!(decoded_header.alg, "HS256")
-  assert_eq!(decoded_header.typ, "JWT")
 }
 
-test "JWTPayload industrial-grade claims validation" {
-  // 1. Create a comprehensive mock payload with standard RFC 7519 claims
-  // Setting timestamps explicitly to test the Option[Int64] wrapping
-  let payload : JWTPayload = {
-    iss: Some("auth.sustech.edu.cn"),
-    sub: Some("copernicus_123"),
-    aud: Some("gateway_edge"),
-    exp: Some(1783928400L), // Fixed Future Unix timestamp
-    nbf: Some(1773928400L),
-    iat: Some(1773928400L),
-    jti: Some("unique-uuid-v4-token-id"),
+test "JWT payload roundtrip with sign and decode" {
+  let original_payload = "{\"iss\":\"issuer\",\"sub\":\"subject\",\"aud\":\"audience\",\"exp\":1000,\"nbf\":100,\"iat\":50,\"jti\":\"id\"}"
+  let secret = "secret"
+
+  // Sign the payload
+  let token = sign(original_payload, secret)
+
+  // Decode to get payload back
+  match decode(token) {
+    Ok(decoded_payload) => {
+      assert_eq(decoded_payload, original_payload)
+    }
+    Err(_) => assert_true(false)
   }
-
-  // 2. Test round-trip conversion via MoonBit's @json macros
-  let json_obj = payload.to_json()
-  let decoded_payload : JWTPayload = @json.from_json!(json_obj)
-
-  // 3. Assert all critical structural fields remain completely uncorrupted
-  assert_eq!(decoded_payload.iss, Some("auth.sustech.edu.cn"))
-  assert_eq!(decoded_payload.sub, Some("copernicus_123"))
-  assert_eq!(decoded_payload.aud, Some("gateway_edge"))
-  assert_eq!(decoded_payload.exp, Some(1783928400L))
-  assert_eq!(decoded_payload.nbf, Some(1773928400L))
-  assert_eq!(decoded_payload.iat, Some(1773928400L))
-  assert_eq!(decoded_payload.jti, Some("unique-uuid-v4-token-id"))
 }
 
-test "JWTPayload handles optional missing claims gracefully" {
-  // In many production ecosystems, claims like nbf or jti are omitted.
-  // We must ensure the types smoothly fall back to None without throwing exceptions.
-  let minimal_payload : JWTPayload = {
-    iss: None,
-    sub: Some("anonymous_user"),
-    aud: None,
-    exp: Some(1783928400L),
-    nbf: None,
-    iat: None,
-    jti: None,
+test "JWT full roundtrip with complex standard claims" {
+  let payload = "{\"iss\":\"https://auth.example.com\",\"sub\":\"user-123\",\"aud\":\"api.example.com\",\"exp\":1783928400,\"nbf\":1773928400,\"iat\":1773928400,\"jti\":\"uuid-token-id\"}"
+  let secret = "complex-secret-key"
+
+  let token = sign(payload, secret)
+
+  // Verify returns the exact payload
+  match verify(token, secret) {
+    Ok(verified_payload) => {
+      assert_eq(verified_payload, payload)
+    }
+    Err(_) => assert_true(false)
   }
+}
 
-  let json_obj = minimal_payload.to_json()
-  let decoded : JWTPayload = @json.from_json!(json_obj)
+test "JWT header remains constant across different payloads" {
+  let payload1 = "{\"data\":\"test1\"}"
+  let payload2 = "{\"data\":\"test2\"}"
+  let secret = "secret"
 
-  assert_eq!(decoded.sub, Some("anonymous_user"))
-  assert_eq!(decoded.iss, None)
-  assert_eq!(decoded.nbf, None)
+  let token1 = sign(payload1, secret)
+  let token2 = sign(payload2, secret)
+
+  // Both tokens should have the same HS256 header
+  match (decode_header(token1), decode_header(token2)) {
+    (Ok(h1), Ok(h2)) => {
+      assert_eq(h1, h2)
+      assert_eq(h1, "{\"alg\":\"HS256\",\"typ\":\"JWT\"}")
+    }
+    _ => assert_true(false)
+  }
+}
+
+test "JWT with minimal claims" {
+  let minimal_payload = "{\"sub\":\"user\",\"iat\":1000}"
+  let secret = "secret"
+
+  let token = sign(minimal_payload, secret)
+
+  match verify(token, secret) {
+    Ok(decoded) => {
+      assert_eq(decoded, minimal_payload)
+    }
+    Err(_) => assert_true(false)
+  }
+}
+
+test "JWT preserves payload with unicode and special characters" {
+  let payload = "{\"iss\":\"https://auth.example.com/path?query=1\",\"sub\":\"user@domain.com\",\"name\":\"John Doe\"}"
+  let secret = "secret"
+
+  let token = sign(payload, secret)
+
+  match decode(token) {
+    Ok(decoded_payload) => {
+      assert_eq(decoded_payload, payload)
+    }
+    Err(_) => assert_true(false)
+  }
+}
+
+test "ES256 header is different from HS256" {
+  let private_key = hex_to_uints(
+    "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721",
+  )
+  let payload = "{\"test\":true}"
+
+  match sign_es256(payload, private_key) {
+    Err(_) => assert_true(false)
+    Ok(token) => {
+      match decode_header(token) {
+        Ok(header) => {
+          assert_eq(header, "{\"alg\":\"ES256\",\"typ\":\"JWT\"}")
+        }
+        Err(_) => assert_true(false)
+      }
+    }
+  }
+}
+
+// --- Direct Type Validation for JWT Structures ---
+
+test "Direct Type Validation for JWT Structures" {
+  // 1. 使用构造函数创建 JWT Header，测试 pub 字段的可访问性与强类型约束
+  let header = new_jwt_header("HS256", "JWT")
+  assert_eq(header.alg, "HS256")
+  assert_eq(header.typ, "JWT")
+
+  // 2. 使用构造函数创建复杂的 Payload 结构体
+  let payload = new_jwt_payload(
+    Some("auth.sustech.edu.cn"),
+    Some("copernicus_123"),
+    None,              // 测试 Option 包装器的缺省表现
+    Some(1783928400L), // 测试 Int64 长整型
+    None,
+    Some(1773928400L),
+    None,
+  )
+
+  // 验证 payload 字段 (针对 Option 类型，改用更地道的 assert_true! 配合 == 运算符)
+  assert_true(payload.iss == Some("auth.sustech.edu.cn"))
+  assert_true(payload.sub == Some("copernicus_123"))
+  assert_true(payload.aud == None)
+  assert_true(payload.exp == Some(1783928400L))
+
+  // 3. 验证 new_jwt 构造函数是否正常工作
+  let jwt_obj = new_jwt(header, payload, "mock_signature_string")
+
+  // 4. 直接利用 derive(Eq) 进行对象级别的断言
+  assert_eq(jwt_obj.header.alg, "HS256")
+  assert_eq(jwt_obj.header.typ, "JWT")
+  assert_true(jwt_obj.payload.sub == Some("copernicus_123"))
+  assert_eq(jwt_obj.signature, "mock_signature_string")
+}
+
+test "JWT constructor with minimal claims" {
+  let header = new_jwt_header("ES256", "JWT")
+  let payload = new_jwt_payload(
+    None,
+    Some("minimal-user"),
+    None,
+    None,
+    None,
+    Some(1000L),
+    None,
+  )
+  let jwt_obj = new_jwt(header, payload, "es256_signature")
+
+  assert_eq(jwt_obj.header.alg, "ES256")
+  assert_true(jwt_obj.payload.sub == Some("minimal-user"))
+  assert_true(jwt_obj.payload.iss == None)
 }

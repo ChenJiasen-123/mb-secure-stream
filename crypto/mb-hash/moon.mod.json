@@ -1,0 +1,10 @@
+{
+  "name": "ChenJiasen-123/moon_jwt/crypto/mb-hash",
+  "version": "0.1.0",
+  "description": "Secure hashing for MoonBit (SHA-256, SHA-512; native+WASM)",
+  "repository": "https://github.com/moonbit-crypto/mb-crypto",
+  "readme": "README.md",
+  "license": "Apache-2.0",
+  "keywords": ["crypto", "hash", "sha256", "sha512", "sha2"],
+  "source": "src"
+}

@@ -1,0 +1,10 @@
+{
+  "is_main": false,
+  "import": [
+    "ChenJiasen-123/moon_jwt/crypto/mb-hash/sha2",
+    { "path": "ChenJiasen-123/moon_jwt/crypto/mb-hmac", "alias": "hmac" }
+  ],
+  "test-import": [
+    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }
+  ]
+}

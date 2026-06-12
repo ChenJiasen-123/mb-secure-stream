@@ -1,0 +1,14 @@
+{
+  "name": "ChenJiasen-123/moon_jwt/crypto/mb-jwt",
+  "version": "0.1.0",
+  "description": "JWT (JSON Web Tokens) for MoonBit with HS256 signing and verification",
+  "repository": "https://github.com/moonbit-crypto/mb-crypto",
+  "readme": "README.md",
+  "license": "Apache-2.0",
+  "keywords": ["crypto", "jwt", "token", "hs256", "json-web-token"],
+  "source": "src",
+  "deps": {
+    "ChenJiasen-123/moon_jwt/crypto/mb-hmac": { "path": "../mb-hmac" },
+    "ChenJiasen-123/moon_jwt/crypto/mb-p256": { "path": "../mb-p256" }
+  }
+}

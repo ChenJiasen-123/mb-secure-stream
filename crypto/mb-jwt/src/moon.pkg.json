@@ -1,8 +1,9 @@
 {
   "is-main": false,
   "import": [
-    { "path": "Tigls/mb-hmac", "alias": "hmac" },
-    { "path": "Tigls/mb-p256", "alias": "p256" },
-    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }
+    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" },
+    { "path": "moonbitlang/core/json", "alias": "json" },
+    { "path": "ChenJiasen-123/moon_jwt/crypto/mb-hmac", "alias": "hmac" },
+    { "path": "ChenJiasen-123/moon_jwt/crypto/mb-p256", "alias": "p256" }
   ]
 }

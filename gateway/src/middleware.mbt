@@ -6,6 +6,10 @@ pub struct StreamContext {
   mut user_role : String
 }
 
+pub fn new_stream_context(token : String) -> StreamContext {
+  { token, is_allowed: false, error_message: "", user_role: "" }
+}
+
 pub fn execute_security_filter(ctx : StreamContext, secret : String, current_time : Int64) -> Unit {
 
   match @mb_jwt.verify(ctx.token, secret) {

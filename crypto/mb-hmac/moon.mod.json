@@ -1,5 +1,5 @@
 {
-  "name": "ChenJiasen-123/moon_jwt/crypto/mb-hmac",
+  "name": "ChenJiasen-123/mb-secure-stream/crypto/mb-hmac",
   "version": "0.1.0",
   "description": "HMAC message authentication for MoonBit (HMAC-SHA256, HMAC-SHA512; native+WASM)",
   "repository": "https://github.com/moonbit-crypto/mb-crypto",
@@ -8,6 +8,6 @@
   "keywords": ["crypto", "mac", "hmac", "hmac-sha256", "hmac-sha512"],
   "source": "src",
   "deps": {
-    "ChenJiasen-123/moon_jwt/crypto/mb-hash": { "path": "../mb-hash" }
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-hash": { "path": "../mb-hash" }
   }
 }

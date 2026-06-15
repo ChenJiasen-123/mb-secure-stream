@@ -1,7 +1,0 @@
-{
-  "name": "gateway",
-  "version": "0.1.0",
-  "deps": {
-    "mb_jwt": { "path": "../crypto/mb-jwt" }
-  }
-}

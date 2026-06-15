@@ -1,0 +1,8 @@
+{
+  "name": "gateway",
+  "version": "0.1.0",
+  "source": "src",
+  "deps": {
+    "mb_jwt": { "path": "../crypto/mb-jwt" }
+  }
+}

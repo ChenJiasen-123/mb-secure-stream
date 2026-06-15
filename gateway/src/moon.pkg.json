@@ -1,0 +1,6 @@
+{
+  "import": [
+    "mb_jwt",
+    "moonbitlang/core/json"
+  ]
+}

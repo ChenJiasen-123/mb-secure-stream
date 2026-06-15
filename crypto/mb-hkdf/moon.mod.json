@@ -1,5 +1,5 @@
 {
-  "name": "ChenJiasen-123/moon_jwt/crypto/mb-hkdf",
+  "name": "ChenJiasen-123/mb-secure-stream/crypto/mb-hkdf",
   "version": "0.1.0",
   "description": "HKDF key derivation for MoonBit (RFC 5869, HMAC-SHA256/SHA512)",
   "repository": "https://github.com/moonbit-crypto/mb-crypto",
@@ -8,6 +8,6 @@
   "keywords": ["crypto", "hkdf", "key-derivation", "kdf"],
   "source": "src",
   "deps": {
-    "ChenJiasen-123/moon_jwt/crypto/mb-hmac": { "path": "../mb-hmac" }
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-hmac": { "path": "../mb-hmac" }
   }
 }

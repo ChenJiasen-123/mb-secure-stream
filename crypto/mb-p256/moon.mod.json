@@ -1,5 +1,5 @@
 {
-  "name": "ChenJiasen-123/moon_jwt/crypto/mb-p256",
+  "name": "ChenJiasen-123/mb-secure-stream/crypto/mb-p256",
   "version": "0.1.0",
   "description": "NIST P-256 elliptic curve (secp256r1) for MoonBit: ECDSA and ECDH",
   "repository": "https://github.com/moonbit-crypto/mb-crypto",
@@ -8,7 +8,7 @@
   "keywords": ["crypto", "p256", "ecdsa", "ecdh", "secp256r1", "elliptic-curve"],
   "source": "src",
   "deps": {
-    "ChenJiasen-123/moon_jwt/crypto/mb-hash": { "path": "../mb-hash" },
-    "ChenJiasen-123/moon_jwt/crypto/mb-hmac": { "path": "../mb-hmac" }
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-hash": { "path": "../mb-hash" },
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-hmac": { "path": "../mb-hmac" }
   }
 }

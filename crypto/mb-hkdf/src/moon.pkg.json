@@ -1,6 +1,6 @@
 {
   "is-main": false,
   "import": [
-    { "path": "ChenJiasen-123/moon_jwt/crypto/mb-hmac", "alias": "hmac" }
+    { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-hmac", "alias": "hmac" }
   ]
 }

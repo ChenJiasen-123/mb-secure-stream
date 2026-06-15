@@ -39,7 +39,7 @@ A high-performance, security-hardened streaming cryptography library written pur
                             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  3. Constant-Time Signature Verification                                    │
-│                                                                              │
+│                                                                             │
 │     ┌─── header ───┐  ┌─── payload ──┐                                      │
 │     │ base64url    │  │ base64url    │                                      │
 │     │ decode_range │  │ decode_range │                                      │

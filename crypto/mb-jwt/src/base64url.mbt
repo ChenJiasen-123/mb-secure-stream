@@ -161,3 +161,67 @@ pub fn base64url_decode_to_string(encoded: String) -> String {
   }
   result
 }
+
+/// Zero-copy base64url decode from a range within a source string.
+/// Decodes directly from the original string without creating intermediate substrings.
+pub fn base64url_decode_range(source: String, start: Int, end: Int) -> Array[UInt] {
+  let chars = source.to_array()
+  let result : Array[UInt] = []
+  let len = end
+  let mut i = start
+
+  while i + 3 < len {
+    let c0 = get_decode_value(chars[i].to_int())
+    let c1 = get_decode_value(chars[i + 1].to_int())
+    let c2 = get_decode_value(chars[i + 2].to_int())
+    let c3 = get_decode_value(chars[i + 3].to_int())
+
+    if c0 < 0 || c1 < 0 || c2 < 0 || c3 < 0 {
+      break
+    }
+
+    let b0 = ((c0 << 2) | (c1 >> 4)) & 0xFF
+    let b1 = ((c1 << 4) | (c2 >> 2)) & 0xFF
+    let b2 = ((c2 << 6) | c3) & 0xFF
+
+    result.push(b0.reinterpret_as_uint())
+    result.push(b1.reinterpret_as_uint())
+    result.push(b2.reinterpret_as_uint())
+
+    i = i + 4
+  }
+
+  let remaining = len - i
+  if remaining == 3 {
+    let c0 = get_decode_value(chars[i].to_int())
+    let c1 = get_decode_value(chars[i + 1].to_int())
+    let c2 = get_decode_value(chars[i + 2].to_int())
+
+    if c0 >= 0 && c1 >= 0 && c2 >= 0 {
+      let b0 = ((c0 << 2) | (c1 >> 4)) & 0xFF
+      let b1 = ((c1 << 4) | (c2 >> 2)) & 0xFF
+      result.push(b0.reinterpret_as_uint())
+      result.push(b1.reinterpret_as_uint())
+    }
+  } else if remaining == 2 {
+    let c0 = get_decode_value(chars[i].to_int())
+    let c1 = get_decode_value(chars[i + 1].to_int())
+
+    if c0 >= 0 && c1 >= 0 {
+      let b0 = ((c0 << 2) | (c1 >> 4)) & 0xFF
+      result.push(b0.reinterpret_as_uint())
+    }
+  }
+
+  result
+}
+
+/// Zero-copy base64url decode to string from a range within a source string.
+pub fn base64url_decode_range_to_string(source: String, start: Int, end: Int) -> String {
+  let bytes = base64url_decode_range(source, start, end)
+  let mut result = ""
+  for b in bytes {
+    result = result + b.reinterpret_as_int().unsafe_to_char().to_string()
+  }
+  result
+}

@@ -20,14 +20,17 @@ fn fixed_to_array(fixed: FixedArray[UInt]) -> Array[UInt] {
   arr
 }
 
+/// Constant-time comparison to prevent timing attacks.
+/// Even when lengths differ, it compares up to the minimum length
+/// to avoid leaking length information via early return.
 fn constant_time_eq(a: Array[UInt], b: Array[UInt]) -> Bool {
-  if a.length() != b.length() {
-    return false
-  }
+  let min_len = if a.length() < b.length() { a.length() } else { b.length() }
   let mut diff : UInt = 0U
-  for i in 0..<a.length() {
+  for i in 0..<min_len {
     diff = diff | (a[i] ^ b[i])
   }
+  // Also accumulate length difference to make it constant-time
+  diff = diff | (a.length().reinterpret_as_uint() ^ b.length().reinterpret_as_uint())
   diff == 0U
 }
 
@@ -40,25 +43,48 @@ fn string_to_bytes_filtered_jwt(s: String) -> Array[Int] {
   result
 }
 
-fn split_token(token: String) -> Result[Array[String], String] {
-  let chars = token.to_array()
-  let parts : Array[String] = []
-  let mut current_buffer : Array[Char] = []
+/// Token part positions in the original token string.
+/// Uses indices to avoid creating intermediate substring allocations.
+priv struct TokenParts {
+  header_start : Int
+  header_end : Int   // exclusive, position of first '.'
+  payload_start : Int
+  payload_end : Int  // exclusive, position of second '.'
+  signature_start : Int
+  signature_end : Int // exclusive, end of string
+}
 
-  for c in chars {
-    if c == '.' {
-      parts.push(String::from_array(current_buffer))
-      current_buffer = []
-    } else {
-      current_buffer.push(c)
+/// Zero-copy token splitter: finds the two '.' positions
+/// and returns index ranges without allocating substrings.
+fn split_token_indices(token: String) -> Result[TokenParts, String] {
+  let chars = token.to_array()
+  let len = chars.length()
+  let mut first_dot = -1
+  let mut second_dot = -1
+
+  for i in 0..<len {
+    if chars[i] == '.' {
+      if first_dot < 0 {
+        first_dot = i
+      } else {
+        second_dot = i
+        break
+      }
     }
   }
-  parts.push(String::from_array(current_buffer))
 
-  if parts.length() != 3 {
+  if first_dot < 0 || second_dot < 0 {
     return Err("Invalid JWT format: expected 3 parts separated by dots")
   }
-  Ok(parts)
+
+  Ok({
+    header_start: 0,
+    header_end: first_dot,
+    payload_start: first_dot + 1,
+    payload_end: second_dot,
+    signature_start: second_dot + 1,
+    signature_end: len,
+  })
 }
 
 /// Validates the header to reject `alg: none` and other insecure algorithms.
@@ -91,53 +117,47 @@ pub fn sign(payload: String, secret: String) -> String {
 }
 
 pub fn verify(token: String, secret: String) -> Result[String, String] {
-  let parts = match split_token(token) {
+  let parts = match split_token_indices(token) {
     Ok(p) => p
     Err(e) => return Err(e)
   }
-  
-  let header_encoded = parts[0]
-  let payload_encoded = parts[1]
-  let signature_encoded = parts[2]
 
-  let header_json = base64url_decode_to_string(header_encoded)
+  let header_json = base64url_decode_range_to_string(token, parts.header_start, parts.header_end)
 
   match validate_header_algorithm(header_json, "HS256") {
     Ok(_) => ()
     Err(e) => return Err(e)
   }
 
-  let signing_input = header_encoded + "." + payload_encoded
+  let signing_input = token[:parts.payload_end].to_owned()
   let expected_signature = @hmac.hmac_sha256_string(signing_input, secret)
-  let actual_signature = base64url_decode(signature_encoded)
+  let actual_signature = base64url_decode_range(token, parts.signature_start, parts.signature_end)
 
   if !(constant_time_eq(fixed_to_array(expected_signature), actual_signature)) {
     return Err("Invalid signature")
   }
 
-  let payload_json = base64url_decode_to_string(payload_encoded)
+  let payload_json = base64url_decode_range_to_string(token, parts.payload_start, parts.payload_end)
   Ok(payload_json)
 }
 
 /// Decodes a JWT token without verifying the signature.
 pub fn decode(token: String) -> Result[String, String] {
-  let parts = match split_token(token) {
+  let parts = match split_token_indices(token) {
     Ok(p) => p
     Err(e) => return Err(e)
   }
-  let payload_encoded = parts[1]
-  let payload_json = base64url_decode_to_string(payload_encoded)
+  let payload_json = base64url_decode_range_to_string(token, parts.payload_start, parts.payload_end)
   Ok(payload_json)
 }
 
 /// Decodes the header of a JWT token without verification.
 pub fn decode_header(token: String) -> Result[String, String] {
-  let parts = match split_token(token) {
+  let parts = match split_token_indices(token) {
     Ok(p) => p
     Err(e) => return Err(e)
   }
-  let header_encoded = parts[0]
-  let header_json = base64url_decode_to_string(header_encoded)
+  let header_json = base64url_decode_range_to_string(token, parts.header_start, parts.header_end)
   Ok(header_json)
 }
 
@@ -171,30 +191,26 @@ pub fn verify_es256(
   token : String,
   public_key : Array[UInt],
 ) -> Result[String, String] {
-  let parts = match split_token(token) {
+  let parts = match split_token_indices(token) {
     Ok(p) => p
     Err(e) => return Err(e)
   }
-  
-  let header_encoded = parts[0]
-  let payload_encoded = parts[1]
-  let signature_encoded = parts[2]
 
-  let header_json = base64url_decode_to_string(header_encoded)
+  let header_json = base64url_decode_range_to_string(token, parts.header_start, parts.header_end)
 
   match validate_header_algorithm(header_json, "ES256") {
     Ok(_) => ()
     Err(e) => return Err(e)
   }
 
-  let signing_input = header_encoded + "." + payload_encoded
+  let signing_input = token[:parts.payload_end].to_owned()
   let input_bytes = string_to_bytes_filtered_jwt(signing_input)
   let input_uints : Array[UInt] = []
   for b in input_bytes {
     input_uints.push(b.reinterpret_as_uint())
   }
 
-  let sig_raw = base64url_decode(signature_encoded)
+  let sig_raw = base64url_decode_range(token, parts.signature_start, parts.signature_end)
   if sig_raw.length() != 64 {
     return Err("Invalid ES256 signature length")
   }
@@ -209,7 +225,7 @@ pub fn verify_es256(
     Err(e) => Err(e)
     Ok(valid) =>
       if valid {
-        let payload_json = base64url_decode_to_string(payload_encoded)
+        let payload_json = base64url_decode_range_to_string(token, parts.payload_start, parts.payload_end)
         Ok(payload_json)
       } else {
         Err("Invalid signature")

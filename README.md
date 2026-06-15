@@ -14,23 +14,23 @@ A high-performance, security-hardened streaming cryptography library written pur
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        Inbound Request (HTTP/WS/gRPC)                        │
+│                        Inbound Request (HTTP/WS/gRPC)                       │
 └───────────────────────────┬─────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  1. Token Extraction                                                        │
-│     Raw JWT extracted from Authorization header or protocol metadata         │
-│     e.g. "eyJhbGciOiJIUzI1NiIs...3gFcS0"                                   │
+│     Raw JWT extracted from Authorization header or protocol metadata        │
+│     e.g. "eyJhbGciOiJIUzI1NiIs...3gFcS0"                                    │
 └───────────────────────────┬─────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  2. Zero-Copy Token Splitting  (O(1) heap — no substring allocations)        │
-│                                                                              │
+│  2. Zero-Copy Token Splitting  (O(1) heap — no substring allocations)       │
+│                                                                             │
 │     Token: ┌───────header────────┬───────payload──────┬────signature─────┐  │
 │            0─────────────────dot1──────────────dot2─────────────────len     │
-│                                                                              │
+│                                                                             │
 │     Returns: TokenParts { header_start, header_end, payload_start,          │
 │                           payload_end, signature_start, signature_end }     │
 │     No String[3] allocated.  Only two Int indices scanned from original.    │
@@ -46,25 +46,25 @@ A high-performance, security-hardened streaming cryptography library written pur
 │     └──────┬───────┘  └──────┬───────┘                                      │
 │            │                 │                                              │
 │            └─────┬───────────┘                                              │
-│                  ▼                                                           │
+│                  ▼                                                          │
 │     Signing Input: "header_enc.payload_enc"                                 │
-│                  │                                                           │
-│                  ▼                                                           │
+│                  │                                                          │
+│                  ▼                                                          │
 │     HMAC-SHA256(secret) ──► expected_sig                                    │
-│                  │                                                           │
-│                  ▼                                                           │
-│     constant_time_eq(expected_sig, actual_sig)  ◄─── decoded from range      │
-│         │                                           │                        │
-│         │ (bitwise XOR across all bytes,             │                        │
-│         │  no early return on mismatch)              │                        │
-│         ▼                                           │                        │
-│     ╔══════════════════════╗                        │                        │
-│     ║  Timing Attack       ║  XOR accumulator       │                        │
-│     ║  Impossible: every   ║  includes length       │                        │
-│     ║  comparison takes    ║  difference too        │                        │
-│     ║  identical wall time ║                        │                        │
-│     ╚══════════════════════╝                        │                        │
-└───────────────────────────┬─────────────────────────┘────────────────────────┘
+│                  │                                                          │
+│                  ▼                                                          │
+│     constant_time_eq(expected_sig, actual_sig)  ◄─── decoded from range     │
+│         │                                           │                       │
+│         │ (bitwise XOR across all bytes,            │                       │
+│         │  no early return on mismatch)             │                       │
+│         ▼                                           │                       │
+│     ╔══════════════════════╗                        │                       │
+│     ║  Timing Attack       ║  XOR accumulator       │                       │
+│     ║  Impossible: every   ║  includes length       │                       │
+│     ║  comparison takes    ║  difference too        │                       │
+│     ║  identical wall time ║                        │                       │
+│     ╚══════════════════════╝                        │                       │
+└───────────────────────────┬─────────────────────────┘───────────────────────┘
                             │
                     ┌───────┴───────┐
                     ▼               ▼

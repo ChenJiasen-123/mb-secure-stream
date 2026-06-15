@@ -29,7 +29,7 @@ A high-performance, security-hardened streaming cryptography library written pur
 │  2. Zero-Copy Token Splitting  (O(1) heap — no substring allocations)       │
 │                                                                             │
 │     Token: ┌───────header────────┬───────payload──────┬────signature─────┐  │
-│            0─────────────────dot1──────────────dot2─────────────────len     │
+│            0────────────────────dot1─────────────────dot2───────────────len │
 │                                                                             │
 │     Returns: TokenParts { header_start, header_end, payload_start,          │
 │                           payload_end, signature_start, signature_end }     │
@@ -54,17 +54,17 @@ A high-performance, security-hardened streaming cryptography library written pur
 │                  │                                                          │
 │                  ▼                                                          │
 │     constant_time_eq(expected_sig, actual_sig)  ◄─── decoded from range     │
-│         │                                           │                       │
-│         │ (bitwise XOR across all bytes,            │                       │
-│         │  no early return on mismatch)             │                       │
-│         ▼                                           │                       │
-│     ╔══════════════════════╗                        │                       │
-│     ║  Timing Attack       ║  XOR accumulator       │                       │
-│     ║  Impossible: every   ║  includes length       │                       │
-│     ║  comparison takes    ║  difference too        │                       │
-│     ║  identical wall time ║                        │                       │
-│     ╚══════════════════════╝                        │                       │
-└───────────────────────────┬─────────────────────────┘───────────────────────┘
+│         │                                                │                  │
+│         │ (bitwise XOR across all bytes,                 │                  │
+│         │  no early return on mismatch)                  │                  │
+│         ▼                                                │                  │
+│     ╔══════════════════════╗                             │                  │
+│     ║  Timing Attack       ║  XOR accumulator            │                  │
+│     ║  Impossible: every   ║  includes length            │                  │
+│     ║  comparison takes    ║  difference too             │                  │
+│     ║  identical wall time ║                             │                  │
+│     ╚══════════════════════╝                             │                  │
+└───────────────────────────┬──────────────────────────────┘──────────────────┘
                             │
                     ┌───────┴───────┐
                     ▼               ▼

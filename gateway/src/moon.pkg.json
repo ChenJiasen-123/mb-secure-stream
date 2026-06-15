@@ -1,6 +1,7 @@
 {
   "import": [
     "mb_jwt",
-    "moonbitlang/core/json"
+    "moonbitlang/core/json",
+    { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-aead", "alias": "aead" }
   ]
 }

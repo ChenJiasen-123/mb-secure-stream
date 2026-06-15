@@ -1,8 +1,8 @@
 {
-  "name": "ChenJiasen-123/moon_jwt/crypto/mb-getrandom",
+  "name": "ChenJiasen-123/mb-secure-stream/crypto/mb-getrandom",
   "version": "0.1.0",
   "description": "Secure random number generation for MoonBit (OS entropy; native+WASM)",
-  "repository": "https://github.com/moonbit-crypto/mb-crypto",
+  "repository": "https://github.com/ChenJiasen-123/mb-secure-stream",
   "readme": "README.md",
   "license": "Apache-2.0",
   "keywords": ["crypto", "random", "entropy", "getrandom"],

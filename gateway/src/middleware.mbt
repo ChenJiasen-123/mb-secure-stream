@@ -26,11 +26,15 @@ pub fn execute_security_filter(ctx : StreamContext, secret : String, current_tim
         }
         Ok(claims) => {
 
-          if current_time >= claims.exp {
+          // nbf check: current_time must be >= nbf (token must be not-before this time)
+          // nbf == 0L means "not set" — skip check
+          if claims.nbf > 0L && current_time < claims.nbf {
+            ctx.is_allowed = false
+            ctx.error_message = "Gateway Blocked: Token is not yet valid (nbf)"
+          } else if current_time >= claims.exp {
             ctx.is_allowed = false
             ctx.error_message = "Gateway Blocked: Token has expired"
           } else {
-
             ctx.is_allowed = true
             ctx.user_role = claims.role
           }

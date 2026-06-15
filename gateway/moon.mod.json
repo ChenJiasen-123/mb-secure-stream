@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "source": "src",
   "deps": {
-    "mb_jwt": { "path": "../crypto/mb-jwt" }
+    "mb_jwt": { "path": "../crypto/mb-jwt" },
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-aead": { "path": "../crypto/mb-aead" },
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-chacha": { "path": "../crypto/mb-chacha" }
   }
 }

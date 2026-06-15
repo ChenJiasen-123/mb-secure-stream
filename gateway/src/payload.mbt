@@ -1,6 +1,7 @@
 pub struct GatewayClaims {
   sub : String        
   exp : Int64         
+  nbf : Int64         
   iss : String        
   role : String       
 }
@@ -24,6 +25,10 @@ pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] 
     Some(Number(n, ..)) => n.to_int64()
     _ => return Err("Gateway Error: Missing or invalid 'exp' claim")
   }
+  let nbf = match obj.get("nbf") {
+    Some(Number(n, ..)) => n.to_int64()
+    _ => 0L  // 0 means "not set" — no nbf restriction
+  }
   let iss = match obj.get("iss") {
     Some(String(s)) => s
     _ => "" 
@@ -33,5 +38,5 @@ pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] 
     _ => "guest" 
   }
 
-  Ok({ sub, exp, iss, role })
+  Ok({ sub, exp, nbf, iss, role })
 }

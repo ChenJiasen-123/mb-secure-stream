@@ -5,6 +5,7 @@
   "deps": {
     "mb_jwt": { "path": "../crypto/mb-jwt" },
     "ChenJiasen-123/mb-secure-stream/crypto/mb-aead": { "path": "../crypto/mb-aead" },
-    "ChenJiasen-123/mb-secure-stream/crypto/mb-chacha": { "path": "../crypto/mb-chacha" }
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-chacha": { "path": "../crypto/mb-chacha" },
+    "ChenJiasen-123/mb-secure-stream/crypto/mb-p256": { "path": "../crypto/mb-p256" }
   }
 }

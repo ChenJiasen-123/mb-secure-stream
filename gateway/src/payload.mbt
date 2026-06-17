@@ -1,18 +1,23 @@
+/// Gateway-specific claims extending standard JWT with a `role` field.
 pub struct GatewayClaims {
-  sub : String        
-  exp : Int64         
-  nbf : Int64         
-  iss : String        
-  role : String       
+  sub : String
+  exp : Int64
+  nbf : Option[Int64]
+  iss : Option[String]
+  role : Option[String]
 }
 
+/// Manual JSON deserialization for GatewayClaims.
+/// We implement this manually (equivalent to derive(FromJson)) because the
+/// MoonBit auto-derived `from_json` takes a `JsonPath` parameter whose
+/// construction is inconvenient here. The logic is kept simple and
+/// field-by-field, avoiding duplication of JWTPayload definitions.
+/// @json.parse is an error-raising function using try/catch.
 pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] {
-
-  let json_obj = try @json.parse(json_str) catch {
+  let parsed = try @json.parse(json_str) catch {
     _ => return Err("Gateway Error: Failed to parse payload JSON")
   }
-
-  let obj = match json_obj {
+  let obj = match parsed {
     Object(m) => m
     _ => return Err("Gateway Error: Expected JSON object")
   }
@@ -26,16 +31,16 @@ pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] 
     _ => return Err("Gateway Error: Missing or invalid 'exp' claim")
   }
   let nbf = match obj.get("nbf") {
-    Some(Number(n, ..)) => n.to_int64()
-    _ => 0L  // 0 means "not set" — no nbf restriction
+    Some(Number(n, ..)) => Some(n.to_int64())
+    _ => None
   }
   let iss = match obj.get("iss") {
-    Some(String(s)) => s
-    _ => "" 
+    Some(String(s)) => Some(s)
+    _ => None
   }
   let role = match obj.get("role") {
-    Some(String(s)) => s
-    _ => "guest" 
+    Some(String(s)) => Some(s)
+    _ => None
   }
 
   Ok({ sub, exp, nbf, iss, role })

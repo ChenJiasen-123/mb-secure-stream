@@ -25,32 +25,36 @@ pub struct JWT {
   signature : String
 } derive(Debug, Eq)
 
-///| Creates a new JWT Header with the given algorithm and type.
+///| A type-safe key enum that binds the signing algorithm to its required key material.
+///| This prevents callers from accidentally passing the wrong type of key (e.g., using
+///| an HMAC secret where an ECDSA private key is expected).
 ///|
-///| Example:
-///| ```
-///| let header = new_jwt_header("HS256", "JWT")
-///| ```
+///| Variants:
+///| - `HS256(String)`: Symmetric HMAC-SHA256 secret key
+///| - `ES256(Array[UInt])`: Asymmetric ECDSA P-256 private key (32 bytes, big-endian)
+pub(all) enum JwtKey {
+  HS256(String)
+  ES256(Array[UInt])
+} derive(Debug, Eq, Show)
+
+///| Represents all errors that can occur during JWT operations.
+pub enum JWTError {
+  InvalidFormat                    // TOken does not have the correct "header.payload.signature" format
+  InvalidSignature                 // Signature verification failed (e.g., HMAC mismatch, ECDSA signature invalid)
+  AlgorithmMismatch(String)        // Header "alg" field does not match the expected algorithm (e.g., "HS256" vs "ES256")
+  CryptoError(String)              // Underlying cryptography library computation failed (e.g., ECDSA operation failed)
+  TokenExpired(Int64, Int64)       // Token has expired (current time, expiration time)
+  TokenNotYetValid(Int64, Int64)   // Token is not yet valid (current time, not before time)
+  InvalidIssuer(String)            // Issuer does not match
+  InvalidAudience(String)          // Audience does not match
+} derive(Debug, Eq, Show)
+
+///| Creates a new JWT Header with the given algorithm and type.
 pub fn new_jwt_header(alg : String, typ : String) -> JWTHeader {
   { alg, typ }
 }
 
 ///| Creates a new JWT Payload with the given claims.
-///|
-///| All claims are optional and can be set to `None` if not needed.
-///|
-///| Example:
-///| ```
-///| let payload = new_jwt_payload(
-///|   Some("issuer"),
-///|   Some("subject"),
-///|   None,
-///|   Some(1000L),
-///|   None,
-///|   Some(100L),
-///|   Some("jwt-id")
-///| )
-///| ```
 pub fn new_jwt_payload(
   iss : Option[String],
   sub : Option[String],
@@ -64,13 +68,6 @@ pub fn new_jwt_payload(
 }
 
 ///| Creates a new JWT with the given header, payload, and signature.
-///|
-///| Example:
-///| ```
-///| let header = new_jwt_header("HS256", "JWT")
-///| let payload = new_jwt_payload(Some("sub"), Some("user"), None, None, None, Some(100L), None)
-///| let jwt = new_jwt(header, payload, "signature_string")
-///| ```
 pub fn new_jwt(
   header : JWTHeader,
   payload : JWTPayload,
@@ -78,13 +75,3 @@ pub fn new_jwt(
 ) -> JWT {
   { header, payload, signature }
 }
-
-///| Represents the precise errors that can occur during JWT validation.
-pub enum ValidationError {
-  InvalidSignature
-  InvalidFormat
-  TokenExpired(Int64, Int64)     // 包含 (当前时间, 过期时间)
-  TokenNotYetValid(Int64, Int64) // 包含 (当前时间, 生效时间)
-  InvalidIssuer(String)          // 包含不匹配的 Issuer 名字
-  InvalidAudience(String)        // 包含不匹配的 Audience 名字
-} derive(Debug, Eq)

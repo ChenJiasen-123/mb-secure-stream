@@ -1,5 +1,5 @@
 // Base64URL encoding/decoding (RFC 4648)
-// URL-safe alphabet: A-Za-z0-9-_ (no padding)
+// URL-safe alphabet（ASCII): A-Za-z0-9-_ (no padding)
 
 let base64url_chars : FixedArray[Int] = [
   65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,  // A-M
@@ -32,6 +32,7 @@ fn get_decode_value(ch: Int) -> Int {
     63
   } else {
     -1
+    // Invalid character
   }
 }
 
@@ -41,7 +42,7 @@ fn string_to_bytes_filtered(s: String) -> Array[Int] {
   for i in 0..<raw.length() {
     result.push(raw[i].to_int())
   }
-  result
+  result  
 }
 
 pub fn base64url_encode(data: Array[UInt]) -> String {
@@ -113,6 +114,7 @@ pub fn base64url_decode(encoded: String) -> Array[UInt] {
     let c2 = get_decode_value(chars[i + 2])
     let c3 = get_decode_value(chars[i + 3])
 
+    // Invalid character check
     if c0 < 0 || c1 < 0 || c2 < 0 || c3 < 0 {
       break
     }

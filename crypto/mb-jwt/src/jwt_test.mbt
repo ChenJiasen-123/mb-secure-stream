@@ -36,10 +36,13 @@ test "base64url encode jwt header" {
 
 test "jwt sign and verify roundtrip" {
   let payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\",\"iat\":1516239022}"
-  let secret = "your-256-bit-secret"
+  let key = JwtKey::HS256("your-256-bit-secret")
 
-  let token = sign(payload, secret)
-  let result = verify(token, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let result = verify(token, key)
 
   match result {
     Ok(decoded_payload) => assert_eq(decoded_payload, payload)
@@ -49,11 +52,14 @@ test "jwt sign and verify roundtrip" {
 
 test "jwt verify with wrong secret fails" {
   let payload = "{\"sub\":\"1234567890\"}"
-  let secret = "correct-secret"
-  let wrong_secret = "wrong-secret"
+  let key = JwtKey::HS256("correct-secret")
+  let wrong_key = JwtKey::HS256("wrong-secret")
 
-  let token = sign(payload, secret)
-  let result = verify(token, wrong_secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let result = verify(token, wrong_key)
 
   match result {
     Ok(_) => assert_true(false)
@@ -63,9 +69,12 @@ test "jwt verify with wrong secret fails" {
 
 test "jwt decode without verification" {
   let payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\"}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
   let result = decode(token)
 
   match result {
@@ -76,9 +85,12 @@ test "jwt decode without verification" {
 
 test "jwt decode header" {
   let payload = "{\"sub\":\"test\"}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
   let header = decode_header(token)
 
   match header {
@@ -88,22 +100,25 @@ test "jwt decode header" {
 }
 
 test "jwt invalid format" {
-  let result = verify("invalid-token", "secret")
+  let key = JwtKey::HS256("secret")
+  let result = verify("invalid-token", key)
   match result {
     Ok(_) => assert_true(false)
-    Err(_) => assert_true(true)
+    Err(InvalidFormat) => assert_true(true)
+    Err(_) => assert_true(false)
   }
 }
 
 test "jwt tampered payload fails verification" {
   let payload = "{\"sub\":\"1234567890\"}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   // Manually tamper with the token by replacing the payload part
-  // Original token: header.payload.signature
-  // We'll create: header.tampered_payload.signature (same signature)
   let tampered_payload = base64url_encode_string("{\"sub\":\"hacked\"}")
 
   // Find the dots and reconstruct with tampered payload
@@ -137,25 +152,29 @@ test "jwt tampered payload fails verification" {
 
   let tampered_token = header_part + "." + tampered_payload + "." + signature_part
 
-  let result = verify(tampered_token, secret)
+  let result = verify(tampered_token, key)
   match result {
     Ok(_) => assert_true(false)
-    Err(_) => assert_true(true)
+    Err(InvalidSignature) => assert_true(true)
+    Err(_) => assert_true(false)
   }
 }
 
 // Test vector from jwt.io
 test "jwt.io test vector" {
   let payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\",\"iat\":1516239022}"
-  let secret = "your-256-bit-secret"
+  let key = JwtKey::HS256("your-256-bit-secret")
 
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   // Verify it starts with the correct header
   assert_true(token.has_prefix("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."))
 
   // Verify roundtrip works
-  match verify(token, secret) {
+  match verify(token, key) {
     Ok(_) => assert_true(true)
     Err(_) => assert_true(false)
   }
@@ -203,7 +222,9 @@ test "ES256 sign and verify round trip" {
       assert_true(false)
     }
     Ok(public_key) => {
-      match sign_es256(payload, private_key) {
+      let sign_key = JwtKey::ES256(private_key)
+      let verify_key = JwtKey::ES256(public_key)
+      match sign(payload, sign_key) {
         Err(e) => {
           println("sign error: \{e}")
           assert_true(false)
@@ -213,7 +234,7 @@ test "ES256 sign and verify round trip" {
           assert_true(token.has_prefix("eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9."))
 
           // Verify
-          match verify_es256(token, public_key) {
+          match verify(token, verify_key) {
             Ok(decoded) => assert_eq(decoded, payload)
             Err(e) => {
               println("verify error: \{e}")
@@ -235,14 +256,17 @@ test "ES256 rejects tampered token" {
   match @p256.derive_public_key(private_key) {
     Err(_) => assert_true(false)
     Ok(public_key) => {
-      match sign_es256(payload, private_key) {
+      let sign_key = JwtKey::ES256(private_key)
+      let verify_key = JwtKey::ES256(public_key)
+      match sign(payload, sign_key) {
         Err(_) => assert_true(false)
         Ok(token) => {
           // Tamper with the payload part
           let tampered = token + "x"
-          match verify_es256(tampered, public_key) {
+          match verify(tampered, verify_key) {
             Ok(_) => assert_true(false) // should fail
-            Err(_) => assert_true(true)
+            Err(InvalidSignature) => assert_true(true)
+            Err(_) => assert_true(false)
           }
         }
       }
@@ -254,7 +278,7 @@ test "ES256 decode header shows ES256 algorithm" {
   let private_key = hex_to_uints(
     "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721",
   )
-  match sign_es256("{\"test\":true}", private_key) {
+  match sign("{\"test\":true}", JwtKey::ES256(private_key)) {
     Err(_) => assert_true(false)
     Ok(token) => {
       match decode_header(token) {
@@ -269,8 +293,11 @@ test "ES256 decode header shows ES256 algorithm" {
 
 test "JWTHeader JSON structure via decode_header" {
   let payload = "{\"test\":true}"
-  let secret = "secret"
-  let token = sign(payload, secret)
+  let key = JwtKey::HS256("secret")
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   // Verify header decodes correctly
   match decode_header(token) {
@@ -283,10 +310,13 @@ test "JWTHeader JSON structure via decode_header" {
 
 test "JWT payload roundtrip with sign and decode" {
   let original_payload = "{\"iss\":\"issuer\",\"sub\":\"subject\",\"aud\":\"audience\",\"exp\":1000,\"nbf\":100,\"iat\":50,\"jti\":\"id\"}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
   // Sign the payload
-  let token = sign(original_payload, secret)
+  let token = match sign(original_payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   // Decode to get payload back
   match decode(token) {
@@ -299,12 +329,15 @@ test "JWT payload roundtrip with sign and decode" {
 
 test "JWT full roundtrip with complex standard claims" {
   let payload = "{\"iss\":\"https://auth.example.com\",\"sub\":\"user-123\",\"aud\":\"api.example.com\",\"exp\":1783928400,\"nbf\":1773928400,\"iat\":1773928400,\"jti\":\"uuid-token-id\"}"
-  let secret = "complex-secret-key"
+  let key = JwtKey::HS256("complex-secret-key")
 
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   // Verify returns the exact payload
-  match verify(token, secret) {
+  match verify(token, key) {
     Ok(verified_payload) => {
       assert_eq(verified_payload, payload)
     }
@@ -315,10 +348,16 @@ test "JWT full roundtrip with complex standard claims" {
 test "JWT header remains constant across different payloads" {
   let payload1 = "{\"data\":\"test1\"}"
   let payload2 = "{\"data\":\"test2\"}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
-  let token1 = sign(payload1, secret)
-  let token2 = sign(payload2, secret)
+  let token1 = match sign(payload1, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let token2 = match sign(payload2, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   // Both tokens should have the same HS256 header
   match (decode_header(token1), decode_header(token2)) {
@@ -332,11 +371,14 @@ test "JWT header remains constant across different payloads" {
 
 test "JWT with minimal claims" {
   let minimal_payload = "{\"sub\":\"user\",\"iat\":1000}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
-  let token = sign(minimal_payload, secret)
+  let token = match sign(minimal_payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
-  match verify(token, secret) {
+  match verify(token, key) {
     Ok(decoded) => {
       assert_eq(decoded, minimal_payload)
     }
@@ -346,9 +388,12 @@ test "JWT with minimal claims" {
 
 test "JWT preserves payload with unicode and special characters" {
   let payload = "{\"iss\":\"https://auth.example.com/path?query=1\",\"sub\":\"user@domain.com\",\"name\":\"John Doe\"}"
-  let secret = "secret"
+  let key = JwtKey::HS256("secret")
 
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   match decode(token) {
     Ok(decoded_payload) => {
@@ -364,7 +409,7 @@ test "ES256 header is different from HS256" {
   )
   let payload = "{\"test\":true}"
 
-  match sign_es256(payload, private_key) {
+  match sign(payload, JwtKey::ES256(private_key)) {
     Err(_) => assert_true(false)
     Ok(token) => {
       match decode_header(token) {
@@ -395,16 +440,13 @@ test "Direct Type Validation for JWT Structures" {
     None,
   )
 
-  
   assert_true(payload.iss == Some("auth.sustech.edu.cn"))
   assert_true(payload.sub == Some("copernicus_123"))
   assert_true(payload.aud == None)
   assert_true(payload.exp == Some(1783928400L))
 
-
   let jwt_obj = new_jwt(header, payload, "mock_signature_string")
 
- 
   assert_eq(jwt_obj.header.alg, "HS256")
   assert_eq(jwt_obj.header.typ, "JWT")
   assert_true(jwt_obj.payload.sub == Some("copernicus_123"))
@@ -448,7 +490,7 @@ test "JWT Claims validation - expiration and timing flags" {
 
   let expired_res = validate_claims(payload, 1800000000L, None, None)
   match expired_res {
-    Err(ValidationError::TokenExpired(curr, exp)) => {
+    Err(TokenExpired(curr, exp)) => {
       assert_eq(curr, 1800000000L)
       assert_eq(exp, 1767225600L)
     }
@@ -457,7 +499,7 @@ test "JWT Claims validation - expiration and timing flags" {
 
   let premature_res = validate_claims(payload, 1700000000L, None, None)
   match premature_res {
-    Err(ValidationError::TokenNotYetValid(curr, nbf)) => {
+    Err(TokenNotYetValid(curr, nbf)) => {
       assert_eq(curr, 1700000000L)
       assert_eq(nbf, 1735689600L)
     }
@@ -479,37 +521,43 @@ test "JWT Claims validation - metadata mismatch" {
   // Issuer mismatch
   let iss_res = validate_claims(payload, 0L, Some("hacker-issuer"), None)
   match iss_res {
-    Err(ValidationError::InvalidIssuer(name)) => assert_eq(name, "trusted-issuer")
+    Err(InvalidIssuer(name)) => assert_eq(name, "trusted-issuer")
     _ => assert_true(false)
   }
 
   // Audience mismatch
   let aud_res = validate_claims(payload, 0L, None, Some("wrong-audience"))
   match aud_res {
-    Err(ValidationError::InvalidAudience(name)) => assert_eq(name, "expected-audience")
+    Err(InvalidAudience(name)) => assert_eq(name, "expected-audience")
     _ => assert_true(false)
   }
 }
 
 test "JWT HS256 Sign and Verify Success" {
-  let secret = "my_super_secret_key_123"
+  let key = JwtKey::HS256("my_super_secret_key_123")
   let payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\",\"admin\":true}"
   
-  let token = sign(payload, secret)
-  let result = verify(token, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let result = verify(token, key)
   
   match result {
-  Ok(p) => assert_eq(p, payload)
-  Err(e) => fail("Expected Ok, but got Err: \{e}")
-}
+    Ok(p) => assert_eq(p, payload)
+    Err(e) => fail("Expected Ok, but got Err: \{e}")
+  }
 }
 
 test "Benchmark JWT HS256 verification speed" {
-  let secret = "production_secure_channel_secret_key_2026"
+  let key = JwtKey::HS256("production_secure_channel_secret_key_2026")
   let payload = "{\"sub\":\"user_999\",\"role\":\"admin\",\"iss\":\"stream_gateway\"}"
-  let token = sign(payload, secret)
+  let token = match sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   for i = 0; i < 10000; i = i + 1 {
-    let _ = verify(token, secret)
+    let _ = verify(token, key)
   }
 }

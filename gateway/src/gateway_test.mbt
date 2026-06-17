@@ -104,7 +104,10 @@ test "parse_gateway_claims - exp is not a number returns error" {
 test "execute_security_filter - valid token not expired is allowed" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"iss\":\"auth.example.com\",\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, secret, 1000000000L)
@@ -117,7 +120,10 @@ test "execute_security_filter - valid token not expired is allowed" {
 test "execute_security_filter - valid token with guest role" {
   let payload = "{\"sub\":\"guest1\",\"exp\":2000000000}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, secret, 1000000000L)
@@ -129,7 +135,10 @@ test "execute_security_filter - valid token with guest role" {
 test "execute_security_filter - expired token is blocked" {
   let payload = "{\"sub\":\"user123\",\"exp\":1500000000,\"iss\":\"auth.example.com\",\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, secret, 2000000000L)
@@ -142,7 +151,10 @@ test "execute_security_filter - expired token is blocked" {
 test "execute_security_filter - token expired exactly at boundary" {
   let payload = "{\"sub\":\"user123\",\"exp\":1500000000,\"role\":\"editor\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, secret, 1500000000L)
@@ -155,7 +167,10 @@ test "execute_security_filter - wrong secret is blocked" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"role\":\"admin\"}"
   let correct_secret = "correct-secret"
   let wrong_secret = "wrong-secret"
-  let token = @mb_jwt.sign(payload, correct_secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(correct_secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, wrong_secret, 1000000000L)
@@ -167,7 +182,10 @@ test "execute_security_filter - wrong secret is blocked" {
 test "execute_security_filter - tampered token is blocked" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   // Manually tamper with the token: replace payload part
   // token format: header.payload.signature
@@ -217,7 +235,10 @@ test "execute_security_filter - invalid token format is blocked" {
 test "execute_security_filter - missing sub in claims is blocked" {
   let payload = "{\"exp\":2000000000,\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, secret, 1000000000L)
@@ -229,7 +250,10 @@ test "execute_security_filter - missing sub in claims is blocked" {
 test "execute_security_filter - missing exp in claims is blocked" {
   let payload = "{\"sub\":\"user123\",\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, secret, 1000000000L)
@@ -241,7 +265,10 @@ test "execute_security_filter - missing exp in claims is blocked" {
 test "execute_security_filter - token not yet valid (nbf in future) is blocked" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"nbf\":1500000000,\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   // current_time < nbf => should be blocked
   let ctx = new_stream_context(token)
@@ -255,7 +282,10 @@ test "execute_security_filter - token not yet valid (nbf in future) is blocked" 
 test "execute_security_filter - token valid exactly at nbf boundary" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"nbf\":1000000000,\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   // current_time == nbf => should be allowed (nbf is inclusive lower bound)
   let ctx = new_stream_context(token)
@@ -268,7 +298,10 @@ test "execute_security_filter - token valid exactly at nbf boundary" {
 test "execute_security_filter - token with nbf and exp in valid window" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"nbf\":500000000,\"role\":\"editor\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   // nbf(500M) <= current(1000M) < exp(2000M) => allowed
   let ctx = new_stream_context(token)
@@ -281,7 +314,10 @@ test "execute_security_filter - token with nbf and exp in valid window" {
 test "execute_security_filter - token with nbf=0 (not set) behaves normally" {
   let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"role\":\"admin\"}"
   let secret = "test-secret"
-  let token = @mb_jwt.sign(payload, secret)
+  let token = match @mb_jwt.sign(payload, @mb_jwt.JwtKey::HS256(secret)) {
+    Ok(t) => t
+    Err(e) => { assert_true(false); return }
+  }
 
   // nbf defaults to 0L => skip check, normal exp check
   let ctx = new_stream_context(token)
@@ -303,7 +339,10 @@ test "execute_security_filter - all fields correct allows multiple concurrent us
   ]
 
   for p in payloads {
-    let token = @mb_jwt.sign(p, secret)
+    let token = match @mb_jwt.sign(p, @mb_jwt.JwtKey::HS256(secret)) {
+      Ok(t) => t
+      Err(e) => { assert_true(false); return }
+    }
     let ctx = new_stream_context(token)
     execute_security_filter(ctx, secret, current_time)
     assert_true(ctx.is_allowed)

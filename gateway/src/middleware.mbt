@@ -29,15 +29,16 @@ pub fn execute_security_filter(
   let payload_json = match @mb_jwt.verify(ctx.token, key) {
     Err(e) => {
       ctx.is_allowed = false
+      // verify() only ever returns crypto-level errors (Format, Signature, Algorithm, Crypto).
+      // Business-rule errors (Expired, NotYetValid, Issuer, Audience) are thrown exclusively
+      // by validate_claims() in Step 3, so they are not matched here.
       ctx.error_message = match e {
         @mb_jwt.InvalidSignature => "Crypto Blocked: Invalid signature"
         @mb_jwt.InvalidFormat => "Crypto Blocked: Malformed token format"
         @mb_jwt.AlgorithmMismatch(_) => "Crypto Blocked: Algorithm mismatch"
         @mb_jwt.CryptoError(msg) => "Crypto Blocked: \{msg}"
-        @mb_jwt.TokenExpired(_, _) => "Gateway Blocked: Token has expired"
-        @mb_jwt.TokenNotYetValid(_, _) => "Gateway Blocked: Token is not yet valid (nbf)"
-        @mb_jwt.InvalidIssuer(_) => "Gateway Blocked: Invalid issuer"
-        @mb_jwt.InvalidAudience(_) => "Gateway Blocked: Invalid audience"
+        // validate_claims() handles these; they are never returned by verify()
+        _ => "Crypto Blocked: Verification failed"
       }
       return
     }

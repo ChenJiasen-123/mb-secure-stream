@@ -265,16 +265,19 @@ The following is a complete, copy-pasteable example that signs a JWT, passes it 
 
 ```moonbit
 // === Step 1: Sign a token with user claims ===
-let secret = "my-cluster-secret"
+let key = @mb_jwt.JwtKey::HS256("my-cluster-secret")
 let current_time = 1000000000L  // e.g. Unix timestamp
 let future_exp = 2000000000L
 
 let payload = "{\"sub\":\"user_abc123\",\"exp\":\{future_exp},\"iss\":\"auth.example.com\",\"role\":\"admin\"}"
-let token = @mb_jwt.sign(payload, secret)
+let token = match @mb_jwt.sign(payload, key) {
+  Ok(t) => t
+  Err(_) => { abort("sign failed") }
+}
 
 // === Step 2: Create gateway context and run security filter ===
 let ctx = new_stream_context(token)
-execute_security_filter(ctx, secret, current_time)
+execute_security_filter(ctx, key, current_time)
 
 // === Step 3: Check result ===
 if ctx.is_allowed {
@@ -356,8 +359,8 @@ $$T_i = \mathbf{Poly1305}_K(N_i, \mathbf{AAD}_i \parallel \text{Length} \paralle
 | Function | Description |
 |----------|-------------|
 | `new_stream_context(token) -> StreamContext` | Create a security context |
-| `execute_security_filter(ctx, secret, current_time)` | Run the full security pipeline |
-| `parse_gateway_claims(json) -> Result[GatewayClaims, String]` | Parse gateway-specific claims |
+| `execute_security_filter(ctx, key, current_time)` | Run the full security pipeline with **algorithm-polymorphic** `JwtKey` (`HS256` or `ES256`). Returns gradated error messages: `InvalidSignature` → IP-fencing trigger, `TokenExpired` → refresh trigger |
+| `parse_gateway_claims(json) -> Result[GatewayClaims, String]` | Parse gateway-specific claims (`sub`, `exp` required; `nbf`, `iss`, `role` optional → `Option[...]`) |
 
 ---
 

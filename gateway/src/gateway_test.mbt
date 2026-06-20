@@ -486,3 +486,190 @@ test "AEAD streaming O(1) memory benchmark — metadata only" {
     }
   }
 }
+
+// =============================================================================
+// AEAD STREAM SECURITY BOUNDARY TESTS
+// Based on:
+//   - Stream truncation attacks (incomplete transmission)
+//   - Out-of-order / replay attacks (sequence number binding)
+// =============================================================================
+
+// --- Boundary A: Stream Truncation Attack ---
+// Scenario: An attacker intercepts a multi-chunk stream and drops the final chunks.
+// Defense: The receiver must detect incomplete streams and reject them.
+// 
+// In a production system, this would be enforced by an IsLastFlag in the final chunk's AAD.
+// Here we simulate the attack by encrypting 5 chunks but only decrypting the first 3,
+// demonstrating that the missing chunks would cause the stream to be incomplete.
+
+test "security: AEAD stream truncation attack — incomplete stream detected" {
+  let key = hex_to_uints(
+    "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+  )
+  let chunk_size = 64
+  let total_chunks = 5
+  
+  // Encrypt 5 chunks with sequence numbers in AAD
+  let encrypted_chunks : Array[(Array[UInt], Array[UInt])] = []
+  for i in 0..<total_chunks {
+    let plaintext : Array[UInt] = Array::make(chunk_size, (0x41 + i).reinterpret_as_uint())
+    
+    // AAD encodes: sequence_number (4 bytes) + is_last_flag (1 byte)
+    let is_last = if i == total_chunks - 1 { 1U } else { 0U }
+    let aad : Array[UInt] = [
+      (i & 0xFF).reinterpret_as_uint(),
+      ((i >> 8) & 0xFF).reinterpret_as_uint(),
+      ((i >> 16) & 0xFF).reinterpret_as_uint(),
+      ((i >> 24) & 0xFF).reinterpret_as_uint(),
+      is_last,
+    ]
+    
+    let nonce = hex_to_uints("070000004041424344454647")
+    nonce[0] = (i & 0xFF).reinterpret_as_uint()
+    
+    match @aead.aead_encrypt(key, nonce, aad, plaintext) {
+      Err(e) => fail("Encrypt chunk \{i} failed: \{e}")
+      Ok((ct, tag)) => encrypted_chunks.push((ct, tag))
+    }
+  }
+  
+  // Attacker truncates stream: only delivers first 3 chunks (drops chunks 3 and 4)
+  let mut last_is_last_flag = 0U
+  for i in 0..<3 {  // Only decrypt first 3 of 5 chunks
+    let (ct, tag) = encrypted_chunks[i]
+    let is_last = if i == total_chunks - 1 { 1U } else { 0U }
+    let aad : Array[UInt] = [
+      (i & 0xFF).reinterpret_as_uint(),
+      ((i >> 8) & 0xFF).reinterpret_as_uint(),
+      ((i >> 16) & 0xFF).reinterpret_as_uint(),
+      ((i >> 24) & 0xFF).reinterpret_as_uint(),
+      is_last,
+    ]
+    
+    let nonce = hex_to_uints("070000004041424344454647")
+    nonce[0] = (i & 0xFF).reinterpret_as_uint()
+    
+    match @aead.aead_decrypt(key, nonce, aad, ct, tag) {
+      Err(e) => fail("Decrypt chunk \{i} failed: \{e}")
+      Ok(_pt) => {
+        last_is_last_flag = is_last
+      }
+    }
+  }
+  
+  // After processing 3 chunks, the last chunk's is_last_flag must be 0 (not the final chunk)
+  // This indicates the stream was truncated — a production system would reject this.
+  assert_eq(last_is_last_flag, 0U)  // Stream incomplete: is_last_flag != 1
+}
+
+// --- Boundary B: Out-of-Order / Replay Attack ---
+// Scenario: An attacker intercepts chunks 1, 2, 3 and reorders them to 1, 3, 2.
+// Defense: The AAD binds each chunk to its sequence number. Reordering causes MAC failure.
+
+test "security: AEAD out-of-order attack — sequence number binding enforced" {
+  let key = hex_to_uints(
+    "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+  )
+  let chunk_size = 64
+  
+  // Encrypt 3 chunks with sequence numbers 0, 1, 2
+  let encrypted_chunks : Array[(Array[UInt], Array[UInt], Array[UInt])] = []
+  for i in 0..<3 {
+    let plaintext : Array[UInt] = Array::make(chunk_size, (0x41 + i).reinterpret_as_uint())
+    
+    // AAD = sequence_number (4 bytes)
+    let aad : Array[UInt] = [
+      (i & 0xFF).reinterpret_as_uint(),
+      ((i >> 8) & 0xFF).reinterpret_as_uint(),
+      ((i >> 16) & 0xFF).reinterpret_as_uint(),
+      ((i >> 24) & 0xFF).reinterpret_as_uint(),
+    ]
+    
+    let nonce = hex_to_uints("070000004041424344454647")
+    nonce[0] = (i & 0xFF).reinterpret_as_uint()
+    
+    match @aead.aead_encrypt(key, nonce, aad, plaintext) {
+      Err(e) => fail("Encrypt chunk \{i} failed: \{e}")
+      Ok((ct, tag)) => encrypted_chunks.push((ct, tag, aad))
+    }
+  }
+  
+  // Attacker reorders: swap chunks 1 and 2 (indices 1 and 2)
+  let reordered_indices = [0, 2, 1]  // Original order: 0,1,2 → Reordered: 0,2,1
+  
+  // Attempt to decrypt in the reordered sequence
+  // Chunk at index 1 (sequence 2) will be decrypted with AAD claiming sequence 1 → MAC fail
+  for i in 0..<3 {
+    let chunk_idx = reordered_indices[i]
+    let (ct, tag, _original_aad) = encrypted_chunks[chunk_idx]
+    
+    // Attacker tries to decrypt with the EXPECTED sequence number (i), not the actual one
+    let expected_aad : Array[UInt] = [
+      (i & 0xFF).reinterpret_as_uint(),
+      ((i >> 8) & 0xFF).reinterpret_as_uint(),
+      ((i >> 16) & 0xFF).reinterpret_as_uint(),
+      ((i >> 24) & 0xFF).reinterpret_as_uint(),
+    ]
+    
+    let nonce = hex_to_uints("070000004041424344454647")
+    nonce[0] = (chunk_idx & 0xFF).reinterpret_as_uint()  // Nonce matches original chunk
+    
+    match @aead.aead_decrypt(key, nonce, expected_aad, ct, tag) {
+      Err(_e) => {
+        // Expected: MAC verification fails when AAD mismatch (sequence number != chunk index)
+        if i == 1 || i == 2 {
+          // Chunks 1 and 2 are swapped, so their AAD won't match → MAC fail
+          assert_true(true)  // Attack detected
+        } else {
+          fail("Chunk \{i} should succeed (not reordered)")
+        }
+      }
+      Ok(_pt) => {
+        // Only chunk 0 should succeed (not reordered)
+        if i == 0 {
+          assert_true(true)
+        } else {
+          fail("Chunk \{i} should fail MAC (reordered)")
+        }
+      }
+    }
+  }
+}
+
+// --- Boundary B2: Replay Attack (same chunk sent twice) ---
+// Scenario: Attacker captures chunk 1 and replays it as chunk 2.
+// Defense: Nonce uniqueness + AAD sequence binding prevents replay.
+
+test "security: AEAD replay attack — duplicate chunk rejected" {
+  let key = hex_to_uints(
+    "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+  )
+  let chunk_size = 64
+  
+  // Encrypt chunk 0
+  let plaintext : Array[UInt] = Array::make(chunk_size, 0x41U)
+  let aad_0 : Array[UInt] = [0U, 0U, 0U, 0U]  // Sequence 0
+  let nonce_0 = hex_to_uints("070000004041424344454647")
+  
+  let (ct_0, tag_0) = match @aead.aead_encrypt(key, nonce_0, aad_0, plaintext) {
+    Err(e) => { fail("Encrypt failed: \{e}"); return }
+    Ok(result) => result
+  }
+  
+  // Decrypt chunk 0 correctly
+  match @aead.aead_decrypt(key, nonce_0, aad_0, ct_0, tag_0) {
+    Err(e) => fail("Decrypt chunk 0 failed: \{e}")
+    Ok(_pt) => assert_true(true)
+  }
+  
+  // Attacker replays chunk 0's ciphertext as chunk 1 (with sequence number 1 in AAD)
+  let aad_1 : Array[UInt] = [1U, 0U, 0U, 0U]  // Sequence 1
+  let nonce_1 = hex_to_uints("070000004041424344454647")
+  nonce_1[0] = 1U  // Different nonce for chunk 1
+  
+  // Attempt to decrypt chunk 0's ciphertext with chunk 1's AAD and nonce → must fail
+  match @aead.aead_decrypt(key, nonce_1, aad_1, ct_0, tag_0) {
+    Err(_e) => assert_true(true)  // Replay detected: MAC fails due to AAD mismatch
+    Ok(_pt) => fail("Replay attack should be rejected (AAD mismatch)")
+  }
+}

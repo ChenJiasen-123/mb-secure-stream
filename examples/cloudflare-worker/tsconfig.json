@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler", // 👈 修改这里，支持现代打包工具的解析算法
+    "lib": ["es2022"],
+    "strict": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": [
+    "src/**/*",
+    "*.ts",
+    "*.d.ts"
+  ]
+}

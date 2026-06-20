@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "gateway"
+
+// Values
+pub fn execute_security_filter(StreamContext, @mb_jwt.JwtKey, Int64) -> Unit
+
+pub fn new_stream_context(String) -> StreamContext
+
+pub fn parse_gateway_claims(String) -> Result[GatewayClaims, String]
+
+// Errors
+
+// Types and methods
+pub struct GatewayClaims {
+  sub : String
+  exp : Int64
+  nbf : Int64?
+  iss : String?
+  role : String?
+}
+
+pub struct StreamContext {
+  token : String
+  mut is_allowed : Bool
+  mut error_message : String
+  mut user_role : String
+}
+
+// Type aliases
+
+// Traits
+

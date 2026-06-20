@@ -4,5 +4,20 @@
     "moonbitlang/core/json",
     { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-p256", "alias": "p256" },
     { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-aead", "alias": "aead" }
-  ]
+  ],
+  "is-main": true,
+  "link": {
+    "wasm": {
+      "exports": [
+        "new_stream_context",
+        "execute_security_filter"
+      ]
+    },
+    "wasm-gc": {
+      "exports": [
+        "new_stream_context",
+        "execute_security_filter"
+      ]
+    }
+  }
 }

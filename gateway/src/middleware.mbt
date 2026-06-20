@@ -6,6 +6,7 @@ pub struct StreamContext {
 }
 
 // initializes StreamContext with the incoming JWT token and default values for other fields
+//| @FFI.export
 pub fn new_stream_context(token : String) -> StreamContext {
   { token, is_allowed: false, error_message: "", user_role: "" }
 }
@@ -21,6 +22,8 @@ pub fn new_stream_context(token : String) -> StreamContext {
 ///     eliminating hand-rolled clock checks.
 ///  3. Accepts `JwtKey` (not just HS256) so the filter works with ES256
 ///     (ECDSA P-256) out of the box when a public-key channel is deployed.
+
+//| @FFI.export
 pub fn execute_security_filter(
   ctx : StreamContext,
   key : @mb_jwt.JwtKey,
@@ -90,3 +93,5 @@ pub fn execute_security_filter(
     }
   }
 }
+
+fn main {}

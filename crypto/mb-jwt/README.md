@@ -30,7 +30,8 @@ match @mb_jwt.verify(token, key) {
 | `sign(payload, key)` | Create signed JWT (HS256 or ES256) |
 | `verify(token, key)` | Constant-time verify + decode |
 | `decode(token)` | Decode without verification |
-| `validate_claims(payload, time, iss, aud)` | Validate exp, nbf, iss, aud |
+| `decode_header(token)` | Decode header without verification |
+| `validate_claims(payload, current_time, expected_iss, expected_aud)` | Validate exp, nbf, iss, aud |
 | `base64url_encode(data)` | Base64URL encode |
 | `base64url_decode(encoded)` | Base64URL decode |
 

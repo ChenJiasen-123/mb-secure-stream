@@ -28,7 +28,9 @@ Token → verify() → parse_gateway_claims() → validate_claims() → StreamCo
 let key = @mb_jwt.JwtKey::HS256("secret")
 let ctx = new_stream_context(token)
 execute_security_filter(ctx, key, current_time)
-if ctx.is_allowed { println("role: \{ctx.user_role}") }
+if ctx.is_allowed {
+  println("role: " + ctx.user_role)
+}
 ```
 
 ## Tests

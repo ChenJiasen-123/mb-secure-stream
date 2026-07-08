@@ -3,7 +3,8 @@
   "targets": {
     "getrandom_native.mbt": ["native"],
     "getrandom_js.mbt": ["js"],
-    "getrandom_wasm.mbt": ["wasm", "wasm-gc"]
+    "getrandom_wasm.mbt": ["wasm", "wasm-gc"],
+    "getrandom_test.mbt": ["native"]
   },
   "native-stub": [
     "getrandom_stub.c"

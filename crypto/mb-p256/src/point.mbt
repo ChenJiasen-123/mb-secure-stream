@@ -5,8 +5,8 @@
 // Curve equation: y^2 = x^3 - 3x + b (mod p)
 // b = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
 
-// Curve coefficient b in Montgomery form
-let curve_b_mont : FixedArray[UInt] = FixedArray::make(8, 0U)
+// Curve coefficient b in Montgomery form (not currently used, reserved for future extensions)
+// let curve_b_mont : FixedArray[UInt] = FixedArray::make(8, 0U)
 
 // Generator point Gx (raw, big-endian hex bytes -> little-endian limbs)
 let gen_x_raw : FixedArray[UInt] = [
@@ -83,17 +83,18 @@ fn point_to_affine(p : ProjectivePoint) -> AffinePoint {
   }
 }
 
-/// Convert affine to projective.
-fn affine_to_projective(p : AffinePoint) -> ProjectivePoint {
-  if p.infinity {
-    return point_identity()
-  }
-  ProjectivePoint::{
-    x: fe_to_mont(p.x),
-    y: fe_to_mont(p.y),
-    z: fe_copy(field_one),
-  }
-}
+/// Convert affine to projective (reserved for future extensions).
+/// Not used in current implementation.
+// fn affine_to_projective(p : AffinePoint) -> ProjectivePoint {
+//   if p.infinity {
+//     return point_identity()
+//   }
+//   ProjectivePoint::{
+//     x: fe_to_mont(p.x),
+//     y: fe_to_mont(p.y),
+//     z: fe_copy(field_one),
+//   }
+// }
 
 /// Get curve_b in Montgomery form (lazy init pattern).
 fn get_curve_b_mont() -> FixedArray[UInt] {

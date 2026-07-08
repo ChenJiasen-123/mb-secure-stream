@@ -6,3 +6,11 @@ target
 .moonagent/
 node_modules/
 .wrangler/
+*.lock
+package-lock.json
+examples/cloudflare-worker/package-lock.json
+gateway/target/
+gateway/_build/
+crypto/*/target/
+crypto/*/_build/
+crypto/*/.mooncakes/

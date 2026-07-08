@@ -5,12 +5,14 @@ pub struct StreamContext {
   mut user_role : String
 }
 
-//| @FFI.export
+/// Creates a new stream security context for a given token.
 pub fn new_stream_context(token : String) -> StreamContext {
   { token, is_allowed: false, error_message: "", user_role: "" }
 }
 
-//| @FFI.export
+/// Executes the security filter on the given stream context.
+/// Validates the JWT token against the provided key and current time,
+/// and populates the context's `is_allowed`, `user_role`, and `error_message` fields.
 pub fn execute_security_filter(
   ctx : StreamContext,
   key : @mb_jwt.JwtKey,
@@ -70,5 +72,3 @@ pub fn execute_security_filter(
     }
   }
 }
-
-fn main {}

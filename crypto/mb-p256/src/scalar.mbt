@@ -69,33 +69,35 @@ fn sc_sub_n_if_needed(r : FixedArray[UInt], carry : UInt) -> FixedArray[UInt] {
   out
 }
 
-/// Scalar subtraction: r = a - b mod n
-fn sc_sub(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
-  let r = sc_new()
-  let mut borrow = 0U
-  for i in 0..<8 {
-    let (d, b2) = carrying_sub(a[i], b[i], borrow)
-    r[i] = d
-    borrow = b2
-  }
-  let mask = if borrow != 0U { 0xFFFFFFFFU } else { 0U }
-  let mut carry = 0U
-  let out = sc_new()
-  for i in 0..<8 {
-    let (sum, c) = carrying_add(r[i], scalar_n[i] & mask, carry)
-    out[i] = sum
-    carry = c
-  }
-  out
-}
+/// Scalar subtraction: r = a - b mod n (reserved for future extensions)
+/// Not used in current implementation.
+// fn sc_sub(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
+//   let r = sc_new()
+//   let mut borrow = 0U
+//   for i in 0..<8 {
+//     let (d, b2) = carrying_sub(a[i], b[i], borrow)
+//     r[i] = d
+//     borrow = b2
+//   }
+//   let mask = if borrow != 0U { 0xFFFFFFFFU } else { 0U }
+//   let mut carry = 0U
+//   let out = sc_new()
+//   for i in 0..<8 {
+//     let (sum, c) = carrying_add(r[i], scalar_n[i] & mask, carry)
+//     out[i] = sum
+//     carry = c
+//   }
+//   out
+// }
 
-/// Scalar negation: r = -a mod n
-fn sc_neg(a : FixedArray[UInt]) -> FixedArray[UInt] {
-  if sc_is_zero(a) {
-    return sc_copy(a)
-  }
-  sc_sub(scalar_n, a)
-}
+/// Scalar negation: r = -a mod n (reserved for future extensions)
+/// Not used in current implementation.
+// fn sc_neg(a : FixedArray[UInt]) -> FixedArray[UInt] {
+//   if sc_is_zero(a) {
+//     return sc_copy(a)
+//   }
+//   sc_sub(scalar_n, a)
+// }
 
 /// Scalar multiplication: r = a * b mod n using Barrett reduction.
 fn sc_mul(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {

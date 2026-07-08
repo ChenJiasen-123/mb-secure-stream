@@ -1,5 +1,5 @@
 {
-  "is-main": false,
+  "is_main": false,
   "import": [
     "ChenJiasen-123/mb-secure-stream/crypto/mb-hash/sha2",
     { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }

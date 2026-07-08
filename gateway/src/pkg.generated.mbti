@@ -1,10 +1,20 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "gateway"
 
+import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt",
+}
+
 // Values
-pub fn execute_security_filter(StreamContext, @mb_jwt.JwtKey, Int64) -> Unit
+pub fn execute_security_filter(StreamContext, @mb-jwt.JwtKey, Int64) -> Unit
+
+pub fn new_rate_limiter(Int64, Int64) -> RateLimiter
+
+pub fn new_replay_protector(Int64) -> ReplayProtector
 
 pub fn new_stream_context(String) -> StreamContext
+
+pub fn new_stream_session(String, String, String, Int64) -> StreamSession
 
 pub fn parse_gateway_claims(String) -> Result[GatewayClaims, String]
 
@@ -19,12 +29,40 @@ pub struct GatewayClaims {
   role : String?
 }
 
+pub struct RateLimiter {
+  max_tokens : Int64
+  refill_rate : Int64
+  mut tokens : Int64
+  mut last_refill_time : Int64
+}
+pub fn RateLimiter::try_consume(Self, Int64) -> Bool
+
+pub struct ReplayProtector {
+  seen_nonces : Map[String, Int64]
+  window_size : Int64
+}
+pub fn ReplayProtector::check_nonce(Self, String, Int64) -> Bool
+pub fn ReplayProtector::evict_expired(Self, Int64) -> Unit
+
 pub struct StreamContext {
   token : String
   mut is_allowed : Bool
   mut error_message : String
   mut user_role : String
 }
+
+pub struct StreamSession {
+  session_id : String
+  user_sub : String
+  user_role : String
+  created_at : Int64
+  mut last_activity : Int64
+  mut packet_count : Int64
+  mut byte_count : Int64
+  is_active : Bool
+}
+pub fn StreamSession::is_expired(Self, Int64, Int64) -> Bool
+pub fn StreamSession::record_packet(Self, Int64, Int64) -> Unit
 
 // Type aliases
 

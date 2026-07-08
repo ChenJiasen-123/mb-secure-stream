@@ -35,7 +35,7 @@ pub struct JWT {
 pub(all) enum JwtKey {
   HS256(String)
   ES256(Array[UInt])
-} derive(Debug, Eq, Show)
+} derive(Debug, Eq)
 
 ///| Represents all errors that can occur during JWT operations.
 pub enum JWTError {
@@ -47,7 +47,20 @@ pub enum JWTError {
   TokenNotYetValid(Int64, Int64)   // Token is not yet valid (current time, not before time)
   InvalidIssuer(String)            // Issuer does not match
   InvalidAudience(String)          // Audience does not match
-} derive(Debug, Eq, Show)
+} derive(Debug, Eq)
+
+pub fn JWTError::to_debug_string(self : JWTError) -> String {
+  match self {
+    InvalidFormat => "InvalidFormat"
+    InvalidSignature => "InvalidSignature"
+    AlgorithmMismatch(alg) => "AlgorithmMismatch(\{alg})"
+    CryptoError(msg) => "CryptoError(\{msg})"
+    TokenExpired(now, exp) => "TokenExpired(\{now}, \{exp})"
+    TokenNotYetValid(now, nbf) => "TokenNotYetValid(\{now}, \{nbf})"
+    InvalidIssuer(iss) => "InvalidIssuer(\{iss})"
+    InvalidAudience(aud) => "InvalidAudience(\{aud})"
+  }
+}
 
 ///| Creates a new JWT Header with the given algorithm and type.
 pub fn new_jwt_header(alg : String, typ : String) -> JWTHeader {

@@ -27,10 +27,14 @@ Industrial-grade JWT gateway and cryptography library for MoonBit.
 ## Quick Start
 
 ```bash
-# Run JWT tests
-cd crypto/mb-jwt && moon test
+# Workspace check and full test suite
+moon check --target all
+moon fmt -- --deny-warn
+moon info -- --deny-warn
+moon test
 
-# Run gateway tests
+# Module-level smoke tests
+cd crypto/mb-jwt && moon test
 cd ../../gateway && moon test
 ```
 

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mb_jwt"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt"
 
 import {
   "moonbitlang/core/debug",
@@ -19,9 +19,9 @@ pub fn base64url_encode(Array[UInt]) -> String
 
 pub fn base64url_encode_string(String) -> String
 
-pub fn decode(String) -> Result[String, String]
+pub fn decode(String) -> Result[String, JWTError]
 
-pub fn decode_header(String) -> Result[String, String]
+pub fn decode_header(String) -> Result[String, JWTError]
 
 pub fn new_jwt(JWTHeader, JWTPayload, String) -> JWT
 
@@ -29,15 +29,11 @@ pub fn new_jwt_header(String, String) -> JWTHeader
 
 pub fn new_jwt_payload(String?, String?, String?, Int64?, Int64?, Int64?, String?) -> JWTPayload
 
-pub fn sign(String, String) -> String
+pub fn sign(String, JwtKey) -> Result[String, JWTError]
 
-pub fn sign_es256(String, Array[UInt]) -> Result[String, String]
+pub fn validate_claims(JWTPayload, Int64, String?, String?) -> Result[Unit, JWTError]
 
-pub fn validate_claims(JWTPayload, Int64, String?, String?) -> Result[Unit, ValidationError]
-
-pub fn verify(String, String) -> Result[String, String]
-
-pub fn verify_es256(String, Array[UInt]) -> Result[String, String]
+pub fn verify(String, JwtKey) -> Result[String, JWTError]
 
 // Errors
 
@@ -47,6 +43,18 @@ pub struct JWT {
   payload : JWTPayload
   signature : String
 } derive(Eq, @debug.Debug)
+
+pub enum JWTError {
+  InvalidFormat
+  InvalidSignature
+  AlgorithmMismatch(String)
+  CryptoError(String)
+  TokenExpired(Int64, Int64)
+  TokenNotYetValid(Int64, Int64)
+  InvalidIssuer(String)
+  InvalidAudience(String)
+} derive(Eq, @debug.Debug)
+pub fn JWTError::to_debug_string(Self) -> String
 
 pub struct JWTHeader {
   alg : String
@@ -63,13 +71,9 @@ pub struct JWTPayload {
   jti : String?
 } derive(Eq, ToJson, @debug.Debug, @json.FromJson)
 
-pub enum ValidationError {
-  InvalidSignature
-  InvalidFormat
-  TokenExpired(Int64, Int64)
-  TokenNotYetValid(Int64, Int64)
-  InvalidIssuer(String)
-  InvalidAudience(String)
+pub(all) enum JwtKey {
+  HS256(String)
+  ES256(Array[UInt])
 } derive(Eq, @debug.Debug)
 
 // Type aliases

@@ -8,11 +8,6 @@ pub struct GatewayClaims {
 }
 
 /// Manual JSON deserialization for GatewayClaims.
-/// We implement this manually (equivalent to derive(FromJson)) because the
-/// MoonBit auto-derived `from_json` takes a `JsonPath` parameter whose
-/// construction is inconvenient here. The logic is kept simple and
-/// field-by-field, avoiding duplication of JWTPayload definitions.
-/// @json.parse is an error-raising function using try/catch.
 pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] {
   let parsed = try @json.parse(json_str) catch {
     _ => return Err("Gateway Error: Failed to parse payload JSON")

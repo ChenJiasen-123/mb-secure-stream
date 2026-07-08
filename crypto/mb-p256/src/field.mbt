@@ -121,10 +121,10 @@ fn fe_sub(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   out
 }
 
-/// Field negation: r = -a mod p
-fn fe_neg(a : FixedArray[UInt]) -> FixedArray[UInt] {
-  fe_sub(field_zero, a)
-}
+/// Field negation: r = -a mod p (reserved for future extensions)
+// fn fe_neg(a : FixedArray[UInt]) -> FixedArray[UInt] {
+//   fe_sub(field_zero, a)
+// }
 
 /// Montgomery multiplication: r = a * b * R^{-1} mod p
 /// Uses the special structure of p where p' = 1.
@@ -273,26 +273,26 @@ fn fe_inv(a : FixedArray[UInt]) -> FixedArray[UInt] {
 }
 
 /// Field square root: r = a^{(p+1)/4} mod p (valid since p = 3 mod 4)
-fn fe_sqrt(a : FixedArray[UInt]) -> FixedArray[UInt] {
-  // (p+1)/4 = 3fffffff c0000000 40000000 00000000 00000000 40000000 00000000 00000000
-  let exp : FixedArray[UInt] = [
-    0x00000000U, 0x00000000U, 0x40000000U, 0x00000000U,
-    0x00000000U, 0x40000000U, 0xC0000000U, 0x3FFFFFFFU,
-  ]
-  let mut result = fe_copy(field_one)
-  let mut base = fe_copy(a)
-  for i in 0..<8 {
-    let mut limb = exp[i]
-    for _j in 0..<32 {
-      if (limb & 1U) != 0U {
-        result = fe_mul(result, base)
-      }
-      base = fe_sqr(base)
-      limb = limb >> 1
-    }
-  }
-  result
-}
+/// Reserved for future extensions; not used in current implementation.
+// fn fe_sqrt(a : FixedArray[UInt]) -> FixedArray[UInt] {
+//   let exp : FixedArray[UInt] = [
+//     0x00000000U, 0x00000000U, 0x40000000U, 0x00000000U,
+//     0x00000000U, 0x40000000U, 0xC0000000U, 0x3FFFFFFFU,
+//   ]
+//   let mut result = fe_copy(field_one)
+//   let mut base = fe_copy(a)
+//   for i in 0..<8 {
+//     let mut limb = exp[i]
+//     for _j in 0..<32 {
+//       if (limb & 1U) != 0U {
+//         result = fe_mul(result, base)
+//       }
+//       base = fe_sqr(base)
+//       limb = limb >> 1
+//     }
+//   }
+//   result
+// }
 
 /// Check if a field element is zero.
 fn fe_is_zero(a : FixedArray[UInt]) -> Bool {
@@ -349,18 +349,18 @@ fn fe_to_bytes(a : FixedArray[UInt]) -> Array[UInt] {
 }
 
 /// Check if the field element (non-Montgomery) is less than p.
-fn fe_is_valid(a : FixedArray[UInt]) -> Bool {
-  // Compare from MSB to LSB
-  let mut i = 7
-  while i >= 0 {
-    if a[i] < field_p[i] {
-      return true
-    }
-    if a[i] > field_p[i] {
-      return false
-    }
-    i = i - 1
-  }
-  false // equal to p is not valid
-}
+/// Reserved for future validation; not used in current implementation.
+// fn fe_is_valid(a : FixedArray[UInt]) -> Bool {
+//   let mut i = 7
+//   while i >= 0 {
+//     if a[i] < field_p[i] {
+//       return true
+//     }
+//     if a[i] > field_p[i] {
+//       return false
+//     }
+//     i = i - 1
+//   }
+//   false
+// }
 

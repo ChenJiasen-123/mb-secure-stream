@@ -1,0 +1,55 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-p256"
+
+// Values
+pub fn derive_public_key(Array[UInt]) -> Result[Array[UInt], String]
+
+pub fn ecdh(Array[UInt], Array[UInt]) -> Result[Array[UInt], String]
+
+pub fn ecdh_bytes(Bytes, Bytes) -> Result[Bytes, String]
+
+pub fn ecdsa_keygen(Array[UInt]) -> Result[ECDSAKeyPair, String]
+
+pub fn ecdsa_keygen_bytes(Bytes) -> Result[ECDSAKeyPair, String]
+
+pub fn ecdsa_sign(Array[UInt], FixedArray[UInt]) -> Result[ECDSASignature, String]
+
+pub fn ecdsa_sign_bytes(Bytes, Bytes) -> Result[ECDSASignature, String]
+
+pub fn ecdsa_sign_message(Array[UInt], Array[UInt]) -> Result[ECDSASignature, String]
+
+pub fn ecdsa_verify(Array[UInt], FixedArray[UInt], ECDSASignature) -> Result[Bool, String]
+
+pub fn ecdsa_verify_bytes(Bytes, Bytes, ECDSASignature) -> Result[Bool, String]
+
+pub fn ecdsa_verify_message(Array[UInt], Array[UInt], ECDSASignature) -> Result[Bool, String]
+
+// Errors
+
+// Types and methods
+pub struct AffinePoint {
+  x : FixedArray[UInt]
+  y : FixedArray[UInt]
+  infinity : Bool
+}
+
+pub struct ECDSAKeyPair {
+  private_key : Array[UInt]
+  public_key : Array[UInt]
+}
+
+pub(all) struct ECDSASignature {
+  r : Array[UInt]
+  s : Array[UInt]
+}
+
+pub struct ProjectivePoint {
+  x : FixedArray[UInt]
+  y : FixedArray[UInt]
+  z : FixedArray[UInt]
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,51 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-hash/sha2"
+
+// Values
+pub fn get_k32() -> Array[UInt]
+
+pub fn get_k64() -> Array[UInt64]
+
+pub fn hash_to_hex(FixedArray[UInt]) -> String
+
+pub fn rotate_right_u32(UInt, Int) -> UInt
+
+pub fn rotate_right_u64(UInt64, Int) -> UInt64
+
+pub fn sha256_state() -> FixedArray[UInt]
+
+pub fn sha512_state() -> FixedArray[UInt64]
+
+// Errors
+
+// Types and methods
+pub struct Sha256 {
+  state : FixedArray[UInt]
+  buffer : FixedArray[UInt]
+  mut buffer_len : Int
+  mut total_len : UInt64
+}
+pub fn Sha256::digest(Array[UInt]) -> FixedArray[UInt]
+pub fn Sha256::digest_bytes(Bytes) -> FixedArray[UInt]
+pub fn Sha256::digest_string(String) -> FixedArray[UInt]
+pub fn Sha256::finalize(Self) -> FixedArray[UInt]
+pub fn Sha256::new() -> Self
+pub fn Sha256::update(Self, Array[UInt]) -> Unit
+
+pub struct Sha512 {
+  state : FixedArray[UInt64]
+  buffer : FixedArray[UInt]
+  mut buffer_len : Int
+  mut total_len : UInt64
+}
+pub fn Sha512::digest(Array[UInt]) -> FixedArray[UInt64]
+pub fn Sha512::digest_bytes(Bytes) -> FixedArray[UInt64]
+pub fn Sha512::digest_string(String) -> FixedArray[UInt64]
+pub fn Sha512::finalize(Self) -> FixedArray[UInt64]
+pub fn Sha512::new() -> Self
+pub fn Sha512::update(Self, Array[UInt]) -> Unit
+
+// Type aliases
+
+// Traits
+

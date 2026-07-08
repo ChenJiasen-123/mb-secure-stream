@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-hkdf"
+
+// Values
+pub fn hkdf_expand_sha256(Array[UInt], Array[UInt], Int) -> Result[Array[UInt], String]
+
+pub fn hkdf_expand_sha256_bytes(Bytes, Bytes, Int) -> Result[Bytes, String]
+
+pub fn hkdf_expand_sha512(Array[UInt], Array[UInt], Int) -> Result[Array[UInt], String]
+
+pub fn hkdf_expand_sha512_bytes(Bytes, Bytes, Int) -> Result[Bytes, String]
+
+pub fn hkdf_extract_sha256(Array[UInt], Array[UInt]) -> Array[UInt]
+
+pub fn hkdf_extract_sha256_bytes(Bytes, Bytes) -> Bytes
+
+pub fn hkdf_extract_sha512(Array[UInt], Array[UInt]) -> Array[UInt]
+
+pub fn hkdf_extract_sha512_bytes(Bytes, Bytes) -> Bytes
+
+pub fn hkdf_sha256(Array[UInt], Array[UInt], Array[UInt], Int) -> Result[Array[UInt], String]
+
+pub fn hkdf_sha256_bytes(Bytes, Bytes, Bytes, Int) -> Result[Bytes, String]
+
+pub fn hkdf_sha512(Array[UInt], Array[UInt], Array[UInt], Int) -> Result[Array[UInt], String]
+
+pub fn hkdf_sha512_bytes(Bytes, Bytes, Bytes, Int) -> Result[Bytes, String]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

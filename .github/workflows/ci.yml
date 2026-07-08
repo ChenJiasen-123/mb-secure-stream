@@ -7,46 +7,34 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  mbt-ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | sh
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - run: moon check -d
 
-  fmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - name: Install MoonBit
+        shell: bash
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | sh
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - run: |
+          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
+          echo 'export PATH="$HOME/.moon/bin:$PATH"' >> "$BASH_ENV"
+          moon version
+
+      - name: moon check -d
+        shell: bash
+        run: moon check -d
+
+      - name: moon fmt --check
+        shell: bash
+        run: |
           moon fmt --check crypto/mb-aead crypto/mb-chacha \
             crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
             crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
             crypto/mb-poly1305 gateway
 
-  info:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | sh
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - run: moon info
+      - name: moon info
+        shell: bash
+        run: moon info
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | sh
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - run: moon test
+      - name: moon test
+        shell: bash
+        run: moon test

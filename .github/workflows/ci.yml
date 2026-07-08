@@ -15,8 +15,17 @@ jobs:
       - name: Install MoonBit
         shell: bash
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
-          echo 'export PATH="$HOME/.moon/bin:$PATH"' >> "$BASH_ENV"
+          # Try multiple download sources
+          if curl -fsSL "https://github.com/moonbitlang/moon/releases/latest/download/moon-linux-x86_64.tar.gz" -o /tmp/moon.tar.gz 2>/dev/null; then
+            tar -xzf /tmp/moon.tar.gz -C /tmp
+            sudo mv /tmp/moon /usr/local/bin/moon
+          elif curl -fsSL "https://github.com/moonbitlang/moon/releases/latest/download/moon-x86_64-unknown-linux-musl.tar.gz" -o /tmp/moon.tar.gz 2>/dev/null; then
+            tar -xzf /tmp/moon.tar.gz -C /tmp
+            sudo mv /tmp/moon /usr/local/bin/moon
+          else
+            echo "Failed to download MoonBit"
+            exit 1
+          fi
           moon version
 
       - name: moon check -d

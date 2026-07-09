@@ -6,6 +6,14 @@ pub enum Priority {
   Critical
 } derive(Eq, Hash)
 
+// Ensure all variants are recognized as used within this module.
+fn _priority_variants_used() -> Unit {
+  let _ = Low
+  let _ = Normal
+  let _ = High
+  let _ = Critical
+}
+
 /// A weighted fair queue entry for stream arbitration.
 pub struct QueueEntry {
   session_id : String

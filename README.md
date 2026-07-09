@@ -15,22 +15,29 @@ Industrial-grade JWT gateway and cryptography library for MoonBit.
 | Module | Description |
 |--------|-------------|
 | `crypto/mb-jwt` | JWT sign/verify (HS256, ES256) with constant-time verification |
-| `crypto/mb-hmac` | HMAC-SHA256 |
-| `crypto/mb-hash` | SHA-2 family |
-| `crypto/mb-chacha` | ChaCha20 stream cipher |
-| `crypto/mb-aead` | Poly1305 AEAD |
-| `crypto/mb-p256` | ECDSA P-256 |
-| `crypto/mb-hkdf` | HKDF key derivation |
-| `crypto/mb-getrandom` | Secure random bytes |
+| `crypto/mb-hmac` | HMAC-SHA256 and HMAC-SHA512 |
+| `crypto/mb-hash` | SHA-2 family (SHA-256, SHA-512) |
+| `crypto/mb-chacha` | ChaCha20 and XChaCha20 stream ciphers (RFC 8439) |
+| `crypto/mb-aead` | ChaCha20-Poly1305 AEAD (RFC 8439) |
+| `crypto/mb-poly1305` | Poly1305 one-time authenticator (RFC 7539) |
+| `crypto/mb-p256` | ECDSA P-256 (secp256r1) signatures |
+| `crypto/mb-hkdf` | HKDF key derivation (RFC 5869) |
+| `crypto/mb-getrandom` | Secure random bytes (OS CSPRNG) |
 | `gateway` | JWT security filter middleware |
 
 ## Quick Start
 
 ```bash
+# Install MoonBit
+curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+
 # Workspace check and full test suite
-moon check --target all
-moon fmt -- --deny-warn
-moon info -- --deny-warn
+moon check -d
+moon fmt --check crypto/mb-aead crypto/mb-chacha \
+  crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
+  crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
+  crypto/mb-poly1305 gateway
+moon info
 moon test
 
 # Module-level smoke tests

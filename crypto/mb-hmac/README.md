@@ -1,42 +1,37 @@
-# MB Crypto Mac Library
+# mb-hmac
 
-A cryptographic MAC (Message Authentication Code) library for secure message authentication.
+HMAC (Hash-Based Message Authentication Code) for MoonBit — SHA-256 and SHA-512 variants.
 
-## Features
+## Status
 
-- Secure message authentication
-- Multiple MAC algorithm support
-- Easy-to-use API
-- Cross-platform compatibility
+Production-ready. Constant-time comparison for secure MAC verification.
 
-## Installation
+## API
 
-```bash
-# Add installation instructions here
-```
+| Function | Description |
+|----------|-------------|
+| `hmac_sha256(message, key)` | Compute HMAC-SHA256 (Array[UInt] input) |
+| `hmac_sha256_bytes(message, key)` | Compute HMAC-SHA256 (Bytes input) |
+| `hmac_sha256_string(message, key)` | Compute HMAC-SHA256 (String input) |
+| `verify_hmac_sha256(message, key, mac)` | Constant-time HMAC-SHA256 verification |
+| `verify_hmac_sha256_bytes(message, key, mac)` | Constant-time verification (Bytes input) |
+| `hmac_sha512(message, key)` | Compute HMAC-SHA512 (Array[UInt] input) |
+| `hmac_sha512_bytes(message, key)` | Compute HMAC-SHA512 (Bytes input) |
+| `hmac_sha512_string(message, key)` | Compute HMAC-SHA512 (String input) |
+| `verify_hmac_sha512(message, key, mac)` | Constant-time HMAC-SHA512 verification |
+| `verify_hmac_sha512_bytes(message, key, mac)` | Constant-time verification (Bytes input) |
 
 ## Usage
 
 ```moonbit
-// Generate MAC
-let mac = @hmac.generateMAC(message, key);
+let key = string_to_uints("secret-key")
+let msg = string_to_uints("hello world")
 
-// Verify MAC
-let isValid = @hmac.verifyMAC(message, key, mac);
+let mac = hmac_sha256(msg, key)
+let ok = verify_hmac_sha256(msg, key, mac)
 ```
 
-## API Reference
+## Tests
 
-### `generateMAC(message, key)`
-Generates a MAC for the given message using the provided key.
-
-### `verifyMAC(message, key, mac)`
-Verifies a MAC against the message and key.
-
-## License
-
-MIT License
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first.
+```bash
+cd crypto/mb-hmac && moon test

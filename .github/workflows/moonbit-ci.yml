@@ -13,7 +13,7 @@ jobs:
 
       - name: Install MoonBit
         run: |
-          curl -fsSL https://moonbitlang.com/install.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: MoonBit workspace check

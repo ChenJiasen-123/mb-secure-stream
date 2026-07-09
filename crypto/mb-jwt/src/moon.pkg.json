@@ -3,7 +3,7 @@
   "import": [
     { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" },
     { "path": "moonbitlang/core/json", "alias": "json" },
-    { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-hmac", "alias": "hmac" },
-    { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-p256", "alias": "p256" }
+    { "path": "crypto/mb-hmac", "alias": "hmac" },
+    { "path": "crypto/mb-p256", "alias": "p256" }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "is-main": false,
   "import": [
-    { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt", "alias": "mb_jwt" },
+    { "path": "crypto/mb-jwt", "alias": "mb_jwt" },
     "moonbitlang/core/json"
   ]
 }

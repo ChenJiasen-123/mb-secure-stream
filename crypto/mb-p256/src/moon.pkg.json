@@ -1,8 +1,8 @@
 {
   "is_main": false,
   "import": [
-    "ChenJiasen-123/mb-secure-stream/crypto/mb-hash/sha2",
-    { "path": "ChenJiasen-123/mb-secure-stream/crypto/mb-hmac", "alias": "hmac" }
+    "crypto/mb-hash/sha2",
+    { "path": "crypto/mb-hmac", "alias": "hmac" }
   ],
   "test-import": [
     { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }

@@ -4,14 +4,16 @@ pub enum Priority {
   Normal
   High
   Critical
-} derive(Eq, Hash)
+}
 
-// Ensure all variants are recognized as used within this module.
-fn _priority_variants_used() -> Unit {
-  let _ = Low
-  let _ = Normal
-  let _ = High
-  let _ = Critical
+// Helper to ensure all Priority variants are recognized as used.
+fn _use_all_priorities(p : Priority) -> Priority {
+  match p {
+    Low => Normal
+    Normal => High
+    High => Critical
+    Critical => Low
+  }
 }
 
 /// A weighted fair queue entry for stream arbitration.

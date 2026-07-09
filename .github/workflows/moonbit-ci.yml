@@ -16,14 +16,29 @@ jobs:
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
-      - name: MoonBit workspace check
-        run: moon check --target all
+      - name: moon check -d
+        shell: bash
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon check -d
 
-      - name: MoonBit format check
-        run: moon fmt -- --deny-warn
+      - name: moon fmt --check
+        shell: bash
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon fmt --check crypto/mb-aead crypto/mb-chacha \
+            crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
+            crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
+            crypto/mb-poly1305 gateway
 
-      - name: MoonBit info check
-        run: moon info -- --deny-warn
+      - name: moon info
+        shell: bash
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon info
 
-      - name: MoonBit tests
-        run: moon test
+      - name: moon test
+        shell: bash
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon test

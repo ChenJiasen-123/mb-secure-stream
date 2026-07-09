@@ -213,3 +213,202 @@ test "gateway_claims_parse_missing_sub" {
   let result = parse_gateway_claims("{\"exp\":2000000000}")
   assert_true(match result { Err(msg) => msg.contains("sub"); _ => false })
 }
+
+test "gateway_claims_parse_non_object_json" {
+  let result = parse_gateway_claims("\"string\"")
+  assert_true(match result { Err(msg) => msg.contains("object"); _ => false })
+}
+
+test "gateway_claims_parse_missing_exp" {
+  let result = parse_gateway_claims("{\"sub\":\"user1\",\"iss\":\"issuer\"}")
+  assert_true(match result { Err(msg) => msg.contains("exp"); _ => false })
+}
+
+test "gateway_claims_parse_all_optional_fields" {
+  let json = "{\"sub\":\"user1\",\"exp\":2000000000,\"nbf\":1000000000,\"iss\":\"my-issuer\",\"role\":\"admin\"}"
+  let result = parse_gateway_claims(json)
+  assert_true(match result {
+    Ok(claims) => claims.sub == "user1" && claims.exp == 2000000000L
+    _ => false
+  })
+  assert_true(match result {
+    Ok(claims) => match claims.nbf { Some(n) => n == 1000000000L; _ => false }
+    _ => false
+  })
+  assert_true(match result {
+    Ok(claims) => match claims.iss { Some(i) => i == "my-issuer"; _ => false }
+    _ => false
+  })
+  assert_true(match result {
+    Ok(claims) => match claims.role { Some(r) => r == "admin"; _ => false }
+    _ => false
+  })
+}
+
+test "gateway_claims_parse_optional_fields_none" {
+  let json = "{\"sub\":\"user1\",\"exp\":2000000000}"
+  let result = parse_gateway_claims(json)
+  assert_true(match result {
+    Ok(claims) => claims.sub == "user1"
+    _ => false
+  })
+  assert_true(match result {
+    Ok(claims) => match claims.nbf { None => true; _ => false }
+    _ => false
+  })
+  assert_true(match result {
+    Ok(claims) => match claims.iss { None => true; _ => false }
+    _ => false
+  })
+  assert_true(match result {
+    Ok(claims) => match claims.role { None => true; _ => false }
+    _ => false
+  })
+}
+
+test "security_filter_valid_token" {
+  // Create a valid signed JWT and verify it passes
+  let payload = "{\"sub\":\"user1\",\"role\":\"admin\",\"exp\":2000000000}"
+  let key = @mb_jwt.JwtKey::HS256("secret")
+  let token = match @mb_jwt.sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let ctx = new_stream_context(token)
+  execute_security_filter(ctx, key, 1000000L)
+  assert_true(ctx.is_allowed)
+  assert_eq(ctx.user_role, "admin")
+}
+
+test "security_filter_expired_token" {
+  let payload = "{\"sub\":\"user1\",\"exp\":1000}"
+  let key = @mb_jwt.JwtKey::HS256("secret")
+  let token = match @mb_jwt.sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let ctx = new_stream_context(token)
+  execute_security_filter(ctx, key, 2000L)
+  assert_false(ctx.is_allowed)
+  assert_true(ctx.error_message.contains("expired"))
+}
+
+test "security_filter_nbf_token" {
+  let payload = "{\"sub\":\"user1\",\"nbf\":5000,\"exp\":10000}"
+  let key = @mb_jwt.JwtKey::HS256("secret")
+  let token = match @mb_jwt.sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let ctx = new_stream_context(token)
+  execute_security_filter(ctx, key, 1000L)  // before nbf
+  assert_false(ctx.is_allowed)
+  assert_true(ctx.error_message.contains("nbf"))
+}
+
+test "security_filter_guest_role" {
+  let payload = "{\"sub\":\"guest-user\",\"exp\":2000000000}"
+  let key = @mb_jwt.JwtKey::HS256("secret")
+  let token = match @mb_jwt.sign(payload, key) {
+    Ok(t) => t
+    Err(_) => { assert_true(false); return }
+  }
+  let ctx = new_stream_context(token)
+  execute_security_filter(ctx, key, 1000000L)
+  assert_true(ctx.is_allowed)
+  assert_eq(ctx.user_role, "guest")
+}
+
+test "replay_protector_evict_no_expired" {
+  let rp = new_replay_protector(60L)
+  assert_true(rp.check_nonce("nonce-1", 1000L))
+  // Evict at time far before expiry - should still have entry
+  rp.evict_expired(500L)
+  assert_false(rp.check_nonce("nonce-1", 1001L))  // still fresh
+}
+
+test "fair_queue_priority_order" {
+  let fq = new_fair_queue()
+  // Add in reverse priority order
+  fq.enqueue("low-sess", Low, 100L, 0L)
+  fq.enqueue("normal-sess", Normal, 100L, 1L)
+  fq.enqueue("high-sess", High, 100L, 2L)
+  fq.enqueue("critical-sess", Critical, 100L, 3L)
+
+  // Dequeue should return highest priority first
+  match fq.dequeue() {
+    Some(entry) => assert_eq(entry.session_id, "critical-sess")
+    None => assert_true(false)
+  }
+  match fq.dequeue() {
+    Some(entry) => assert_eq(entry.session_id, "high-sess")
+    None => assert_true(false)
+  }
+  match fq.dequeue() {
+    Some(entry) => assert_eq(entry.session_id, "normal-sess")
+    None => assert_true(false)
+  }
+  match fq.dequeue() {
+    Some(entry) => assert_eq(entry.session_id, "low-sess")
+    None => assert_true(false)
+  }
+}
+
+test "backoff_exponential_growth" {
+  let bo = new_backoff(100L, 10000L)
+  assert_eq(bo.next_delay(), 100L)
+  assert_eq(bo.next_delay(), 200L)
+  assert_eq(bo.next_delay(), 400L)
+  assert_eq(bo.next_delay(), 800L)
+  assert_eq(bo.next_delay(), 1600L)
+}
+
+test "circuit_breaker_half_open_to_closed" {
+  let cb = new_circuit_breaker(3L, 1000L)
+  // Open the circuit
+  cb.record_failure(0L)
+  cb.record_failure(0L)
+  cb.record_failure(0L)
+  assert_false(cb.allow_request(500L))  // still open
+  // After recovery timeout, enters half-open
+  assert_true(cb.allow_request(2000L))
+  // Record success should close the circuit
+  cb.record_success()
+  assert_true(cb.allow_request(3000L))
+  assert_eq(cb.failure_count, 0L)
+}
+
+test "connection_pool_global_limit" {
+  let pool = new_connection_pool(2L)  // only 2 global connections
+  assert_true(pool.acquire("host1", 80L, 0L))
+  assert_true(pool.acquire("host2", 80L, 1L))
+  assert_false(pool.acquire("host3", 80L, 2L))  // exceeded global max
+}
+
+test "connection_pool_host_limit" {
+  let pool = new_connection_pool(100L)
+  // Acquire 12 connections to same host (max per host is 10)
+  let mut acquired = 0L
+  let mut i = 0L
+  while i < 12L {
+    if pool.acquire("same-host", 80L, i) {
+      acquired = acquired + 1L
+    }
+    i = i + 1L
+  }
+  assert_eq(acquired, 10L)  // 10 allowed, 2 blocked by host limit
+}
+
+test "stream_metrics_rolling_window" {
+  let sm = new_stream_metrics(3)  // only 3 samples
+  sm.record_request(100L, 200L, 10L)
+  sm.record_request(200L, 400L, 20L)
+  sm.record_request(300L, 600L, 30L)
+  sm.record_request(400L, 800L, 40L)  // should evict oldest (10ms)
+  assert_eq(sm.avg_duration_ms(), 30L)  // (20+30+40)/3
+}
+
+test "stream_metrics_no_samples" {
+  let sm = new_stream_metrics(100)
+  assert_eq(sm.avg_duration_ms(), 0L)
+}

@@ -1,0 +1,1840 @@
+Total: 159 uncovered line(s) in 18 file(s)
+
+15 uncovered line(s) in crypto\mb-aead\src\aead.mbt:
+
+    | fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
+  4 |   let arr : Array[UInt] = []
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for i in 0..<bytes.length() {
+    |     arr.push(bytes[i].to_int().reinterpret_as_uint())
+    |   }
+    |   arr
+    | }
+    …
+
+    | fn uints_to_bytes(values : Array[UInt]) -> Bytes {
+ 12 |   let buf : Array[Byte] = []
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for value in values {
+ 14 |     buf.push((value & 0xFFU).to_byte())
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+ 16 |   Bytes::from_array(buf)
+    |   ^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | fn pad16_zeros(data_len : Int) -> Array[UInt] {
+    |   let remainder = data_len % 16
+    |   if remainder == 0 {
+ 37 |     return []
+    |     ^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let pad_len = 16 - remainder
+    |   let out : Array[UInt] = []
+    |   let mut i = 0
+    |   while i < pad_len {
+    |     out.push(0U)
+    |     i = i + 1
+    |   }
+    |   out
+    | }
+    …
+
+    | fn constant_time_eq(a : Array[UInt], b : Array[UInt]) -> Bool {
+    |   if a.length() != b.length() {
+ 86 |     return false
+    |     ^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let mut diff = 0U
+    |   for i in 0..<a.length() {
+    |     diff = diff | (a[i] ^ b[i])
+    |   }
+    |   diff == 0U
+    | }
+    …
+
+    | pub fn aead_encrypt(
+    |   key : Array[UInt],
+    |   nonce : Array[UInt],
+    |   aad : Array[UInt],
+    |   plaintext : Array[UInt],
+    | ) -> Result[(Array[UInt], Array[UInt]), String] {
+    |   if key.length() != 32 {
+105 |     return Err("AEAD key must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   if nonce.length() != 12 {
+108 |     return Err("AEAD nonce must be 12 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   // Step 1: Create ChaCha20 at counter=0, generate block for Poly1305 key
+    |   match @chacha.ChaCha20::new_from_uints_with_counter(key, nonce, 0U) {
+112 |     Err(e) => return Err(e)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Ok(cipher) => {
+    |       let block0 = cipher.generate_block() // counter becomes 1
+    |       let poly_key : Array[UInt] = []
+    |       for i in 0..<32 {
+    |         poly_key.push(block0[i])
+    |       }
+    |       // Step 2: Encrypt plaintext (counter starts at 1 since generate_block incremented it)
+    |       let ciphertext = cipher.apply_keystream(plaintext)
+    |       // Step 3: Build mac_data and compute tag
+    |       let mac_data = build_mac_data(aad, ciphertext)
+    |       let tag = @poly1305.poly1305_mac(poly_key, mac_data)
+    |       Ok((ciphertext, tag))
+    |     }
+    |   }
+    | }
+    …
+
+    | pub fn aead_decrypt(
+    |   key : Array[UInt],
+    |   nonce : Array[UInt],
+    |   aad : Array[UInt],
+    |   ciphertext : Array[UInt],
+    |   tag : Array[UInt],
+    | ) -> Result[Array[UInt], String] {
+    |   if key.length() != 32 {
+140 |     return Err("AEAD key must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   if nonce.length() != 12 {
+143 |     return Err("AEAD nonce must be 12 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   if tag.length() != 16 {
+146 |     return Err("AEAD tag must be 16 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   // Step 1: Derive Poly1305 key
+    |   match @chacha.ChaCha20::new_from_uints_with_counter(key, nonce, 0U) {
+150 |     Err(e) => return Err(e)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Ok(cipher) => {
+    |       let block0 = cipher.generate_block()
+    |       let poly_key : Array[UInt] = []
+    |       for i in 0..<32 {
+    |         poly_key.push(block0[i])
+    |       }
+    |       // Step 2: Verify tag BEFORE decrypting (authenticate-then-decrypt)
+    |       let mac_data = build_mac_data(aad, ciphertext)
+    |       let expected_tag = @poly1305.poly1305_mac(poly_key, mac_data)
+    |       if !constant_time_eq(expected_tag, tag) {
+    |         return Err("Authentication failed")
+    |       }
+    |       // Step 3: Decrypt (counter is already 1)
+    |       let plaintext = cipher.apply_keystream(ciphertext)
+    |       Ok(plaintext)
+    |     }
+    |   }
+    | }
+    …
+
+    | pub fn aead_encrypt_bytes(
+    |   key : Bytes,
+    |   nonce : Bytes,
+    |   aad : Bytes,
+    |   plaintext : Bytes,
+    | ) -> Result[(Bytes, Bytes), String] {
+177 |   let key_u = bytes_to_uint_array(key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let nonce_u = bytes_to_uint_array(nonce)
+    |   let aad_u = bytes_to_uint_array(aad)
+    |   let pt_u = bytes_to_uint_array(plaintext)
+    |   match aead_encrypt(key_u, nonce_u, aad_u, pt_u) {
+    |     Err(e) => Err(e)
+    |     Ok((ct, tag)) => Ok((uints_to_bytes(ct), uints_to_bytes(tag)))
+    |   }
+    | }
+    …
+
+    | pub fn aead_decrypt_bytes(
+    |   key : Bytes,
+    |   nonce : Bytes,
+    |   aad : Bytes,
+    |   ciphertext : Bytes,
+    |   tag : Bytes,
+    | ) -> Result[Bytes, String] {
+195 |   let key_u = bytes_to_uint_array(key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let nonce_u = bytes_to_uint_array(nonce)
+    |   let aad_u = bytes_to_uint_array(aad)
+    |   let ct_u = bytes_to_uint_array(ciphertext)
+    |   let tag_u = bytes_to_uint_array(tag)
+    |   match aead_decrypt(key_u, nonce_u, aad_u, ct_u, tag_u) {
+    |     Err(e) => Err(e)
+    |     Ok(pt) => Ok(uints_to_bytes(pt))
+    |   }
+    | }
+    …
+
+27 uncovered line(s) in crypto\mb-chacha\src\chacha20.mbt:
+
+    | fn rotate_left_u32(value : UInt, shift : Int) -> UInt {
+    |   let s = ((shift % 32) + 32) % 32
+    |   if s == 0 {
+  9 |     return value
+    |     ^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   ((value << s) | (value >> (32 - s))) & 0xFFFFFFFFU
+    | }
+    …
+
+    | fn derived_nonce_from_xnonce(xnonce : Array[UInt]) -> FixedArray[UInt] {
+155 |   let nonce = FixedArray::make(3, 0U)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   nonce[0] = 0U
+157 |   nonce[1] = load_le32_from_uints(xnonce, 16)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   nonce[2] = load_le32_from_uints(xnonce, 20)
+    |   nonce
+    | }
+    …
+
+    | pub fn ChaCha20::new(key : Bytes, nonce : Bytes) -> Result[ChaCha20, String] {
+177 |   ChaCha20::new_with_counter(key, nonce, 0U)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::new_from_uints(
+    |   key : Array[UInt],
+    |   nonce : Array[UInt],
+    | ) -> Result[ChaCha20, String] {
+194 |   ChaCha20::new_from_uints_with_counter(key, nonce, 0U)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::new_from_uints_with_counter(
+    |   key : Array[UInt],
+    |   nonce : Array[UInt],
+    |   counter : UInt,
+    | ) -> Result[ChaCha20, String] {
+    |   if key.length() != 32 {
+203 |     return Err("ChaCha20 key must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   if nonce.length() != 12 {
+206 |     return Err("ChaCha20 nonce must be 12 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let key_words = key_words_from_bytes(key)
+    |   let nonce_words = nonce_words_from_bytes(nonce)
+    |   Ok(make_chacha20(key_words, nonce_words, counter))
+    | }
+    …
+
+    | pub fn ChaCha20::set_counter(self : ChaCha20, counter : UInt) -> Unit {
+214 |   self.counter = counter
+    |   ^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::get_counter(self : ChaCha20) -> UInt {
+218 |   self.counter
+    |   ^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::encrypt(
+    |   self : ChaCha20,
+    |   plaintext : Array[UInt],
+    | ) -> Array[UInt] {
+259 |   self.apply_keystream(plaintext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::encrypt_bytes(self : ChaCha20, plaintext : Bytes) -> Bytes {
+263 |   self.apply_keystream_bytes(plaintext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::decrypt(
+    |   self : ChaCha20,
+    |   ciphertext : Array[UInt],
+    | ) -> Array[UInt] {
+270 |   self.apply_keystream(ciphertext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ChaCha20::decrypt_bytes(self : ChaCha20, ciphertext : Bytes) -> Bytes {
+274 |   self.apply_keystream_bytes(ciphertext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | fn xchacha20_from_uints_with_counter(
+    |   key : Array[UInt],
+    |   nonce : Array[UInt],
+    |   counter : UInt,
+    | ) -> Result[XChaCha20, String] {
+286 |   if key.length() != 32 {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     return Err("XChaCha20 key must be 32 bytes")
+    |   }
+289 |   if nonce.length() != 24 {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     return Err("XChaCha20 nonce must be 24 bytes")
+    |   }
+292 |   let key_words = key_words_from_bytes(key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | 
+294 |   let nonce_words = FixedArray::make(4, 0U)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for i in 0..<4 {
+296 |     nonce_words[i] = load_le32_from_uints(nonce, i * 4)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+299 |   let derived_key_words = hchacha20(key_words, nonce_words)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let derived_nonce_words = derived_nonce_from_xnonce(nonce)
+    |   let derived_inner = make_chacha20(derived_key_words, derived_nonce_words, counter)
+    |   Ok(XChaCha20::{ inner: derived_inner })
+    | }
+    …
+
+    | pub fn XChaCha20::new(key : Bytes, nonce : Bytes) -> Result[XChaCha20, String] {
+306 |   XChaCha20::new_with_counter(key, nonce, 0U)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn XChaCha20::new_with_counter(
+    |   key : Bytes,
+    |   nonce : Bytes,
+    |   counter : UInt,
+    | ) -> Result[XChaCha20, String] {
+314 |   let key_uints = bytes_to_uint_array(key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let nonce_uints = bytes_to_uint_array(nonce)
+    |   xchacha20_from_uints_with_counter(key_uints, nonce_uints, counter)
+    | }
+    …
+
+    | pub fn XChaCha20::apply_keystream(
+    |   self : XChaCha20,
+    |   input : Array[UInt],
+    | ) -> Array[UInt] {
+323 |   self.inner.apply_keystream(input)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn XChaCha20::apply_keystream_bytes(
+    |   self : XChaCha20,
+    |   input : Bytes,
+    | ) -> Bytes {
+330 |   self.inner.apply_keystream_bytes(input)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn XChaCha20::encrypt(
+    |   self : XChaCha20,
+    |   plaintext : Array[UInt],
+    | ) -> Array[UInt] {
+337 |   self.inner.encrypt(plaintext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn XChaCha20::encrypt_bytes(
+    |   self : XChaCha20,
+    |   plaintext : Bytes,
+    | ) -> Bytes {
+344 |   self.inner.encrypt_bytes(plaintext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn XChaCha20::decrypt(
+    |   self : XChaCha20,
+    |   ciphertext : Array[UInt],
+    | ) -> Array[UInt] {
+351 |   self.inner.decrypt(ciphertext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn XChaCha20::decrypt_bytes(
+    |   self : XChaCha20,
+    |   ciphertext : Bytes,
+    | ) -> Bytes {
+358 |   self.inner.decrypt_bytes(ciphertext)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+4 uncovered line(s) in crypto\mb-getrandom\src\lib\getrandom_wasm.mbt:
+
+   | pub fn getrandom(len : Int) -> Result[Bytes, String] {
+27 |   if len <= 0 {
+   |   ^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     return Err("Length must be positive")
+   |   }
+30 |   let buf = js_new_uint8array(len)
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   js_get_random_values(buf)
+   |   let bytes_arr : Array[Byte] = []
+   |   let mut i = 0
+   |   while i < len {
+35 |     bytes_arr.push(js_read_byte(buf, i).to_byte())
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     i = i + 1
+   |   }
+38 |   Ok(Bytes::from_array(bytes_arr))
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   | }
+   …
+
+9 uncovered line(s) in crypto\mb-hash\src\sha2\sha256.mbt:
+
+    | pub fn Sha256::update(self : Sha256, input : Array[UInt]) -> Unit {
+    |   let mut input_offset = 0
+    |   let input_len = input.length()
+    |   self.total_len = self.total_len + input_len.to_uint64()
+    | 
+    |   // If we have buffered data, try to fill the buffer and process it
+    |   if self.buffer_len > 0 {
+    |     let space_left = 64 - self.buffer_len
+    |     let to_copy = if input_len < space_left { input_len } else { space_left }
+    |     for i in 0..<to_copy {
+    |       self.buffer[self.buffer_len + i] = input[i]
+    |     }
+    |     self.buffer_len = self.buffer_len + to_copy
+    |     input_offset = to_copy
+    | 
+    |     // If buffer is full, process it
+    |     if self.buffer_len == 64 {
+    |       // Convert buffer to UInt32 array for processing
+106 |       let block = FixedArray::make(16, 0U)
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |       for i in 0..<16 {
+108 |         let idx = i * 4
+    |         ^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |         block[i] = (self.buffer[idx] << 24) |
+    |           (self.buffer[idx + 1] << 16) |
+    |           (self.buffer[idx + 2] << 8) |
+    |           self.buffer[idx + 3]
+    |       }
+114 |       let blocks = FixedArray::make(1, block)
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |       compress256(self.state, blocks)
+    |       self.buffer_len = 0
+    |     }
+    |   }
+    | 
+    |   // Process complete 64-byte blocks directly from input
+    |   while input_offset + 64 <= input_len {
+    |     let block = FixedArray::make(16, 0U)
+    |     for i in 0..<16 {
+    |       let idx = input_offset + i * 4
+    |       block[i] = (input[idx] << 24) |
+    |         (input[idx + 1] << 16) |
+    |         (input[idx + 2] << 8) |
+    |         input[idx + 3]
+    |     }
+    |     let blocks = FixedArray::make(1, block)
+    |     compress256(self.state, blocks)
+    |     input_offset = input_offset + 64
+    |   }
+    | 
+    |   // Buffer any remaining bytes
+    |   while input_offset < input_len {
+    |     self.buffer[self.buffer_len] = input[input_offset]
+    |     self.buffer_len = self.buffer_len + 1
+    |     input_offset = input_offset + 1
+    |   }
+    | }
+    …
+
+    | pub fn Sha256::digest_bytes(input : Bytes) -> FixedArray[UInt] {
+225 |   let sha256 = Sha256::new()
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let arr : Array[UInt] = []
+    |   // Filter out zero bytes to handle UTF-16LE-like encodings from some to_bytes() implementations
+228 |   for i in 0..<input.length() {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     let v = input[i].to_int()
+    |     if v != 0 { arr.push(v.reinterpret_as_uint()) }
+    |   }
+232 |   sha256.update(arr)
+    |   ^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   return sha256.finalize()
+    | }
+    …
+
+    | pub fn Sha256::digest_string(input : String) -> FixedArray[UInt] {
+238 |   let sha256 = Sha256::new()
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let bytes = @utf8.encode(input)
+    |   let arr : Array[UInt] = []
+241 |   for i in 0..<bytes.length() {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     arr.push(bytes[i].to_int().reinterpret_as_uint())
+    |   }
+244 |   sha256.update(arr)
+    |   ^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   return sha256.finalize()
+    | }
+    …
+
+18 uncovered line(s) in crypto\mb-hkdf\src\hkdf.mbt:
+
+    | pub fn hkdf_extract_sha512(salt : Array[UInt], ikm : Array[UInt]) -> Array[UInt] {
+ 94 |   let actual_salt = if salt.length() == 0 {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Array::make(64, 0U)
+    |   } else {
+ 97 |     salt
+    |     ^^^^ 	<-- UNCOVERED
+    |   }
+ 99 |   let prk = @hmac.hmac_sha512(ikm, actual_salt)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   fixed_to_array(prk)
+    | }
+    …
+
+    | pub fn hkdf_expand_sha512(
+    |   prk : Array[UInt],
+    |   info : Array[UInt],
+    |   length : Int
+    | ) -> Result[Array[UInt], String] {
+110 |   let hash_len = 64
+    |   ^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   if length <= 0 {
+112 |     return Err("HKDF-Expand: length must be > 0")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   if length > 255 * hash_len {
+115 |     return Err("HKDF-Expand: length exceeds maximum (16320)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let n = (length + hash_len - 1) / hash_len
+    |   let okm : Array[UInt] = []
+    |   let mut prev : Array[UInt] = []
+    |   for i in 1..=n {
+121 |     let input : Array[UInt] = []
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     for j in 0..<prev.length() {
+    |       input.push(prev[j])
+    |     }
+125 |     for j in 0..<info.length() {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |       input.push(info[j])
+    |     }
+128 |     input.push(i.reinterpret_as_uint() & 0xFFU)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     let block = @hmac.hmac_sha512(input, prk)
+    |     prev = fixed_to_array(block)
+    |     for j in 0..<prev.length() {
+    |       okm.push(prev[j])
+    |     }
+    |   }
+    |   let result : Array[UInt] = []
+    |   for i in 0..<length {
+137 |     result.push(okm[i])
+    |     ^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   Ok(result)
+    | }
+    …
+
+    | pub fn hkdf_sha512(
+    |   salt : Array[UInt],
+    |   ikm : Array[UInt],
+    |   info : Array[UInt],
+    |   length : Int
+    | ) -> Result[Array[UInt], String] {
+149 |   let prk = hkdf_extract_sha512(salt, ikm)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   hkdf_expand_sha512(prk, info, length)
+    | }
+    …
+
+    | pub fn hkdf_extract_sha256_bytes(salt : Bytes, ikm : Bytes) -> Bytes {
+157 |   let result = hkdf_extract_sha256(bytes_to_uints(salt), bytes_to_uints(ikm))
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   uints_to_bytes(result)
+    | }
+    …
+
+    | pub fn hkdf_expand_sha256_bytes(
+    |   prk : Bytes,
+    |   info : Bytes,
+    |   length : Int
+    | ) -> Result[Bytes, String] {
+167 |   match hkdf_expand_sha256(bytes_to_uints(prk), bytes_to_uints(info), length) {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Ok(result) => Ok(uints_to_bytes(result))
+    |     Err(e) => Err(e)
+    |   }
+    | }
+    …
+
+    | pub fn hkdf_sha256_bytes(
+    |   salt : Bytes,
+    |   ikm : Bytes,
+    |   info : Bytes,
+    |   length : Int
+    | ) -> Result[Bytes, String] {
+    |   match hkdf_sha256(
+    |     bytes_to_uints(salt),
+    |     bytes_to_uints(ikm),
+    |     bytes_to_uints(info),
+    |     length,
+    |   ) {
+    |     Ok(result) => Ok(uints_to_bytes(result))
+187 |     Err(e) => Err(e)
+    |     ^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | }
+    …
+
+    | pub fn hkdf_extract_sha512_bytes(salt : Bytes, ikm : Bytes) -> Bytes {
+193 |   let result = hkdf_extract_sha512(bytes_to_uints(salt), bytes_to_uints(ikm))
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   uints_to_bytes(result)
+    | }
+    …
+
+    | pub fn hkdf_expand_sha512_bytes(
+    |   prk : Bytes,
+    |   info : Bytes,
+    |   length : Int
+    | ) -> Result[Bytes, String] {
+203 |   match hkdf_expand_sha512(bytes_to_uints(prk), bytes_to_uints(info), length) {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Ok(result) => Ok(uints_to_bytes(result))
+    |     Err(e) => Err(e)
+    |   }
+    | }
+    …
+
+    | pub fn hkdf_sha512_bytes(
+    |   salt : Bytes,
+    |   ikm : Bytes,
+    |   info : Bytes,
+    |   length : Int
+    | ) -> Result[Bytes, String] {
+216 |   match hkdf_sha512(
+    |   ^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     bytes_to_uints(salt),
+    |     bytes_to_uints(ikm),
+    |     bytes_to_uints(info),
+    |     length,
+    |   ) {
+222 |     Ok(result) => Ok(uints_to_bytes(result))
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Err(e) => Err(e)
+    |   }
+    | }
+    …
+
+15 uncovered line(s) in crypto\mb-hmac\src\hmac.mbt:
+
+    | fn constant_time_eq_bytes(left: FixedArray[UInt], right: Array[UInt]) -> Bool {
+ 56 |   if right.length() != left.length() {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     return false
+    |   }
+    |   let mut diff : UInt = 0U
+ 60 |   for i in 0..<left.length() {
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     diff = diff | (left[i] ^ right[i])
+    |   }
+    |   diff == 0U
+    | }
+    …
+
+    | fn prepare_key_block_sha256(key: Array[UInt]) -> Array[UInt] {
+    |   let block_size = 64
+    |   let block = Array::make(block_size, 0U)
+    |   if key.length() > block_size {
+ 70 |     let key_hash = @sha2.Sha256::digest(key)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     for i in 0..<key_hash.length() {
+    |       block[i] = key_hash[i]
+    |     }
+    |   } else {
+    |     for i in 0..<key.length() {
+    |       block[i] = key[i]
+    |     }
+    |   }
+    |   block
+    | }
+    …
+
+    | fn prepare_key_block_sha512(key: Array[UInt]) -> Array[UInt] {
+    |   let block_size = 128
+    |   let block = Array::make(block_size, 0U)
+    |   if key.length() > block_size {
+ 86 |     let key_hash = @sha2.Sha512::digest(key)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     let key_bytes = sha512_words_to_bytes(key_hash)
+    |     for i in 0..<key_bytes.length() {
+    |       block[i] = key_bytes[i]
+    |     }
+    |   } else {
+    |     for i in 0..<key.length() {
+    |       block[i] = key[i]
+    |     }
+    |   }
+    |   block
+    | }
+    …
+
+    | pub fn verify_hmac_sha256(message: Array[UInt], key: Array[UInt], mac: Array[UInt]) -> Bool {
+134 |   let expected = hmac_sha256(message, key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   constant_time_eq_bytes(expected, mac)
+    | }
+    …
+
+    | pub fn verify_hmac_sha256_bytes(message: Bytes, key: Bytes, mac: Array[UInt]) -> Bool {
+139 |   verify_hmac_sha256(bytes_to_uints(message), bytes_to_uints(key), mac)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn hmac_sha512_string(message: String, key: String) -> FixedArray[UInt] {
+167 |   hmac_sha512(string_to_uints(message), string_to_uints(key))
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn verify_hmac_sha512(message: Array[UInt], key: Array[UInt], mac: Array[UInt]) -> Bool {
+171 |   let expected = hmac_sha512(message, key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   constant_time_eq_bytes(expected, mac)
+    | }
+    …
+
+    | pub fn verify_hmac_sha512_bytes(message: Bytes, key: Bytes, mac: Array[UInt]) -> Bool {
+176 |   verify_hmac_sha512(bytes_to_uints(message), bytes_to_uints(key), mac)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn generateMAC(message: Array[UInt], key: Array[UInt]) -> FixedArray[UInt] {
+180 |   hmac_sha256(message, key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn generateMAC_bytes(message: Bytes, key: Bytes) -> FixedArray[UInt] {
+184 |   hmac_sha256_bytes(message, key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn generateMAC_string(message: String, key: String) -> FixedArray[UInt] {
+188 |   hmac_sha256_string(message, key)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn verifyMAC(message: Array[UInt], key: Array[UInt], mac: Array[UInt]) -> Bool {
+192 |   verify_hmac_sha256(message, key, mac)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn verifyMAC_bytes(message: Bytes, key: Bytes, mac: Array[UInt]) -> Bool {
+196 |   verify_hmac_sha256_bytes(message, key, mac)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn verifyMAC_string(message: String, key: String, mac: Array[UInt]) -> Bool {
+200 |   verify_hmac_sha256(string_to_uints(message), string_to_uints(key), mac)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+7 uncovered line(s) in crypto\mb-jwt\src\jwt.mbt:
+
+    | fn constant_time_eq(a: Array[UInt], b: Array[UInt]) -> Bool {
+ 28 |   let min_len = if a.length() < b.length() { a.length() } else { b.length() }
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   let mut diff : UInt = 0U
+    |   for i in 0..<min_len {
+    |     diff = diff | (a[i] ^ b[i])
+    |   }
+    |   // Also accumulate length difference to make it constant-time
+    |   diff = diff | (a.length().reinterpret_as_uint() ^ b.length().reinterpret_as_uint())
+    |   diff == 0U
+    | }
+    …
+
+    | fn validate_header_algorithm(header_json: String, expected_alg: String) -> Result[Unit, JWTError] {
+    |   let buf = StringBuilder::new()
+    |   for ch in header_json.to_lower().iter() {
+    |     match ch {
+ 87 |       ' ' | '\n' | '\r' | '\t' => () 
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  	<-- UNCOVERED
+    |       _ => buf.write_char(ch)      
+    |     }
+    |   }
+    |   let cleaned = buf.to_string()
+    |   
+    |   if cleaned.contains("\"alg\":\"none\"") {
+    |     return Err(AlgorithmMismatch("alg:none is not permitted (CVE-2016-5431)"))
+    |   }
+    |   
+    |   let expected_pattern = "\"alg\":\"\{expected_alg.to_lower()}\""
+    |   if !cleaned.contains(expected_pattern) {
+    |     return Err(AlgorithmMismatch(expected_alg))
+    |   }
+    |   
+    |   Ok(())
+    | }
+    …
+
+    | pub fn sign(payload: String, key: JwtKey) -> Result[String, JWTError] {
+    |   match key {
+    |     HS256(secret) => {
+    |       let header_encoded = base64url_encode_string(jwt_header_hs256)
+    |       let payload_encoded = base64url_encode_string(payload)
+    |       let signing_input = header_encoded + "." + payload_encoded
+    |       let signature = @hmac.hmac_sha256_string(signing_input, secret)
+    |       let signature_encoded = base64url_encode(fixed_to_array(signature))
+    |       Ok(signing_input + "." + signature_encoded)
+    |     }
+    |     ES256(private_key_bytes) => {
+    |       let header_encoded = base64url_encode_string(jwt_header_es256)
+    |       let payload_encoded = base64url_encode_string(payload)
+    |       let signing_input = header_encoded + "." + payload_encoded
+    |       let input_uints = string_to_uints(signing_input)
+    |       match @p256.ecdsa_sign_message(private_key_bytes, input_uints) {
+133 |         Err(e) => Err(CryptoError(e))
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |         Ok(sig) => {
+    |           let sig_bytes : Array[UInt] = []
+    |           for v in sig.r { sig_bytes.push(v) }
+    |           for v in sig.s { sig_bytes.push(v) }
+    |           let signature_encoded = base64url_encode(sig_bytes)
+    |           Ok(signing_input + "." + signature_encoded)
+    |         }
+    |       }
+    |     }
+    |   }
+    | }
+    …
+
+    | pub fn verify(token: String, key: JwtKey) -> Result[String, JWTError] {
+    |   let parts = match split_token_indices(token) {
+    |     Ok(p) => p
+    |     Err(e) => return Err(e)
+    |   }
+    | 
+    |   let header_json = base64url_decode_range_to_string(token, parts.header_start, parts.header_end)
+    | 
+    |   // 根据密钥类型动态决定预期算法名
+    |   let expected_alg = match key {
+    |     HS256(_) => "HS256"
+    |     ES256(_) => "ES256"
+    |   }
+    | 
+    |   // 传入正确算法进行严格审计
+    |   match validate_header_algorithm(header_json, expected_alg) {
+    |     Err(e) => return Err(e)
+    |     Ok(_) => ()
+    |   }
+    | 
+    |   // 根据 key 变体进行多态分发
+    |   match key {
+    |     HS256(secret) => {
+    |       let signing_input = token[:parts.payload_end].to_owned()
+    |       let expected_signature = @hmac.hmac_sha256_string(signing_input, secret)
+    |       let actual_signature = base64url_decode_range(token, parts.signature_start, parts.signature_end)
+    | 
+    |       if !(constant_time_eq(fixed_to_array(expected_signature), actual_signature)) {
+    |         return Err(InvalidSignature)
+    |       }
+    | 
+    |       let payload_json = base64url_decode_range_to_string(token, parts.payload_start, parts.payload_end)
+    |       Ok(payload_json)
+    |     }
+    |     ES256(public_key) => {
+    |       let signing_input = token[:parts.payload_end].to_owned()
+    |       let input_uints = string_to_uints(signing_input)
+    | 
+    |       let sig_raw = base64url_decode_range(token, parts.signature_start, parts.signature_end)
+    |       if sig_raw.length() != 64 {
+    |         return Err(InvalidSignature)
+    |       }
+    | 
+    |       let r : Array[UInt] = []
+    |       let s : Array[UInt] = []
+    |       for i in 0..<32 { r.push(sig_raw[i]) }
+    |       for i in 32..<64 { s.push(sig_raw[i]) }
+    |       let sig = @p256.ECDSASignature::{ r, s }
+    | 
+    |       match @p256.ecdsa_verify_message(public_key, input_uints, sig) {
+199 |         Err(e) => Err(CryptoError(e))
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |         Ok(valid) =>
+    |           if valid {
+202 |             let payload_json = base64url_decode_range_to_string(token, parts.payload_start, parts.payload_end)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |             Ok(payload_json)
+    |           } else {
+    |             Err(InvalidSignature)
+    |           }
+    |       }
+    |     }
+    |   }
+    | }
+    …
+
+    | pub fn decode(token: String) -> Result[String, JWTError] {
+    |   let parts = match split_token_indices(token) {
+    |     Ok(p) => p
+216 |     Err(e) => return Err(e)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let payload_json = base64url_decode_range_to_string(token, parts.payload_start, parts.payload_end)
+    |   Ok(payload_json)
+    | }
+    …
+
+    | pub fn decode_header(token: String) -> Result[String, JWTError] {
+    |   let parts = match split_token_indices(token) {
+    |     Ok(p) => p
+226 |     Err(e) => return Err(e)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let header_json = base64url_decode_range_to_string(token, parts.header_start, parts.header_end)
+    |   Ok(header_json)
+    | }
+    …
+
+1 uncovered line(s) in crypto\mb-jwt\src\types.mbt:
+
+   | pub fn JWTError::to_debug_string(self : JWTError) -> String {
+53 |   match self {
+   |   ^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     InvalidFormat => "InvalidFormat"
+   |     InvalidSignature => "InvalidSignature"
+   |     AlgorithmMismatch(alg) => "AlgorithmMismatch(\{alg})"
+   |     CryptoError(msg) => "CryptoError(\{msg})"
+   |     TokenExpired(now, exp) => "TokenExpired(\{now}, \{exp})"
+   |     TokenNotYetValid(now, nbf) => "TokenNotYetValid(\{now}, \{nbf})"
+   |     InvalidIssuer(iss) => "InvalidIssuer(\{iss})"
+   |     InvalidAudience(aud) => "InvalidAudience(\{aud})"
+   |   }
+   | }
+   …
+
+8 uncovered line(s) in crypto\mb-p256\src\ecdh.mbt:
+
+   | pub fn ecdh(
+   |   private_key : Array[UInt],
+   |   peer_public_key : Array[UInt],
+   | ) -> Result[Array[UInt], String] {
+   |   if private_key.length() != 32 {
+10 |     return Err("Private key must be 32 bytes")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   | 
+   |   let d = sc_from_bytes(private_key)
+   |   if !sc_is_valid(d) {
+15 |     return Err("Private key out of range")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   | 
+   |   let peer = match parse_public_key(peer_public_key) {
+19 |     Err(e) => return Err(e)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     Ok(p) => p
+   |   }
+   | 
+   |   // shared_point = d * peer_public_key
+   |   let shared = point_mul(d, peer)
+   |   let shared_affine = point_to_affine(shared)
+   |   if shared_affine.infinity {
+27 |     return Err("ECDH produced identity point")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   | 
+   |   // Return x-coordinate as 32 bytes (big-endian)
+   |   Ok(fe_to_bytes(shared_affine.x))
+   | }
+   …
+
+   | pub fn ecdh_bytes(
+   |   private_key : Bytes,
+   |   peer_public_key : Bytes,
+   | ) -> Result[Bytes, String] {
+39 |   match ecdh(bytes_to_uint_array(private_key), bytes_to_uint_array(peer_public_key)) {
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     Err(e) => Err(e)
+   |     Ok(shared) => Ok(uints_to_bytes(shared))
+   |   }
+   | }
+   …
+
+   | pub fn derive_public_key(private_key : Array[UInt]) -> Result[Array[UInt], String] {
+   |   if private_key.length() != 32 {
+48 |     return Err("Private key must be 32 bytes")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   |   let d = sc_from_bytes(private_key)
+   |   if !sc_is_valid(d) {
+52 |     return Err("Private key out of range")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   |   let q = point_mul(d, point_generator())
+   |   let q_affine = point_to_affine(q)
+   |   if q_affine.infinity {
+57 |     return Err("Invalid private key")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   |   let pub_key : Array[UInt] = []
+   |   pub_key.push(0x04U)
+   |   for v in fe_to_bytes(q_affine.x) {
+   |     pub_key.push(v)
+   |   }
+   |   for v in fe_to_bytes(q_affine.y) {
+   |     pub_key.push(v)
+   |   }
+   |   Ok(pub_key)
+   | }
+   …
+
+22 uncovered line(s) in crypto\mb-p256\src\ecdsa.mbt:
+
+    | fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
+ 19 |   let arr : Array[UInt] = []
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for i in 0..<bytes.length() {
+    |     arr.push(bytes[i].to_int().reinterpret_as_uint())
+    |   }
+    |   arr
+    | }
+    …
+
+    | fn uints_to_bytes(values : Array[UInt]) -> Bytes {
+ 27 |   let buf : Array[Byte] = []
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for value in values {
+ 29 |     buf.push((value & 0xFFU).to_byte())
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+ 31 |   Bytes::from_array(buf)
+    |   ^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ecdsa_keygen(private_key_bytes : Array[UInt]) -> Result[ECDSAKeyPair, String] {
+    |   if private_key_bytes.length() != 32 {
+ 37 |     return Err("Private key must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let d = sc_from_bytes(private_key_bytes)
+    |   if !sc_is_valid(d) {
+ 41 |     return Err("Private key out of range")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // Q = d * G
+    |   let q = point_mul(d, point_generator())
+    |   let q_affine = point_to_affine(q)
+    |   if q_affine.infinity {
+ 48 |     return Err("Invalid private key (produces identity)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   let pub_key : Array[UInt] = []
+    |   pub_key.push(0x04U) // uncompressed point prefix
+    |   let x_bytes = fe_to_bytes(q_affine.x)
+    |   let y_bytes = fe_to_bytes(q_affine.y)
+    |   for v in x_bytes {
+    |     pub_key.push(v)
+    |   }
+    |   for v in y_bytes {
+    |     pub_key.push(v)
+    |   }
+    | 
+    |   Ok(ECDSAKeyPair::{ private_key: private_key_bytes, public_key: pub_key })
+    | }
+    …
+
+    | fn parse_public_key(pub_key : Array[UInt]) -> Result[ProjectivePoint, String] {
+    |   if pub_key.length() != 65 || pub_key[0] != 0x04U {
+ 68 |     return Err("Invalid public key format (expected uncompressed)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let x_bytes : Array[UInt] = []
+    |   let y_bytes : Array[UInt] = []
+    |   for i in 1..<33 {
+    |     x_bytes.push(pub_key[i])
+    |   }
+    |   for i in 33..<65 {
+    |     y_bytes.push(pub_key[i])
+    |   }
+    |   let x = fe_from_bytes(x_bytes)
+    |   let y = fe_from_bytes(y_bytes)
+    | 
+    |   // Verify point is on curve: y^2 = x^3 + ax + b (mod p)
+    |   let x_mont = fe_to_mont(x)
+    |   let y_mont = fe_to_mont(y)
+    |   let y2 = fe_sqr(y_mont)
+    |   let x2 = fe_sqr(x_mont)
+    |   let x3 = fe_mul(x2, x_mont)
+    |   let ax = fe_mul(get_curve_a_mont(), x_mont)
+    |   let rhs = fe_add(fe_add(x3, ax), get_curve_b_mont())
+    |   if !fe_eq(y2, rhs) {
+ 90 |     return Err("Point not on curve")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   Ok(ProjectivePoint::{ x: x_mont, y: y_mont, z: fe_copy(field_one) })
+    | }
+    …
+
+    | pub fn ecdsa_sign(
+    |   private_key : Array[UInt],
+    |   message_hash : FixedArray[UInt],
+    | ) -> Result[ECDSASignature, String] {
+    |   if private_key.length() != 32 {
+180 |     return Err("Private key must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   if message_hash.length() != 32 {
+183 |     return Err("Message hash must be 32 bytes (SHA-256)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   let d = sc_from_bytes(private_key)
+    |   if !sc_is_valid(d) {
+188 |     return Err("Private key out of range")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // z = message hash as scalar (truncated to n bits if needed, but SHA-256 is 256 bits = n bits)
+    |   let z_bytes : Array[UInt] = []
+    |   for i in 0..<message_hash.length() {
+    |     z_bytes.push(message_hash[i])
+    |   }
+    |   let z = sc_from_bytes(z_bytes)
+    | 
+    |   // Generate deterministic k using RFC 6979
+    |   let k = rfc6979_generate_k(private_key, message_hash)
+    |   if sc_is_zero(k) || !sc_is_valid(k) {
+201 |     return Err("Failed to generate valid nonce")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // R = k * G
+    |   let r_point = point_mul(k, point_generator())
+    |   let r_affine = point_to_affine(r_point)
+    |   if r_affine.infinity {
+208 |     return Err("Invalid nonce (R is identity)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // r = R.x mod n
+    |   let r = sc_reduce(r_affine.x)
+    |   if sc_is_zero(r) {
+214 |     return Err("Invalid nonce (r = 0)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // s = k^{-1} * (z + r * d) mod n
+    |   let k_inv = sc_inv(k)
+    |   let r_d = sc_mul(r, d)
+    |   let z_plus_rd = sc_add(z, r_d)
+    |   let s = sc_mul(k_inv, z_plus_rd)
+    |   if sc_is_zero(s) {
+223 |     return Err("Invalid nonce (s = 0)")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   Ok(ECDSASignature::{
+    |     r: sc_to_bytes(r),
+    |     s: sc_to_bytes(s),
+    |   })
+    | }
+    …
+
+    | pub fn ecdsa_verify(
+    |   public_key : Array[UInt],
+    |   message_hash : FixedArray[UInt],
+    |   signature : ECDSASignature,
+    | ) -> Result[Bool, String] {
+    |   if message_hash.length() != 32 {
+248 |     return Err("Message hash must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   let q = match parse_public_key(public_key) {
+252 |     Err(e) => return Err(e)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Ok(p) => p
+    |   }
+    | 
+    |   let r = sc_from_bytes(signature.r)
+    |   let s = sc_from_bytes(signature.s)
+    | 
+    |   if !sc_is_valid(r) || !sc_is_valid(s) {
+    |     return Ok(false)
+    |   }
+    | 
+    |   // z = hash as scalar
+    |   let z_bytes : Array[UInt] = []
+    |   for i in 0..<message_hash.length() {
+    |     z_bytes.push(message_hash[i])
+    |   }
+    |   let z = sc_from_bytes(z_bytes)
+    | 
+    |   // u1 = z * s^{-1} mod n
+    |   // u2 = r * s^{-1} mod n
+    |   let s_inv = sc_inv(s)
+    |   let u1 = sc_mul(z, s_inv)
+    |   let u2 = sc_mul(r, s_inv)
+    | 
+    |   // R = u1*G + u2*Q
+    |   let r_point = point_mul2(u1, u2, q)
+    |   let r_affine = point_to_affine(r_point)
+    |   if r_affine.infinity {
+280 |     return Ok(false)
+    |     ^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // Check r == R.x mod n
+    |   let r_x = sc_reduce(r_affine.x)
+    |   let mut eq = 0U
+    |   for i in 0..<8 {
+    |     eq = eq | (r[i] ^ r_x[i])
+    |   }
+    |   Ok(eq == 0U)
+    | }
+    …
+
+    | pub fn ecdsa_keygen_bytes(private_key : Bytes) -> Result[ECDSAKeyPair, String] {
+304 |   ecdsa_keygen(bytes_to_uint_array(private_key))
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ecdsa_sign_bytes(
+    |   private_key : Bytes,
+    |   message : Bytes,
+    | ) -> Result[ECDSASignature, String] {
+311 |   ecdsa_sign_message(bytes_to_uint_array(private_key), bytes_to_uint_array(message))
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | pub fn ecdsa_verify_bytes(
+    |   public_key : Bytes,
+    |   message : Bytes,
+    |   signature : ECDSASignature,
+    | ) -> Result[Bool, String] {
+319 |   ecdsa_verify_message(bytes_to_uint_array(public_key), bytes_to_uint_array(message), signature)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+1 uncovered line(s) in crypto\mb-p256\src\point.mbt:
+
+    | fn point_to_affine(p : ProjectivePoint) -> AffinePoint {
+    |   if point_is_identity(p) {
+ 70 |     return AffinePoint::{
+    |     ^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |       x: fe_copy(field_zero),
+    |       y: fe_copy(field_zero),
+    |       infinity: true,
+    |     }
+    |   }
+    |   let z_inv = fe_inv(p.z)
+    |   let x = fe_mul(p.x, z_inv)
+    |   let y = fe_mul(p.y, z_inv)
+    |   AffinePoint::{
+    |     x: fe_from_mont(x),
+    |     y: fe_from_mont(y),
+    |     infinity: false,
+    |   }
+    | }
+    …
+
+1 uncovered line(s) in crypto\mb-p256\src\scalar.mbt:
+
+    | fn sc_is_valid(a : FixedArray[UInt]) -> Bool {
+    |   if sc_is_zero(a) {
+    |     return false
+    |   }
+    |   // Check a < n
+    |   let mut i = 7
+    |   while i >= 0 {
+    |     if a[i] < scalar_n[i] {
+    |       return true
+    |     }
+    |     if a[i] > scalar_n[i] {
+244 |       return false
+    |       ^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     }
+    |     i = i - 1
+    |   }
+    |   false // equal to n is not valid
+    | }
+    …
+
+8 uncovered line(s) in crypto\mb-poly1305\src\poly1305.mbt:
+
+    | fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
+  2 |   let arr : Array[UInt] = []
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for i in 0..<bytes.length() {
+    |     arr.push(bytes[i].to_int().reinterpret_as_uint())
+    |   }
+    |   arr
+    | }
+    …
+
+    | fn uints_to_bytes(values : Array[UInt]) -> Bytes {
+ 10 |   let buf : Array[Byte] = []
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   for value in values {
+ 12 |     buf.push((value & 0xFFU).to_byte())
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+ 14 |   Bytes::from_array(buf)
+    |   ^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    | }
+    …
+
+    | fn constant_time_eq(left : Array[UInt], right : Array[UInt]) -> Bool {
+    |   if left.length() != right.length() {
+ 19 |     return false
+    |     ^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let mut diff : UInt = 0U
+    |   for i in 0..<left.length() {
+    |     diff = diff | (left[i] ^ right[i])
+    |   }
+    |   diff == 0U
+    | }
+    …
+
+    | pub fn poly1305_mac(key : Array[UInt], message : Array[UInt]) -> Array[UInt] {
+    |   if key.length() != 32 {
+ 34 |     abort("Poly1305 key must be 32 bytes")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | 
+    |   // Clamp r (first 16 bytes of key)
+    |   let r_bytes = FixedArray::make(16, 0U)
+    |   for i in 0..<16 {
+    |     r_bytes[i] = key[i] & 0xFFU
+    |   }
+    |   r_bytes[3] = r_bytes[3] & 0x0FU
+    |   r_bytes[7] = r_bytes[7] & 0x0FU
+    |   r_bytes[11] = r_bytes[11] & 0x0FU
+    |   r_bytes[15] = r_bytes[15] & 0x0FU
+    |   r_bytes[4] = r_bytes[4] & 0xFCU
+    |   r_bytes[8] = r_bytes[8] & 0xFCU
+    |   r_bytes[12] = r_bytes[12] & 0xFCU
+    | 
+    |   // Convert r to 5 limbs of 26 bits
+    |   let r0 : UInt64 = ((r_bytes[0].to_uint64()) |
+    |     (r_bytes[1].to_uint64() << 8) |
+    |     (r_bytes[2].to_uint64() << 16) |
+    |     (r_bytes[3].to_uint64() << 24)) & 0x3FFFFFFUL
+    |   let r1 : UInt64 = ((r_bytes[3].to_uint64() >> 2) |
+    |     (r_bytes[4].to_uint64() << 6) |
+    |     (r_bytes[5].to_uint64() << 14) |
+    |     (r_bytes[6].to_uint64() << 22)) & 0x3FFFFFFUL
+    |   let r2 : UInt64 = ((r_bytes[6].to_uint64() >> 4) |
+    |     (r_bytes[7].to_uint64() << 4) |
+    |     (r_bytes[8].to_uint64() << 12) |
+    |     (r_bytes[9].to_uint64() << 20)) & 0x3FFFFFFUL
+    |   let r3 : UInt64 = ((r_bytes[9].to_uint64() >> 6) |
+    |     (r_bytes[10].to_uint64() << 2) |
+    |     (r_bytes[11].to_uint64() << 10) |
+    |     (r_bytes[12].to_uint64() << 18)) & 0x3FFFFFFUL
+    |   let r4 : UInt64 = (r_bytes[13].to_uint64() |
+    |     (r_bytes[14].to_uint64() << 8) |
+    |     (r_bytes[15].to_uint64() << 16)) & 0x3FFFFFFUL
+    | 
+    |   // Precompute r*5 values for modular reduction
+    |   let s1 : UInt64 = r1 * 5UL
+    |   let s2 : UInt64 = r2 * 5UL
+    |   let s3 : UInt64 = r3 * 5UL
+    |   let s4 : UInt64 = r4 * 5UL
+    | 
+    |   // Accumulator in 5 limbs
+    |   let mut h0 : UInt64 = 0UL
+    |   let mut h1 : UInt64 = 0UL
+    |   let mut h2 : UInt64 = 0UL
+    |   let mut h3 : UInt64 = 0UL
+    |   let mut h4 : UInt64 = 0UL
+    | 
+    |   let msg_len = message.length()
+    |   let mut offset = 0
+    | 
+    |   while offset < msg_len {
+    |     // Determine block size
+    |     let remaining = msg_len - offset
+    |     let block_size = if remaining < 16 { remaining } else { 16 }
+    | 
+    |     // Read block bytes into a temporary buffer (up to 17 bytes with the hibit)
+    |     let block = FixedArray::make(17, 0U)
+    |     for i in 0..<block_size {
+    |       block[i] = message[offset + i] & 0xFFU
+    |     }
+    |     // Append 0x01 after the block bytes
+    |     block[block_size] = 1U
+    | 
+    |     // Convert block to 5 limbs (little-endian)
+    |     let b0 : UInt64 = block[0].to_uint64() |
+    |       (block[1].to_uint64() << 8) |
+    |       (block[2].to_uint64() << 16) |
+    |       (block[3].to_uint64() << 24)
+    |     let n0 : UInt64 = b0 & 0x3FFFFFFUL
+    | 
+    |     let b1 : UInt64 = block[3].to_uint64() |
+    |       (block[4].to_uint64() << 8) |
+    |       (block[5].to_uint64() << 16) |
+    |       (block[6].to_uint64() << 24)
+    |     let n1 : UInt64 = (b1 >> 2) & 0x3FFFFFFUL
+    | 
+    |     let b2 : UInt64 = block[6].to_uint64() |
+    |       (block[7].to_uint64() << 8) |
+    |       (block[8].to_uint64() << 16) |
+    |       (block[9].to_uint64() << 24)
+    |     let n2 : UInt64 = (b2 >> 4) & 0x3FFFFFFUL
+    | 
+    |     let b3 : UInt64 = block[9].to_uint64() |
+    |       (block[10].to_uint64() << 8) |
+    |       (block[11].to_uint64() << 16) |
+    |       (block[12].to_uint64() << 24)
+    |     let n3 : UInt64 = (b3 >> 6) & 0x3FFFFFFUL
+    | 
+    |     let b4 : UInt64 = block[12].to_uint64() |
+    |       (block[13].to_uint64() << 8) |
+    |       (block[14].to_uint64() << 16) |
+    |       (block[15].to_uint64() << 24) |
+    |       (block[16].to_uint64() << 32)
+    |     let n4 : UInt64 = (b4 >> 8) & 0x3FFFFFFUL
+    | 
+    |     // Add block to accumulator
+    |     h0 = h0 + n0
+    |     h1 = h1 + n1
+    |     h2 = h2 + n2
+    |     h3 = h3 + n3
+    |     h4 = h4 + n4
+    | 
+    |     // Multiply accumulator by r (schoolbook), reduce mod 2^130 - 5
+    |     let d0 : UInt64 = h0 * r0 + h1 * s4 + h2 * s3 + h3 * s2 + h4 * s1
+    |     let d1 : UInt64 = h0 * r1 + h1 * r0 + h2 * s4 + h3 * s3 + h4 * s2
+    |     let d2 : UInt64 = h0 * r2 + h1 * r1 + h2 * r0 + h3 * s4 + h4 * s3
+    |     let d3 : UInt64 = h0 * r3 + h1 * r2 + h2 * r1 + h3 * r0 + h4 * s4
+    |     let d4 : UInt64 = h0 * r4 + h1 * r3 + h2 * r2 + h3 * r1 + h4 * r0
+    | 
+    |     // Carry propagation
+    |     let mut c : UInt64 = d0 >> 26
+    |     h0 = d0 & 0x3FFFFFFUL
+    |     let dd1 = d1 + c
+    |     c = dd1 >> 26
+    |     h1 = dd1 & 0x3FFFFFFUL
+    |     let dd2 = d2 + c
+    |     c = dd2 >> 26
+    |     h2 = dd2 & 0x3FFFFFFUL
+    |     let dd3 = d3 + c
+    |     c = dd3 >> 26
+    |     h3 = dd3 & 0x3FFFFFFUL
+    |     let dd4 = d4 + c
+    |     c = dd4 >> 26
+    |     h4 = dd4 & 0x3FFFFFFUL
+    |     h0 = h0 + c * 5UL
+    |     c = h0 >> 26
+    |     h0 = h0 & 0x3FFFFFFUL
+    |     h1 = h1 + c
+    | 
+    |     offset = offset + block_size
+    |   }
+    | 
+    |   // Final reduction: fully reduce h mod 2^130 - 5
+    |   // One more carry propagation
+    |   let mut c : UInt64 = h1 >> 26
+    |   h1 = h1 & 0x3FFFFFFUL
+    |   h2 = h2 + c
+    |   c = h2 >> 26
+    |   h2 = h2 & 0x3FFFFFFUL
+    |   h3 = h3 + c
+    |   c = h3 >> 26
+    |   h3 = h3 & 0x3FFFFFFUL
+    |   h4 = h4 + c
+    |   c = h4 >> 26
+    |   h4 = h4 & 0x3FFFFFFUL
+    |   h0 = h0 + c * 5UL
+    |   c = h0 >> 26
+    |   h0 = h0 & 0x3FFFFFFUL
+    |   h1 = h1 + c
+    | 
+    |   // Compute g = h + 5, check if g < 2^130 (meaning h >= p)
+    |   let mut g0 : UInt64 = h0 + 5UL
+    |   c = g0 >> 26
+    |   g0 = g0 & 0x3FFFFFFUL
+    |   let mut g1 : UInt64 = h1 + c
+    |   c = g1 >> 26
+    |   g1 = g1 & 0x3FFFFFFUL
+    |   let mut g2 : UInt64 = h2 + c
+    |   c = g2 >> 26
+    |   g2 = g2 & 0x3FFFFFFUL
+    |   let mut g3 : UInt64 = h3 + c
+    |   c = g3 >> 26
+    |   g3 = g3 & 0x3FFFFFFUL
+    |   let mut g4 : UInt64 = h4 + c
+    |   // If g4 bit 26 is set, g >= 2^130, meaning h >= p, so use g
+    |   // mask is all-ones if h >= p, all-zeros otherwise
+    |   let mask : UInt64 = (g4 >> 26) - 1UL // 0 if g4>=2^26, 0xFFFF... if not
+    |   // Actually: if g4 >> 26 >= 1, then h >= p, mask = 0 (use g)
+    |   // if g4 >> 26 == 0, then h < p, mask = 0xFFFFFFFFFFFFFFFF (use h)
+    |   let nmask : UInt64 = mask.lnot()
+    |   g4 = g4 & 0x3FFFFFFUL
+    | 
+    |   h0 = (h0 & mask) | (g0 & nmask)
+    |   h1 = (h1 & mask) | (g1 & nmask)
+    |   h2 = (h2 & mask) | (g2 & nmask)
+    |   h3 = (h3 & mask) | (g3 & nmask)
+    |   h4 = (h4 & mask) | (g4 & nmask)
+    | 
+    |   // Convert from 5x26-bit limbs to 4x32-bit words
+    |   let f0 : UInt64 = (h0 | (h1 << 26)) & 0xFFFFFFFFUL
+    |   let f1 : UInt64 = ((h1 >> 6) | (h2 << 20)) & 0xFFFFFFFFUL
+    |   let f2 : UInt64 = ((h2 >> 12) | (h3 << 14)) & 0xFFFFFFFFUL
+    |   let f3 : UInt64 = ((h3 >> 18) | (h4 << 8)) & 0xFFFFFFFFUL
+    | 
+    |   // Load s (last 16 bytes of key) as 4 little-endian 32-bit words
+    |   let s0 : UInt64 = (key[16] & 0xFFU).to_uint64() |
+    |     ((key[17] & 0xFFU).to_uint64() << 8) |
+    |     ((key[18] & 0xFFU).to_uint64() << 16) |
+    |     ((key[19] & 0xFFU).to_uint64() << 24)
+    |   let s1_val : UInt64 = (key[20] & 0xFFU).to_uint64() |
+    |     ((key[21] & 0xFFU).to_uint64() << 8) |
+    |     ((key[22] & 0xFFU).to_uint64() << 16) |
+    |     ((key[23] & 0xFFU).to_uint64() << 24)
+    |   let s2_val : UInt64 = (key[24] & 0xFFU).to_uint64() |
+    |     ((key[25] & 0xFFU).to_uint64() << 8) |
+    |     ((key[26] & 0xFFU).to_uint64() << 16) |
+    |     ((key[27] & 0xFFU).to_uint64() << 24)
+    |   let s3_val : UInt64 = (key[28] & 0xFFU).to_uint64() |
+    |     ((key[29] & 0xFFU).to_uint64() << 8) |
+    |     ((key[30] & 0xFFU).to_uint64() << 16) |
+    |     ((key[31] & 0xFFU).to_uint64() << 24)
+    | 
+    |   // Add s to the accumulator mod 2^128
+    |   let mut t0 : UInt64 = f0 + s0
+    |   let mut t1 : UInt64 = f1 + s1_val + (t0 >> 32)
+    |   let mut t2 : UInt64 = f2 + s2_val + (t1 >> 32)
+    |   let mut t3 : UInt64 = f3 + s3_val + (t2 >> 32)
+    |   t0 = t0 & 0xFFFFFFFFUL
+    |   t1 = t1 & 0xFFFFFFFFUL
+    |   t2 = t2 & 0xFFFFFFFFUL
+    |   t3 = t3 & 0xFFFFFFFFUL
+    | 
+    |   // Output 16 bytes little-endian
+    |   let tag : Array[UInt] = Array::make(16, 0U)
+    |   tag[0] = (t0 & 0xFFUL).to_uint()
+    |   tag[1] = ((t0 >> 8) & 0xFFUL).to_uint()
+    |   tag[2] = ((t0 >> 16) & 0xFFUL).to_uint()
+    |   tag[3] = ((t0 >> 24) & 0xFFUL).to_uint()
+    |   tag[4] = (t1 & 0xFFUL).to_uint()
+    |   tag[5] = ((t1 >> 8) & 0xFFUL).to_uint()
+    |   tag[6] = ((t1 >> 16) & 0xFFUL).to_uint()
+    |   tag[7] = ((t1 >> 24) & 0xFFUL).to_uint()
+    |   tag[8] = (t2 & 0xFFUL).to_uint()
+    |   tag[9] = ((t2 >> 8) & 0xFFUL).to_uint()
+    |   tag[10] = ((t2 >> 16) & 0xFFUL).to_uint()
+    |   tag[11] = ((t2 >> 24) & 0xFFUL).to_uint()
+    |   tag[12] = (t3 & 0xFFUL).to_uint()
+    |   tag[13] = ((t3 >> 8) & 0xFFUL).to_uint()
+    |   tag[14] = ((t3 >> 16) & 0xFFUL).to_uint()
+    |   tag[15] = ((t3 >> 24) & 0xFFUL).to_uint()
+    |   tag
+    | }
+    …
+
+    | pub fn poly1305_mac_bytes(key : Bytes, message : Bytes) -> Bytes {
+271 |   let tag = poly1305_mac(bytes_to_uint_array(key), bytes_to_uint_array(message))
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   uints_to_bytes(tag)
+    | }
+    …
+
+    | pub fn poly1305_verify_bytes(key : Bytes, message : Bytes, tag : Bytes) -> Bool {
+285 |   poly1305_verify(
+    |   ^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     bytes_to_uint_array(key),
+    |     bytes_to_uint_array(message),
+    |     bytes_to_uint_array(tag),
+    |   )
+    | }
+    …
+
+4 uncovered line(s) in gateway\src\bandwidth.mbt:
+
+    | pub fn ConnectionPool::acquire(self : ConnectionPool, host : String, port : Int64, current_time : Int64) -> Bool {
+    |   if self.total_active >= self.global_max {
+ 64 |     return false
+    |     ^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let mut found = false
+    |   let mut i = 0
+    |   while i < self.entries.length() {
+    |     let entry = self.entries[i]
+    |     if entry.host == host && entry.port == port {
+    |       if entry.active_connections < entry.max_connections {
+    |         entry.active_connections = entry.active_connections + 1L
+    |         entry.total_requests = entry.total_requests + 1L
+    |         entry.last_used = current_time
+    |         self.total_active = self.total_active + 1L
+    |         found = true
+    |       }
+    |       break
+    |     }
+    |     i = i + 1
+    |   }
+    |   if !found {
+    |     // Create new pool entry
+    |     let entry = new_pool_entry(host, port, 10L)
+    |     entry.active_connections = 1L
+    |     entry.total_requests = 1L
+    |     entry.last_used = current_time
+    |     self.entries = self.entries + [entry]
+    |     self.total_active = self.total_active + 1L
+    |   }
+    |   true
+    | }
+    …
+
+    | pub fn StreamMetrics::record_request(self : StreamMetrics, bytes_in : Int64, bytes_out : Int64, duration_ms : Int64) -> Unit {
+    |   self.total_requests = self.total_requests + 1L
+    |   self.total_bytes_in = self.total_bytes_in + bytes_in
+    |   self.total_bytes_out = self.total_bytes_out + bytes_out
+    |   // Maintain a rolling window of request durations
+    |   let len = self.request_durations_ms.length()
+    |   if len >= self.max_samples {
+    |     // Remove oldest entry by rebuilding the array
+147 |     let mut trimmed : Array[Int64] = []
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |     let mut i = 1
+    |     while i < len {
+150 |       trimmed = trimmed + [self.request_durations_ms[i]]
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |       i = i + 1
+    |     }
+    |     self.request_durations_ms = trimmed
+    |   }
+    |   self.request_durations_ms = self.request_durations_ms + [duration_ms]
+    | }
+    …
+
+    | pub fn StreamMetrics::avg_duration_ms(self : StreamMetrics) -> Int64 {
+    |   let len = self.request_durations_ms.length()
+    |   if len == 0 {
+184 |     return 0L
+    |     ^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    |   let mut sum = 0L
+    |   let mut i = 0
+    |   while i < len {
+    |     sum = sum + self.request_durations_ms[i]
+    |     i = i + 1
+    |   }
+    |   sum / len.to_int64()
+    | }
+    …
+
+3 uncovered line(s) in gateway\src\flow_control.mbt:
+
+    | pub fn FairQueue::enqueue(
+    |   self : FairQueue,
+    |   session_id : String,
+    |   priority : Priority,
+    |   byte_size : Int64,
+    |   arrival_time : Int64,
+    | ) -> Unit {
+    |   let weight : Int64 = match priority {
+    |     Low => 1L
+    |     Normal => 2L
+ 41 |     High => 4L
+    |     ^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Critical => 8L
+    |   }
+    |   let entry = { session_id, priority, byte_size, arrival_time, weight }
+    |   self.entries = self.entries + [entry]
+    | }
+    …
+
+    | fn priority_value(p : Priority) -> Int64 {
+    |   match p {
+    |     Low => 1L
+    |     Normal => 2L
+ 85 |     High => 3L
+    |     ^^^^^^^^^^^ 	<-- UNCOVERED
+    |     Critical => 4L
+    |   }
+    | }
+    …
+
+    | pub fn CircuitBreaker::allow_request(self : CircuitBreaker, current_time : Int64) -> Bool {
+    |   match self.state {
+    |     Closed => true
+    |     Open => {
+    |       if (current_time - self.last_failure_time) >= self.recovery_timeout {
+    |         self.state = HalfOpen
+    |         true
+    |       } else {
+    |         false
+    |       }
+    |     }
+178 |     HalfOpen => true  // probe request allowed
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+    |   }
+    | }
+    …
+
+10 uncovered line(s) in gateway\src\middleware.mbt:
+
+   | pub fn execute_security_filter(
+   |   ctx : StreamContext,
+   |   key : @mb_jwt.JwtKey,
+   |   current_time : Int64,
+   | ) -> Unit {
+   |   let payload_json = match @mb_jwt.verify(ctx.token, key) {
+   |     Err(e) => {
+   |       ctx.is_allowed = false
+   |       ctx.error_message = match e {
+25 |         @mb_jwt.InvalidSignature => "Crypto Blocked: Invalid signature"
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |         @mb_jwt.InvalidFormat => "Crypto Blocked: Malformed token format"
+   |         @mb_jwt.AlgorithmMismatch(_) => "Crypto Blocked: Algorithm mismatch"
+28 |         @mb_jwt.CryptoError(msg) => "Crypto Blocked: \{msg}"
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |         _ => "Crypto Blocked: Verification failed"
+   |       }
+   |       return
+   |     }
+33 |     Ok(json) => json
+   |     ^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   | 
+36 |   let claims = match parse_gateway_claims(payload_json) {
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     Err(err) => {
+   |       ctx.is_allowed = false
+   |       ctx.error_message = err
+   |       return
+   |     }
+42 |     Ok(c) => c
+   |     ^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   | 
+45 |   let jwt_payload = @mb_jwt.new_jwt_payload(
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     claims.iss,
+   |     Some(claims.sub),
+   |     None,
+   |     Some(claims.exp),
+   |     claims.nbf,
+   |     None,
+   |     None,
+   |   )
+   | 
+55 |   match @mb_jwt.validate_claims(jwt_payload, current_time, None, None) {
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     Err(e) => {
+   |       ctx.is_allowed = false
+58 |       ctx.error_message = match e {
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |         @mb_jwt.TokenExpired(_, _) => "Gateway Blocked: Token has expired"
+   |         @mb_jwt.TokenNotYetValid(_, _) => "Gateway Blocked: Token is not yet valid (nbf)"
+   |         @mb_jwt.InvalidIssuer(_) => "Gateway Blocked: Invalid issuer"
+   |         @mb_jwt.InvalidAudience(_) => "Gateway Blocked: Invalid audience"
+   |         _ => "Gateway Blocked: Claims validation failed"
+   |       }
+   |     }
+66 |     Ok(_) => {
+   |     ^^^^^^^^^^^ 	<-- UNCOVERED
+   |       ctx.is_allowed = true
+68 |       ctx.user_role = match claims.role {
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |         Some(r) => r
+   |         None => "guest"
+   |       }
+   |     }
+   |   }
+   | }
+   …
+
+5 uncovered line(s) in gateway\src\payload.mbt:
+
+   | pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] {
+   |   let parsed = try @json.parse(json_str) catch {
+   |     _ => return Err("Gateway Error: Failed to parse payload JSON")
+   |   }
+   |   let obj = match parsed {
+   |     Object(m) => m
+17 |     _ => return Err("Gateway Error: Expected JSON object")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   | 
+   |   let sub = match obj.get("sub") {
+   |     Some(String(s)) => s
+   |     _ => return Err("Gateway Error: Missing or invalid 'sub' claim")
+   |   }
+   |   let exp = match obj.get("exp") {
+   |     Some(Number(n, ..)) => n.to_int64()
+26 |     _ => return Err("Gateway Error: Missing or invalid 'exp' claim")
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |   }
+   |   let nbf = match obj.get("nbf") {
+29 |     Some(Number(n, ..)) => Some(n.to_int64())
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     _ => None
+   |   }
+   |   let iss = match obj.get("iss") {
+33 |     Some(String(s)) => Some(s)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     _ => None
+   |   }
+   |   let role = match obj.get("role") {
+37 |     Some(String(s)) => Some(s)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ 	<-- UNCOVERED
+   |     _ => None
+   |   }
+   | 
+   |   Ok({ sub, exp, nbf, iss, role })
+   | }
+   …
+
+1 uncovered line(s) in gateway\src\stream.mbt:
+
+    | pub fn ReplayProtector::evict_expired(self : ReplayProtector, current_time : Int64) -> Unit {
+    |   let expired : Array[String] = []
+    |   for key in self.seen_nonces.keys() {
+    |     match self.seen_nonces.get(key) {
+    |       Some(expiry) => if expiry <= current_time { expired.push(key) }
+ 73 |       None => ()
+    |       ^^^^^^^^^^^ 	<-- UNCOVERED
+    |     }
+    |   }
+    |   for key in expired {
+    |     self.seen_nonces.remove(key)
+    |   }
+    | }
+    …
+
+Total: 159 uncovered line(s) in 18 file(s)

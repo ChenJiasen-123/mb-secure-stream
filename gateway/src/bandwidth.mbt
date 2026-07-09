@@ -34,10 +34,10 @@ pub fn BandwidthShaper::try_consume(self : BandwidthShaper, byte_count : Int64, 
 pub struct PoolEntry {
   host : String
   port : Int64
-  mut active_connections : Int64
+  active_connections : Int64
   max_connections : Int64
-  mut total_requests : Int64
-  mut last_used : Int64
+  total_requests : Int64
+  last_used : Int64
 }
 
 /// Creates a new pool entry.
@@ -63,31 +63,41 @@ pub fn ConnectionPool::acquire(self : ConnectionPool, host : String, port : Int6
   if self.total_active >= self.global_max {
     return false
   }
-  let mut found = false
+  // Check if host:port already exists
   let mut i = 0
   while i < self.entries.length() {
     let entry = self.entries[i]
     if entry.host == host && entry.port == port {
       if entry.active_connections < entry.max_connections {
-        entry.active_connections = entry.active_connections + 1L
-        entry.total_requests = entry.total_requests + 1L
-        entry.last_used = current_time
+        // Update the entry in the array
+        let updated = {
+          host: entry.host,
+          port: entry.port,
+          active_connections: entry.active_connections + 1L,
+          max_connections: entry.max_connections,
+          total_requests: entry.total_requests + 1L,
+          last_used: current_time,
+        }
+        self.entries[i] = updated
         self.total_active = self.total_active + 1L
-        found = true
+        return true
       }
-      break
+      return false  // host exists but at capacity
     }
     i = i + 1
   }
-  if !found {
-    // Create new pool entry
-    let entry = new_pool_entry(host, port, 10L)
-    entry.active_connections = 1L
-    entry.total_requests = 1L
-    entry.last_used = current_time
-    self.entries = self.entries + [entry]
-    self.total_active = self.total_active + 1L
+  // Create new pool entry
+  let entry = new_pool_entry(host, port, 10L)
+  let new_entry = {
+    host: entry.host,
+    port: entry.port,
+    active_connections: 1L,
+    max_connections: entry.max_connections,
+    total_requests: 1L,
+    last_used: current_time,
   }
+  self.entries = self.entries + [new_entry]
+  self.total_active = self.total_active + 1L
   true
 }
 
@@ -98,7 +108,15 @@ pub fn ConnectionPool::release(self : ConnectionPool, host : String, port : Int6
     let entry = self.entries[i]
     if entry.host == host && entry.port == port {
       if entry.active_connections > 0L {
-        entry.active_connections = entry.active_connections - 1L
+        let updated = {
+          host: entry.host,
+          port: entry.port,
+          active_connections: entry.active_connections - 1L,
+          max_connections: entry.max_connections,
+          total_requests: entry.total_requests,
+          last_used: entry.last_used,
+        }
+        self.entries[i] = updated
         self.total_active = self.total_active - 1L
       }
       break
@@ -115,7 +133,7 @@ pub struct StreamMetrics {
   mut total_errors : Int64
   mut total_rate_limited : Int64
   mut total_auth_failures : Int64
-  mut request_durations_ms : Array[Int64]  // rolling window
+  mut request_durations_ms : Array[Int64]  
   mut peak_concurrent : Int64
   max_samples : Int
 }

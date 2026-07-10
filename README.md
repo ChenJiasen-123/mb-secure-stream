@@ -19,6 +19,7 @@ mb-secure-stream is a production-ready security infrastructure for high-performa
 MoonBit is chosen for this project because of its unique advantages for security-critical, high-performance applications:
 
 ### 1. **WASM-First Design**
+- **Build command**: `moon build --target wasm` or `moon build --target wasm-gc`
 - Compiles to WebAssembly for edge deployment
 - Cold start time <10ms (estimated)
 - Runs on Cloudflare Workers, Fastly Compute, Deno Deploy

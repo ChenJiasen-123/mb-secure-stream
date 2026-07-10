@@ -1,0 +1,102 @@
+# GitLink CI Configuration
+# This file configures CI/CD pipelines for GitLink mirror repository
+# https://www.gitlink.org.cn/ChenJiasen-123/mb-secure-stream/devops
+
+stages:
+  - check
+  - format
+  - info
+  - test
+
+variables:
+  MOONBIT_VERSION: "latest"
+
+.check_template: &check_template
+  stage: check
+  image: ubuntu:latest
+  before_script:
+    - curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+    - echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon version
+  script:
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon check -d
+
+.format_template: &format_template
+  stage: format
+  image: ubuntu:latest
+  before_script:
+    - curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+    - echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon version
+  script:
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon fmt --check crypto/mb-aead crypto/mb-chacha \
+        crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
+        crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
+        crypto/mb-poly1305 gateway
+
+.info_template: &info_template
+  stage: info
+  image: ubuntu:latest
+  before_script:
+    - curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+    - echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon version
+  script:
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon info
+
+.test_template: &test_template
+  stage: test
+  image: ubuntu:latest
+  before_script:
+    - curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+    - echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon version
+  script:
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon test
+
+# Workspace check
+workspace_check:
+  <<: *check_template
+  only:
+    - main
+    - merge_requests
+
+# Format check
+format_check:
+  <<: *format_template
+  only:
+    - main
+    - merge_requests
+
+# Generate interface info
+interface_info:
+  <<: *info_template
+  only:
+    - main
+    - merge_requests
+
+# Run all tests
+full_test:
+  <<: *test_template
+  only:
+    - main
+    - merge_requests
+
+# Module-level tests
+module_tests:
+  <<: *test_template
+  script:
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - cd crypto/mb-jwt && moon test
+    - cd ../../gateway && moon test
+  only:
+    - main
+    - merge_requests

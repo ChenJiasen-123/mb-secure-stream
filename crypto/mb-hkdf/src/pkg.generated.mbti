@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-hkdf"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-hkdf/src"
 
 // Values
 pub fn hkdf_expand_sha256(Array[UInt], Array[UInt], Int) -> Result[Array[UInt], String]

@@ -1,4 +1,6 @@
 // Success: returns Ok with exact length and not all zeros
+
+///|
 test {
   let lens : Array[Int] = []
   lens.push(1)
@@ -6,7 +8,7 @@ test {
   lens.push(16)
   lens.push(32)
   lens.push(64)
-  
+
   let mut idx = 0
   while idx < lens.length() {
     let len = lens[idx]
@@ -25,6 +27,8 @@ test {
 }
 
 // Error: zero and negative length
+
+///|
 test {
   match getrandom(0) {
     Ok(_) => assert_true(false)
@@ -37,6 +41,8 @@ test {
 }
 
 // Randomness sanity: two independent calls likely differ
+
+///|
 test {
   let a = getrandom(32)
   let b = getrandom(32)
@@ -51,6 +57,8 @@ test {
 }
 
 // Larger buffer check (kept modest for test speed)
+
+///|
 test {
   match getrandom(256) {
     Ok(bytes) => {
@@ -61,22 +69,30 @@ test {
   }
 }
 
-fn all_zero(b: Bytes) -> Bool {
+///|
+fn all_zero(b : Bytes) -> Bool {
   let n = b.length()
   let mut i = 0
   while i < n {
-    if b[i] != b'\x00' { return false }
+    if b[i] != b'\x00' {
+      return false
+    }
     i = i + 1
   }
   true
 }
 
-fn bytes_equal(a: Bytes, b: Bytes) -> Bool {
-  if a.length() != b.length() { return false }
+///|
+fn bytes_equal(a : Bytes, b : Bytes) -> Bool {
+  if a.length() != b.length() {
+    return false
+  }
   let n = a.length()
   let mut i = 0
   while i < n {
-    if a[i] != b[i] { return false }
+    if a[i] != b[i] {
+      return false
+    }
     i = i + 1
   }
   true

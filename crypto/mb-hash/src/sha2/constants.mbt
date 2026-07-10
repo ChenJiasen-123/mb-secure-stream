@@ -49,6 +49,7 @@ pub fn sha256_state() -> FixedArray[UInt] {
   ]
 }
 
+///|
 pub fn sha512_state() -> FixedArray[UInt64] {
   [
     0x6a09e667f3bcc908UL, 0xbb67ae8584caa73bUL, 0x3c6ef372fe94f82bUL, 0xa54ff53a5f1d36f1UL,

@@ -4,23 +4,28 @@
 // (the order of the P-256 generator point)
 
 // Group order n (little-endian limbs)
+
+///|
 let scalar_n : FixedArray[UInt] = [
-  0xFC632551U, 0xF3B9CAC2U, 0xA7179E84U, 0xBCE6FAADU,
-  0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U, 0xFFFFFFFFU,
+  0xFC632551U, 0xF3B9CAC2U, 0xA7179E84U, 0xBCE6FAADU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U,
+  0xFFFFFFFFU,
 ]
 
 // Barrett constant MU = floor(2^512 / n), 9 limbs (little-endian)
+
+///|
 let scalar_mu : FixedArray[UInt] = [
-  0xEEDF9BFEU, 0x012FFD85U, 0xDF1A6C21U, 0x43190552U,
-  0xFFFFFFFFU, 0xFFFFFFFEU, 0xFFFFFFFFU, 0x00000000U,
-  0x00000001U,
+  0xEEDF9BFEU, 0x012FFD85U, 0xDF1A6C21U, 0x43190552U, 0xFFFFFFFFU, 0xFFFFFFFEU, 0xFFFFFFFFU,
+  0x00000000U, 0x00000001U,
 ]
 
+///|
 /// Create a new scalar (8 limbs).
 fn sc_new() -> FixedArray[UInt] {
   FixedArray::make(8, 0U)
 }
 
+///|
 /// Copy a scalar.
 fn sc_copy(a : FixedArray[UInt]) -> FixedArray[UInt] {
   let r = sc_new()
@@ -30,6 +35,7 @@ fn sc_copy(a : FixedArray[UInt]) -> FixedArray[UInt] {
   r
 }
 
+///|
 /// Check if scalar is zero.
 fn sc_is_zero(a : FixedArray[UInt]) -> Bool {
   let mut acc = 0U
@@ -39,6 +45,7 @@ fn sc_is_zero(a : FixedArray[UInt]) -> Bool {
   acc == 0U
 }
 
+///|
 /// Scalar addition: r = a + b mod n
 fn sc_add(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   let r = sc_new()
@@ -52,6 +59,7 @@ fn sc_add(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   sc_sub_n_if_needed(r, carry)
 }
 
+///|
 /// Conditionally subtract n.
 fn sc_sub_n_if_needed(r : FixedArray[UInt], carry : UInt) -> FixedArray[UInt] {
   let result = sc_new()
@@ -99,6 +107,7 @@ fn sc_sub_n_if_needed(r : FixedArray[UInt], carry : UInt) -> FixedArray[UInt] {
 //   sc_sub(scalar_n, a)
 // }
 
+///|
 /// Scalar multiplication: r = a * b mod n using Barrett reduction.
 fn sc_mul(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   // Schoolbook multiply: 256x256 -> 512-bit product (16 limbs)
@@ -117,6 +126,7 @@ fn sc_mul(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   barrett_reduce(t)
 }
 
+///|
 /// Barrett reduction of a 512-bit value to mod n.
 fn barrett_reduce(t : FixedArray[UInt]) -> FixedArray[UInt] {
   // Step 1: q1 = t >> 224 (top 9 limbs starting at limb 7)
@@ -195,12 +205,13 @@ fn barrett_reduce(t : FixedArray[UInt]) -> FixedArray[UInt] {
   sc_sub_n_if_needed(r1_reduced, 0U)
 }
 
+///|
 /// Scalar inversion: r = a^{-1} mod n using Fermat's little theorem: a^{n-2} mod n
 fn sc_inv(a : FixedArray[UInt]) -> FixedArray[UInt] {
   // n - 2 = ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc63254f
   let n_minus_2 : FixedArray[UInt] = [
-    0xFC63254FU, 0xF3B9CAC2U, 0xA7179E84U, 0xBCE6FAADU,
-    0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U, 0xFFFFFFFFU,
+    0xFC63254FU, 0xF3B9CAC2U, 0xA7179E84U, 0xBCE6FAADU, 0xFFFFFFFFU, 0xFFFFFFFFU,
+    0x00000000U, 0xFFFFFFFFU,
   ]
   let mut result = sc_new()
   result[0] = 1U
@@ -219,16 +230,19 @@ fn sc_inv(a : FixedArray[UInt]) -> FixedArray[UInt] {
   result
 }
 
+///|
 /// Convert 32 bytes (big-endian) to scalar limbs (little-endian).
 fn sc_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   fe_from_bytes(bytes) // Same layout
 }
 
+///|
 /// Convert scalar limbs (little-endian) to 32 bytes (big-endian).
 fn sc_to_bytes(a : FixedArray[UInt]) -> Array[UInt] {
   fe_to_bytes(a) // Same layout
 }
 
+///|
 /// Check if scalar is in valid range [1, n-1].
 fn sc_is_valid(a : FixedArray[UInt]) -> Bool {
   if sc_is_zero(a) {
@@ -248,6 +262,7 @@ fn sc_is_valid(a : FixedArray[UInt]) -> Bool {
   false // equal to n is not valid
 }
 
+///|
 /// Reduce a scalar mod n (for values that might be >= n).
 fn sc_reduce(a : FixedArray[UInt]) -> FixedArray[UInt] {
   sc_sub_n_if_needed(a, 0U)

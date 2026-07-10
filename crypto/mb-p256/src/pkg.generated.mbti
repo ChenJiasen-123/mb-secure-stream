@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-p256"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-p256/src"
 
 // Values
 pub fn derive_public_key(Array[UInt]) -> Result[Array[UInt], String]

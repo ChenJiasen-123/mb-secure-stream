@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-hash/sha2"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-hash/src/sha2"
 
 // Values
 pub fn get_k32() -> Array[UInt]

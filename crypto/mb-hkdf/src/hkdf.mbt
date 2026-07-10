@@ -1,3 +1,4 @@
+///|
 fn fixed_to_array(fa : FixedArray[UInt]) -> Array[UInt] {
   let arr : Array[UInt] = Array::make(fa.length(), 0U)
   for i in 0..<fa.length() {
@@ -6,6 +7,7 @@ fn fixed_to_array(fa : FixedArray[UInt]) -> Array[UInt] {
   arr
 }
 
+///|
 fn bytes_to_uints(bytes : Bytes) -> Array[UInt] {
   let arr : Array[UInt] = []
   for i in 0..<bytes.length() {
@@ -14,6 +16,7 @@ fn bytes_to_uints(bytes : Bytes) -> Array[UInt] {
   arr
 }
 
+///|
 fn uints_to_bytes(arr : Array[UInt]) -> Bytes {
   let buf : Array[Byte] = []
   for value in arr {
@@ -24,24 +27,25 @@ fn uints_to_bytes(arr : Array[UInt]) -> Bytes {
 
 // --- SHA-256 variants (hash length = 32) ---
 
-///| HKDF-Extract using HMAC-SHA256 (RFC 5869 Section 2.2).
+///|
+/// HKDF-Extract using HMAC-SHA256 (RFC 5869 Section 2.2).
 /// If salt is empty, a 32-byte zero salt is used.
-pub fn hkdf_extract_sha256(salt : Array[UInt], ikm : Array[UInt]) -> Array[UInt] {
-  let actual_salt = if salt.length() == 0 {
-    Array::make(32, 0U)
-  } else {
-    salt
-  }
+pub fn hkdf_extract_sha256(
+  salt : Array[UInt],
+  ikm : Array[UInt],
+) -> Array[UInt] {
+  let actual_salt = if salt.length() == 0 { Array::make(32, 0U) } else { salt }
   let prk = @hmac.hmac_sha256(ikm, actual_salt)
   fixed_to_array(prk)
 }
 
-///| HKDF-Expand using HMAC-SHA256 (RFC 5869 Section 2.3).
+///|
+/// HKDF-Expand using HMAC-SHA256 (RFC 5869 Section 2.3).
 /// Length must be <= 255 * 32 = 8160.
 pub fn hkdf_expand_sha256(
   prk : Array[UInt],
   info : Array[UInt],
-  length : Int
+  length : Int,
 ) -> Result[Array[UInt], String] {
   let hash_len = 32
   if length <= 0 {
@@ -53,7 +57,7 @@ pub fn hkdf_expand_sha256(
   let n = (length + hash_len - 1) / hash_len
   let okm : Array[UInt] = []
   let mut prev : Array[UInt] = []
-  for i in 1..=n {
+  for i in 1..<=n {
     let input : Array[UInt] = []
     for j in 0..<prev.length() {
       input.push(prev[j])
@@ -75,12 +79,13 @@ pub fn hkdf_expand_sha256(
   Ok(result)
 }
 
-///| Combined HKDF using HMAC-SHA256 (RFC 5869).
+///|
+/// Combined HKDF using HMAC-SHA256 (RFC 5869).
 pub fn hkdf_sha256(
   salt : Array[UInt],
   ikm : Array[UInt],
   info : Array[UInt],
-  length : Int
+  length : Int,
 ) -> Result[Array[UInt], String] {
   let prk = hkdf_extract_sha256(salt, ikm)
   hkdf_expand_sha256(prk, info, length)
@@ -88,24 +93,25 @@ pub fn hkdf_sha256(
 
 // --- SHA-512 variants (hash length = 64) ---
 
-///| HKDF-Extract using HMAC-SHA512 (RFC 5869 Section 2.2).
+///|
+/// HKDF-Extract using HMAC-SHA512 (RFC 5869 Section 2.2).
 /// If salt is empty, a 64-byte zero salt is used.
-pub fn hkdf_extract_sha512(salt : Array[UInt], ikm : Array[UInt]) -> Array[UInt] {
-  let actual_salt = if salt.length() == 0 {
-    Array::make(64, 0U)
-  } else {
-    salt
-  }
+pub fn hkdf_extract_sha512(
+  salt : Array[UInt],
+  ikm : Array[UInt],
+) -> Array[UInt] {
+  let actual_salt = if salt.length() == 0 { Array::make(64, 0U) } else { salt }
   let prk = @hmac.hmac_sha512(ikm, actual_salt)
   fixed_to_array(prk)
 }
 
-///| HKDF-Expand using HMAC-SHA512 (RFC 5869 Section 2.3).
+///|
+/// HKDF-Expand using HMAC-SHA512 (RFC 5869 Section 2.3).
 /// Length must be <= 255 * 64 = 16320.
 pub fn hkdf_expand_sha512(
   prk : Array[UInt],
   info : Array[UInt],
-  length : Int
+  length : Int,
 ) -> Result[Array[UInt], String] {
   let hash_len = 64
   if length <= 0 {
@@ -117,7 +123,7 @@ pub fn hkdf_expand_sha512(
   let n = (length + hash_len - 1) / hash_len
   let okm : Array[UInt] = []
   let mut prev : Array[UInt] = []
-  for i in 1..=n {
+  for i in 1..<=n {
     let input : Array[UInt] = []
     for j in 0..<prev.length() {
       input.push(prev[j])
@@ -139,12 +145,13 @@ pub fn hkdf_expand_sha512(
   Ok(result)
 }
 
-///| Combined HKDF using HMAC-SHA512 (RFC 5869).
+///|
+/// Combined HKDF using HMAC-SHA512 (RFC 5869).
 pub fn hkdf_sha512(
   salt : Array[UInt],
   ikm : Array[UInt],
   info : Array[UInt],
-  length : Int
+  length : Int,
 ) -> Result[Array[UInt], String] {
   let prk = hkdf_extract_sha512(salt, ikm)
   hkdf_expand_sha512(prk, info, length)
@@ -152,17 +159,19 @@ pub fn hkdf_sha512(
 
 // --- Bytes convenience wrappers ---
 
-///| HKDF-Extract using HMAC-SHA256 with Bytes inputs.
+///|
+/// HKDF-Extract using HMAC-SHA256 with Bytes inputs.
 pub fn hkdf_extract_sha256_bytes(salt : Bytes, ikm : Bytes) -> Bytes {
   let result = hkdf_extract_sha256(bytes_to_uints(salt), bytes_to_uints(ikm))
   uints_to_bytes(result)
 }
 
-///| HKDF-Expand using HMAC-SHA256 with Bytes inputs.
+///|
+/// HKDF-Expand using HMAC-SHA256 with Bytes inputs.
 pub fn hkdf_expand_sha256_bytes(
   prk : Bytes,
   info : Bytes,
-  length : Int
+  length : Int,
 ) -> Result[Bytes, String] {
   match hkdf_expand_sha256(bytes_to_uints(prk), bytes_to_uints(info), length) {
     Ok(result) => Ok(uints_to_bytes(result))
@@ -170,35 +179,39 @@ pub fn hkdf_expand_sha256_bytes(
   }
 }
 
-///| Combined HKDF using HMAC-SHA256 with Bytes inputs.
+///|
+/// Combined HKDF using HMAC-SHA256 with Bytes inputs.
 pub fn hkdf_sha256_bytes(
   salt : Bytes,
   ikm : Bytes,
   info : Bytes,
-  length : Int
+  length : Int,
 ) -> Result[Bytes, String] {
-  match hkdf_sha256(
-    bytes_to_uints(salt),
-    bytes_to_uints(ikm),
-    bytes_to_uints(info),
-    length,
-  ) {
+  match
+    hkdf_sha256(
+      bytes_to_uints(salt),
+      bytes_to_uints(ikm),
+      bytes_to_uints(info),
+      length,
+    ) {
     Ok(result) => Ok(uints_to_bytes(result))
     Err(e) => Err(e)
   }
 }
 
-///| HKDF-Extract using HMAC-SHA512 with Bytes inputs.
+///|
+/// HKDF-Extract using HMAC-SHA512 with Bytes inputs.
 pub fn hkdf_extract_sha512_bytes(salt : Bytes, ikm : Bytes) -> Bytes {
   let result = hkdf_extract_sha512(bytes_to_uints(salt), bytes_to_uints(ikm))
   uints_to_bytes(result)
 }
 
-///| HKDF-Expand using HMAC-SHA512 with Bytes inputs.
+///|
+/// HKDF-Expand using HMAC-SHA512 with Bytes inputs.
 pub fn hkdf_expand_sha512_bytes(
   prk : Bytes,
   info : Bytes,
-  length : Int
+  length : Int,
 ) -> Result[Bytes, String] {
   match hkdf_expand_sha512(bytes_to_uints(prk), bytes_to_uints(info), length) {
     Ok(result) => Ok(uints_to_bytes(result))
@@ -206,19 +219,21 @@ pub fn hkdf_expand_sha512_bytes(
   }
 }
 
-///| Combined HKDF using HMAC-SHA512 with Bytes inputs.
+///|
+/// Combined HKDF using HMAC-SHA512 with Bytes inputs.
 pub fn hkdf_sha512_bytes(
   salt : Bytes,
   ikm : Bytes,
   info : Bytes,
-  length : Int
+  length : Int,
 ) -> Result[Bytes, String] {
-  match hkdf_sha512(
-    bytes_to_uints(salt),
-    bytes_to_uints(ikm),
-    bytes_to_uints(info),
-    length,
-  ) {
+  match
+    hkdf_sha512(
+      bytes_to_uints(salt),
+      bytes_to_uints(ikm),
+      bytes_to_uints(info),
+      length,
+    ) {
     Ok(result) => Ok(uints_to_bytes(result))
     Err(e) => Err(e)
   }

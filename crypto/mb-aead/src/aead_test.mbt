@@ -1,9 +1,12 @@
+///|
 fn hex_to_uints(hex : String) -> Array[UInt] {
   let raw = @utf8.encode(hex)
   let chars : Array[Int] = []
   for i in 0..<raw.length() {
     let ch = raw[i].to_int()
-    if (ch >= 48 && ch <= 57) || (ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102) {
+    if (ch >= 48 && ch <= 57) ||
+      (ch >= 65 && ch <= 70) ||
+      (ch >= 97 && ch <= 102) {
       chars.push(ch)
     }
   }
@@ -18,6 +21,7 @@ fn hex_to_uints(hex : String) -> Array[UInt] {
   result
 }
 
+///|
 fn parse_hex_digit(ch : Int) -> Int {
   if ch >= 48 && ch <= 57 {
     ch - 48
@@ -30,6 +34,7 @@ fn parse_hex_digit(ch : Int) -> Int {
   }
 }
 
+///|
 /// RFC 8439 Section 2.8.2 - ChaCha20-Poly1305 AEAD test vector
 test "aead encrypt RFC 8439" {
   let key = hex_to_uints(
@@ -39,23 +44,23 @@ test "aead encrypt RFC 8439" {
   let aad = hex_to_uints("50515253c0c1c2c3c4c5c6c7")
   let plaintext = hex_to_uints(
     "4c616469657320616e642047656e746c" +
-      "656d656e206f662074686520636c6173" +
-      "73206f66202739393a20496620492063" +
-      "6f756c64206f6666657220796f75206f" +
-      "6e6c79206f6e652074697020666f7220" +
-      "746865206675747572652c2073756e73" +
-      "637265656e20776f756c642062652069" +
-      "742e",
+    "656d656e206f662074686520636c6173" +
+    "73206f66202739393a20496620492063" +
+    "6f756c64206f6666657220796f75206f" +
+    "6e6c79206f6e652074697020666f7220" +
+    "746865206675747572652c2073756e73" +
+    "637265656e20776f756c642062652069" +
+    "742e",
   )
   let expected_ct = hex_to_uints(
     "d31a8d34648e60db7b86afbc53ef7ec2" +
-      "a4aded51296e08fea9e2b5a736ee62d6" +
-      "3dbea45e8ca9671282fafb69da92728b" +
-      "1a71de0a9e060b2905d6a5b67ecd3b36" +
-      "92ddbd7f2d778b8c9803aee328091b58" +
-      "fab324e4fad675945585808b4831d7bc" +
-      "3ff4def08e4b7a9de576d26586cec64b" +
-      "6116",
+    "a4aded51296e08fea9e2b5a736ee62d6" +
+    "3dbea45e8ca9671282fafb69da92728b" +
+    "1a71de0a9e060b2905d6a5b67ecd3b36" +
+    "92ddbd7f2d778b8c9803aee328091b58" +
+    "fab324e4fad675945585808b4831d7bc" +
+    "3ff4def08e4b7a9de576d26586cec64b" +
+    "6116",
   )
   let expected_tag = hex_to_uints("1ae10b594f09e26a7e902ecbd0600691")
 
@@ -77,6 +82,7 @@ test "aead encrypt RFC 8439" {
   }
 }
 
+///|
 /// Decrypt the RFC 8439 test vector
 test "aead decrypt RFC 8439" {
   let key = hex_to_uints(
@@ -86,24 +92,24 @@ test "aead decrypt RFC 8439" {
   let aad = hex_to_uints("50515253c0c1c2c3c4c5c6c7")
   let ciphertext = hex_to_uints(
     "d31a8d34648e60db7b86afbc53ef7ec2" +
-      "a4aded51296e08fea9e2b5a736ee62d6" +
-      "3dbea45e8ca9671282fafb69da92728b" +
-      "1a71de0a9e060b2905d6a5b67ecd3b36" +
-      "92ddbd7f2d778b8c9803aee328091b58" +
-      "fab324e4fad675945585808b4831d7bc" +
-      "3ff4def08e4b7a9de576d26586cec64b" +
-      "6116",
+    "a4aded51296e08fea9e2b5a736ee62d6" +
+    "3dbea45e8ca9671282fafb69da92728b" +
+    "1a71de0a9e060b2905d6a5b67ecd3b36" +
+    "92ddbd7f2d778b8c9803aee328091b58" +
+    "fab324e4fad675945585808b4831d7bc" +
+    "3ff4def08e4b7a9de576d26586cec64b" +
+    "6116",
   )
   let tag = hex_to_uints("1ae10b594f09e26a7e902ecbd0600691")
   let expected_pt = hex_to_uints(
     "4c616469657320616e642047656e746c" +
-      "656d656e206f662074686520636c6173" +
-      "73206f66202739393a20496620492063" +
-      "6f756c64206f6666657220796f75206f" +
-      "6e6c79206f6e652074697020666f7220" +
-      "746865206675747572652c2073756e73" +
-      "637265656e20776f756c642062652069" +
-      "742e",
+    "656d656e206f662074686520636c6173" +
+    "73206f66202739393a20496620492063" +
+    "6f756c64206f6666657220796f75206f" +
+    "6e6c79206f6e652074697020666f7220" +
+    "746865206675747572652c2073756e73" +
+    "637265656e20776f756c642062652069" +
+    "742e",
   )
 
   match aead_decrypt(key, nonce, aad, ciphertext, tag) {
@@ -120,6 +126,7 @@ test "aead decrypt RFC 8439" {
   }
 }
 
+///|
 /// Authentication failure: tampered ciphertext should be rejected
 test "aead decrypt rejects tampered ciphertext" {
   let key = hex_to_uints(
@@ -129,13 +136,13 @@ test "aead decrypt rejects tampered ciphertext" {
   let aad = hex_to_uints("50515253c0c1c2c3c4c5c6c7")
   let ciphertext = hex_to_uints(
     "d31a8d34648e60db7b86afbc53ef7ec2" +
-      "a4aded51296e08fea9e2b5a736ee62d6" +
-      "3dbea45e8ca9671282fafb69da92728b" +
-      "1a71de0a9e060b2905d6a5b67ecd3b36" +
-      "92ddbd7f2d778b8c9803aee328091b58" +
-      "fab324e4fad675945585808b4831d7bc" +
-      "3ff4def08e4b7a9de576d26586cec64b" +
-      "6116",
+    "a4aded51296e08fea9e2b5a736ee62d6" +
+    "3dbea45e8ca9671282fafb69da92728b" +
+    "1a71de0a9e060b2905d6a5b67ecd3b36" +
+    "92ddbd7f2d778b8c9803aee328091b58" +
+    "fab324e4fad675945585808b4831d7bc" +
+    "3ff4def08e4b7a9de576d26586cec64b" +
+    "6116",
   )
   let tag = hex_to_uints("1ae10b594f09e26a7e902ecbd0600691")
 
@@ -148,6 +155,7 @@ test "aead decrypt rejects tampered ciphertext" {
   }
 }
 
+///|
 /// Round-trip: encrypt then decrypt
 test "aead round trip" {
   let key = hex_to_uints(
@@ -158,7 +166,7 @@ test "aead round trip" {
   let plaintext = hex_to_uints("48656c6c6f20576f726c6421") // "Hello World!"
 
   match aead_encrypt(key, nonce, aad, plaintext) {
-    Ok((ct, tag)) => {
+    Ok((ct, tag)) =>
       match aead_decrypt(key, nonce, aad, ct, tag) {
         Ok(pt) => {
           assert_eq(pt.length(), plaintext.length())
@@ -171,7 +179,6 @@ test "aead round trip" {
           assert_true(false)
         }
       }
-    }
     Err(e) => {
       println("Encrypt failed: \{e}")
       assert_true(false)

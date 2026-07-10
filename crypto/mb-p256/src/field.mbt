@@ -7,34 +7,44 @@
 // The Montgomery parameter p' = 1, which simplifies reduction.
 
 // Field modulus p (little-endian limbs)
+
+///|
 let field_p : FixedArray[UInt] = [
-  0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U,
-  0x00000000U, 0x00000000U, 0x00000001U, 0xFFFFFFFFU,
+  0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000001U,
+  0xFFFFFFFFU,
 ]
 
 // R^2 mod p (for converting to Montgomery form)
+
+///|
 let field_r2 : FixedArray[UInt] = [
-  0x00000003U, 0x00000000U, 0xFFFFFFFFU, 0xFFFFFFFBU,
-  0xFFFFFFFEU, 0xFFFFFFFFU, 0xFFFFFFFDU, 0x00000004U,
+  0x00000003U, 0x00000000U, 0xFFFFFFFFU, 0xFFFFFFFBU, 0xFFFFFFFEU, 0xFFFFFFFFU, 0xFFFFFFFDU,
+  0x00000004U,
 ]
 
 // Montgomery form of 1: R mod p
+
+///|
 let field_one : FixedArray[UInt] = [
-  0x00000001U, 0x00000000U, 0x00000000U, 0xFFFFFFFFU,
-  0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFEU, 0x00000000U,
+  0x00000001U, 0x00000000U, 0x00000000U, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFEU,
+  0x00000000U,
 ]
 
 // Zero element
+
+///|
 let field_zero : FixedArray[UInt] = [
-  0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U,
-  0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U,
+  0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U,
+  0x00000000U,
 ]
 
+///|
 /// Create a new field element (8 limbs, little-endian).
 fn fe_new() -> FixedArray[UInt] {
   FixedArray::make(8, 0U)
 }
 
+///|
 /// Copy a field element.
 fn fe_copy(a : FixedArray[UInt]) -> FixedArray[UInt] {
   let r = fe_new()
@@ -44,6 +54,7 @@ fn fe_copy(a : FixedArray[UInt]) -> FixedArray[UInt] {
   r
 }
 
+///|
 /// Widening multiply-add: a * b + c + carry -> (lo, hi)
 fn carrying_mul_add(a : UInt, b : UInt, c : UInt, carry : UInt) -> (UInt, UInt) {
   let wide = a.to_uint64() * b.to_uint64() + c.to_uint64() + carry.to_uint64()
@@ -52,6 +63,7 @@ fn carrying_mul_add(a : UInt, b : UInt, c : UInt, carry : UInt) -> (UInt, UInt) 
   (lo, hi)
 }
 
+///|
 /// Add with carry: a + b + carry -> (sum, carry_out)
 fn carrying_add(a : UInt, b : UInt, carry : UInt) -> (UInt, UInt) {
   let wide = a.to_uint64() + b.to_uint64() + carry.to_uint64()
@@ -60,14 +72,18 @@ fn carrying_add(a : UInt, b : UInt, carry : UInt) -> (UInt, UInt) {
   (lo, hi)
 }
 
+///|
 /// Subtract with borrow: a - b - borrow -> (diff, borrow_out)
 fn carrying_sub(a : UInt, b : UInt, borrow : UInt) -> (UInt, UInt) {
-  let wide = a.to_uint64().reinterpret_as_int64() - b.to_uint64().reinterpret_as_int64() - borrow.to_uint64().reinterpret_as_int64()
+  let wide = a.to_uint64().reinterpret_as_int64() -
+    b.to_uint64().reinterpret_as_int64() -
+    borrow.to_uint64().reinterpret_as_int64()
   let lo = (wide.reinterpret_as_uint64() & 0xFFFFFFFFUL).to_uint()
   let borrow_out = if wide < 0L { 1U } else { 0U }
   (lo, borrow_out)
 }
 
+///|
 /// Field addition: r = a + b mod p
 fn fe_add(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   let r = fe_new()
@@ -81,6 +97,7 @@ fn fe_add(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   fe_sub_p_if_needed(r, carry)
 }
 
+///|
 /// Conditionally subtract p: if carry != 0 or r >= p, subtract p.
 fn fe_sub_p_if_needed(r : FixedArray[UInt], carry : UInt) -> FixedArray[UInt] {
   let result = fe_new()
@@ -100,6 +117,7 @@ fn fe_sub_p_if_needed(r : FixedArray[UInt], carry : UInt) -> FixedArray[UInt] {
   out
 }
 
+///|
 /// Field subtraction: r = a - b mod p
 fn fe_sub(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   let r = fe_new()
@@ -126,6 +144,7 @@ fn fe_sub(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
 //   fe_sub(field_zero, a)
 // }
 
+///|
 /// Montgomery multiplication: r = a * b * R^{-1} mod p
 /// Uses the special structure of p where p' = 1.
 fn fe_mul(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
@@ -150,6 +169,7 @@ fn fe_mul(a : FixedArray[UInt], b : FixedArray[UInt]) -> FixedArray[UInt] {
   montgomery_reduce(t)
 }
 
+///|
 /// Montgomery reduction of a 512-bit value.
 /// Exploits the special structure of p:
 ///   p = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0, 0, 0, 1, 0xFFFFFFFF]
@@ -227,16 +247,19 @@ fn montgomery_reduce(t : FixedArray[UInt]) -> FixedArray[UInt] {
   fe_sub_p_if_needed(result, r[16])
 }
 
+///|
 /// Field squaring: r = a^2 * R^{-1} mod p
 fn fe_sqr(a : FixedArray[UInt]) -> FixedArray[UInt] {
   fe_mul(a, a)
 }
 
+///|
 /// Convert to Montgomery form: a_mont = a * R mod p = a * R^2 * R^{-1} mod p
 fn fe_to_mont(a : FixedArray[UInt]) -> FixedArray[UInt] {
   fe_mul(a, field_r2)
 }
 
+///|
 /// Convert from Montgomery form: a = a_mont * R^{-1} mod p = a_mont * 1 * R^{-1} mod p
 fn fe_from_mont(a : FixedArray[UInt]) -> FixedArray[UInt] {
   let one = fe_new()
@@ -244,6 +267,7 @@ fn fe_from_mont(a : FixedArray[UInt]) -> FixedArray[UInt] {
   fe_mul(a, one)
 }
 
+///|
 /// Field inversion: r = a^{-1} mod p using Fermat's little theorem: a^{p-2} mod p
 /// Uses an addition chain for p-2.
 fn fe_inv(a : FixedArray[UInt]) -> FixedArray[UInt] {
@@ -255,8 +279,8 @@ fn fe_inv(a : FixedArray[UInt]) -> FixedArray[UInt] {
 
   // p - 2 in little-endian bits: process each limb from LSB
   let p_minus_2 : FixedArray[UInt] = [
-    0xFFFFFFFDU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U,
-    0x00000000U, 0x00000000U, 0x00000001U, 0xFFFFFFFFU,
+    0xFFFFFFFDU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0x00000000U, 0x00000000U, 0x00000000U,
+    0x00000001U, 0xFFFFFFFFU,
   ]
 
   for i in 0..<8 {
@@ -294,6 +318,7 @@ fn fe_inv(a : FixedArray[UInt]) -> FixedArray[UInt] {
 //   result
 // }
 
+///|
 /// Check if a field element is zero.
 fn fe_is_zero(a : FixedArray[UInt]) -> Bool {
   let mut acc = 0U
@@ -303,6 +328,7 @@ fn fe_is_zero(a : FixedArray[UInt]) -> Bool {
   acc == 0U
 }
 
+///|
 /// Check if two field elements are equal.
 fn fe_eq(a : FixedArray[UInt], b : FixedArray[UInt]) -> Bool {
   let mut acc = 0U
@@ -312,9 +338,14 @@ fn fe_eq(a : FixedArray[UInt], b : FixedArray[UInt]) -> Bool {
   acc == 0U
 }
 
+///|
 /// Conditional select: if choice == 1, return b; else return a. Constant-time.
-fn fe_select(a : FixedArray[UInt], b : FixedArray[UInt], choice : UInt) -> FixedArray[UInt] {
-  let mask = (0U - choice) // 0xFFFFFFFF if choice==1, 0 if choice==0
+fn fe_select(
+  a : FixedArray[UInt],
+  b : FixedArray[UInt],
+  choice : UInt,
+) -> FixedArray[UInt] {
+  let mask = 0U - choice // 0xFFFFFFFF if choice==1, 0 if choice==0
   let r = fe_new()
   for i in 0..<8 {
     r[i] = a[i] ^ (mask & (a[i] ^ b[i]))
@@ -322,6 +353,7 @@ fn fe_select(a : FixedArray[UInt], b : FixedArray[UInt], choice : UInt) -> Fixed
   r
 }
 
+///|
 /// Convert 32 bytes (big-endian) to field element limbs (little-endian).
 fn fe_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   let r = fe_new()
@@ -335,6 +367,7 @@ fn fe_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   r
 }
 
+///|
 /// Convert field element limbs (little-endian) to 32 bytes (big-endian).
 fn fe_to_bytes(a : FixedArray[UInt]) -> Array[UInt] {
   let bytes : Array[UInt] = Array::make(32, 0U)
@@ -363,4 +396,3 @@ fn fe_to_bytes(a : FixedArray[UInt]) -> Array[UInt] {
 //   }
 //   false
 // }
-

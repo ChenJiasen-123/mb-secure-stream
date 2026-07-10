@@ -1,12 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "gateway"
-
-import {
-  "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt",
-}
+package "ChenJiasen-123/mb-secure-stream/gateway/src"
 
 // Values
-pub fn execute_security_filter(StreamContext, @mb-jwt.JwtKey, Int64) -> Unit
+pub fn execute_security_filter(StreamContext, @ChenJiasen-123/mb-secure-stream/crypto/mb-jwt/src.JwtKey, Int64) -> Unit
 
 pub fn new_backoff(Int64, Int64) -> BackoffState
 

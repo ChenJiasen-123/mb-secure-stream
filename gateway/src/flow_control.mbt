@@ -1,3 +1,4 @@
+///|
 /// Priority levels for stream flow control.
 pub enum Priority {
   Low
@@ -7,6 +8,8 @@ pub enum Priority {
 }
 
 // Helper to ensure all Priority variants are recognized as used.
+
+///|
 fn _use_all_priorities(p : Priority) -> Priority {
   match p {
     Low => Normal
@@ -16,6 +19,7 @@ fn _use_all_priorities(p : Priority) -> Priority {
   }
 }
 
+///|
 /// A weighted fair queue entry for stream arbitration.
 pub struct QueueEntry {
   session_id : String
@@ -25,6 +29,7 @@ pub struct QueueEntry {
   weight : Int64
 }
 
+///|
 /// Fair queuing scheduler for stream arbitration.
 /// Uses Array-based queues for each priority level.
 pub struct FairQueue {
@@ -32,11 +37,13 @@ pub struct FairQueue {
   mut bytes_scheduled : Int64
 }
 
+///|
 /// Creates a new fair queue scheduler.
 pub fn new_fair_queue() -> FairQueue {
   { entries: [], bytes_scheduled: 0L }
 }
 
+///|
 /// Enqueues a stream entry with the given priority.
 pub fn FairQueue::enqueue(
   self : FairQueue,
@@ -55,9 +62,10 @@ pub fn FairQueue::enqueue(
   self.entries = self.entries + [entry]
 }
 
+///|
 /// Dequeues the highest priority entry.
 /// Returns `None` if the queue is empty.
-pub fn FairQueue::dequeue(self : FairQueue) -> Option[QueueEntry] {
+pub fn FairQueue::dequeue(self : FairQueue) -> QueueEntry? {
   if self.entries.length() == 0 {
     return None
   }
@@ -88,6 +96,7 @@ pub fn FairQueue::dequeue(self : FairQueue) -> Option[QueueEntry] {
   Some(entry)
 }
 
+///|
 fn priority_value(p : Priority) -> Int64 {
   match p {
     Low => 1L
@@ -97,24 +106,28 @@ fn priority_value(p : Priority) -> Int64 {
   }
 }
 
+///|
 fn is_higher_priority(a : Priority, b : Priority) -> Bool {
   priority_value(a) > priority_value(b)
 }
 
+///|
 /// Exponential backoff state for retry logic.
 pub struct BackoffState {
-  initial_delay : Int64  // milliseconds
+  initial_delay : Int64 // milliseconds
   max_delay : Int64
   mut attempt : Int64
   mut current_delay : Int64
 }
 
+///|
 /// Creates a new backoff state.
 /// `initial_delay` in ms, `max_delay` in ms.
 pub fn new_backoff(initial_delay : Int64, max_delay : Int64) -> BackoffState {
   { initial_delay, max_delay, attempt: 0L, current_delay: initial_delay }
 }
 
+///|
 /// Returns the current delay and advances the backoff (exponential with jitter).
 pub fn BackoffState::next_delay(self : BackoffState) -> Int64 {
   let delay = self.current_delay
@@ -125,12 +138,14 @@ pub fn BackoffState::next_delay(self : BackoffState) -> Int64 {
   delay
 }
 
+///|
 /// Resets the backoff state after a successful operation.
 pub fn BackoffState::reset(self : BackoffState) -> Unit {
   self.attempt = 0L
   self.current_delay = self.initial_delay
 }
 
+///|
 /// Circuit breaker state for upstream protection.
 pub enum CircuitState {
   Closed
@@ -138,17 +153,22 @@ pub enum CircuitState {
   HalfOpen
 } derive(Eq)
 
+///|
 /// Circuit breaker for upstream service protection.
 pub struct CircuitBreaker {
   mut state : CircuitState
   failure_threshold : Int64
-  recovery_timeout : Int64  // milliseconds
+  recovery_timeout : Int64 // milliseconds
   mut failure_count : Int64
   mut last_failure_time : Int64
 }
 
+///|
 /// Creates a new circuit breaker.
-pub fn new_circuit_breaker(failure_threshold : Int64, recovery_timeout : Int64) -> CircuitBreaker {
+pub fn new_circuit_breaker(
+  failure_threshold : Int64,
+  recovery_timeout : Int64,
+) -> CircuitBreaker {
   {
     state: Closed,
     failure_threshold,
@@ -158,14 +178,19 @@ pub fn new_circuit_breaker(failure_threshold : Int64, recovery_timeout : Int64) 
   }
 }
 
+///|
 /// Records a success, resetting the failure count.
 pub fn CircuitBreaker::record_success(self : CircuitBreaker) -> Unit {
   self.failure_count = 0L
   self.state = Closed
 }
 
+///|
 /// Records a failure, potentially opening the circuit.
-pub fn CircuitBreaker::record_failure(self : CircuitBreaker, current_time : Int64) -> Unit {
+pub fn CircuitBreaker::record_failure(
+  self : CircuitBreaker,
+  current_time : Int64,
+) -> Unit {
   self.failure_count = self.failure_count + 1L
   self.last_failure_time = current_time
   if self.failure_count >= self.failure_threshold {
@@ -173,18 +198,21 @@ pub fn CircuitBreaker::record_failure(self : CircuitBreaker, current_time : Int6
   }
 }
 
+///|
 /// Checks if the circuit breaker allows requests.
-pub fn CircuitBreaker::allow_request(self : CircuitBreaker, current_time : Int64) -> Bool {
+pub fn CircuitBreaker::allow_request(
+  self : CircuitBreaker,
+  current_time : Int64,
+) -> Bool {
   match self.state {
     Closed => true
-    Open => {
-      if (current_time - self.last_failure_time) >= self.recovery_timeout {
+    Open =>
+      if current_time - self.last_failure_time >= self.recovery_timeout {
         self.state = HalfOpen
         true
       } else {
         false
       }
-    }
-    HalfOpen => true  // probe request allowed
+    HalfOpen => true // probe request allowed
   }
 }

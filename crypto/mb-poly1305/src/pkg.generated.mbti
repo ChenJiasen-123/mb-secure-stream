@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-poly1305"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-poly1305/src"
 
 // Values
 pub fn poly1305_mac(Array[UInt], Array[UInt]) -> Array[UInt]

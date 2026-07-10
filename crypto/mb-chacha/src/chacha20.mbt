@@ -1,30 +1,45 @@
+///|
 const SIGMA0 : UInt = 0x61707865U // "expa"
+
+///|
 const SIGMA1 : UInt = 0x3320646eU // "nd 3"
+
+///|
 const SIGMA2 : UInt = 0x79622d32U // "2-by"
+
+///|
 const SIGMA3 : UInt = 0x6b206574U // "te k"
 
+///|
 fn rotate_left_u32(value : UInt, shift : Int) -> UInt {
-  let s = ((shift % 32) + 32) % 32
+  let s = (shift % 32 + 32) % 32
   if s == 0 {
     return value
   }
   ((value << s) | (value >> (32 - s))) & 0xFFFFFFFFU
 }
 
+///|
 fn load_le32_from_uints(bytes : Array[UInt], offset : Int) -> UInt {
   (bytes[offset] & 0xFFU) |
-    ((bytes[offset + 1] & 0xFFU) << 8) |
-    ((bytes[offset + 2] & 0xFFU) << 16) |
-    ((bytes[offset + 3] & 0xFFU) << 24)
+  ((bytes[offset + 1] & 0xFFU) << 8) |
+  ((bytes[offset + 2] & 0xFFU) << 16) |
+  ((bytes[offset + 3] & 0xFFU) << 24)
 }
 
-fn store_le32_into_fixed(bytes : FixedArray[UInt], offset : Int, value : UInt) -> Unit {
+///|
+fn store_le32_into_fixed(
+  bytes : FixedArray[UInt],
+  offset : Int,
+  value : UInt,
+) -> Unit {
   bytes[offset] = value & 0xFFU
   bytes[offset + 1] = (value >> 8) & 0xFFU
   bytes[offset + 2] = (value >> 16) & 0xFFU
   bytes[offset + 3] = (value >> 24) & 0xFFU
 }
 
+///|
 fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   let arr : Array[UInt] = []
   for i in 0..<bytes.length() {
@@ -33,6 +48,7 @@ fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   arr
 }
 
+///|
 fn key_words_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   let words = FixedArray::make(8, 0U)
   for i in 0..<8 {
@@ -41,6 +57,7 @@ fn key_words_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   words
 }
 
+///|
 fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   let buf : Array[Byte] = []
   for value in values {
@@ -49,8 +66,7 @@ fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   Bytes::from_array(buf)
 }
 
-
-
+///|
 fn nonce_words_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   let words = FixedArray::make(3, 0U)
   for i in 0..<3 {
@@ -59,7 +75,14 @@ fn nonce_words_from_bytes(bytes : Array[UInt]) -> FixedArray[UInt] {
   words
 }
 
-fn quarter_round(state : FixedArray[UInt], a : Int, b : Int, c : Int, d : Int) -> Unit {
+///|
+fn quarter_round(
+  state : FixedArray[UInt],
+  a : Int,
+  b : Int,
+  c : Int,
+  d : Int,
+) -> Unit {
   state[a] = state[a] + state[b]
   state[d] = rotate_left_u32(state[d] ^ state[a], 16)
 
@@ -73,6 +96,7 @@ fn quarter_round(state : FixedArray[UInt], a : Int, b : Int, c : Int, d : Int) -
   state[b] = rotate_left_u32(state[b] ^ state[c], 7)
 }
 
+///|
 fn chacha20_core(state : FixedArray[UInt]) -> Unit {
   let mut round = 0
   while round < 10 {
@@ -90,6 +114,7 @@ fn chacha20_core(state : FixedArray[UInt]) -> Unit {
   }
 }
 
+///|
 fn chacha20_block(
   key_words : FixedArray[UInt],
   counter : UInt,
@@ -123,6 +148,7 @@ fn chacha20_block(
   output
 }
 
+///|
 pub fn hchacha20(
   key_words : FixedArray[UInt],
   nonce_words : FixedArray[UInt],
@@ -151,6 +177,7 @@ pub fn hchacha20(
   result
 }
 
+///|
 fn derived_nonce_from_xnonce(xnonce : Array[UInt]) -> FixedArray[UInt] {
   let nonce = FixedArray::make(3, 0U)
   nonce[0] = 0U
@@ -159,12 +186,14 @@ fn derived_nonce_from_xnonce(xnonce : Array[UInt]) -> FixedArray[UInt] {
   nonce
 }
 
+///|
 pub struct ChaCha20 {
   key_words : FixedArray[UInt]
   nonce_words : FixedArray[UInt]
   mut counter : UInt
 }
 
+///|
 fn make_chacha20(
   key_words : FixedArray[UInt],
   nonce_words : FixedArray[UInt],
@@ -173,10 +202,12 @@ fn make_chacha20(
   ChaCha20::{ key_words, nonce_words, counter }
 }
 
+///|
 pub fn ChaCha20::new(key : Bytes, nonce : Bytes) -> Result[ChaCha20, String] {
   ChaCha20::new_with_counter(key, nonce, 0U)
 }
 
+///|
 pub fn ChaCha20::new_with_counter(
   key : Bytes,
   nonce : Bytes,
@@ -187,6 +218,7 @@ pub fn ChaCha20::new_with_counter(
   ChaCha20::new_from_uints_with_counter(key_uints, nonce_uints, counter)
 }
 
+///|
 pub fn ChaCha20::new_from_uints(
   key : Array[UInt],
   nonce : Array[UInt],
@@ -194,6 +226,7 @@ pub fn ChaCha20::new_from_uints(
   ChaCha20::new_from_uints_with_counter(key, nonce, 0U)
 }
 
+///|
 pub fn ChaCha20::new_from_uints_with_counter(
   key : Array[UInt],
   nonce : Array[UInt],
@@ -210,20 +243,24 @@ pub fn ChaCha20::new_from_uints_with_counter(
   Ok(make_chacha20(key_words, nonce_words, counter))
 }
 
+///|
 pub fn ChaCha20::set_counter(self : ChaCha20, counter : UInt) -> Unit {
   self.counter = counter
 }
 
+///|
 pub fn ChaCha20::get_counter(self : ChaCha20) -> UInt {
   self.counter
 }
 
+///|
 pub fn ChaCha20::generate_block(self : ChaCha20) -> FixedArray[UInt] {
   let block = chacha20_block(self.key_words, self.counter, self.nonce_words)
   self.counter = self.counter + 1U
   block
 }
 
+///|
 pub fn ChaCha20::apply_keystream(
   self : ChaCha20,
   input : Array[UInt],
@@ -243,15 +280,14 @@ pub fn ChaCha20::apply_keystream(
   output
 }
 
-pub fn ChaCha20::apply_keystream_bytes(
-  self : ChaCha20,
-  input : Bytes,
-) -> Bytes {
+///|
+pub fn ChaCha20::apply_keystream_bytes(self : ChaCha20, input : Bytes) -> Bytes {
   let input_uints = bytes_to_uint_array(input)
   let xored = self.apply_keystream(input_uints)
   uints_to_bytes(xored)
 }
 
+///|
 pub fn ChaCha20::encrypt(
   self : ChaCha20,
   plaintext : Array[UInt],
@@ -259,10 +295,12 @@ pub fn ChaCha20::encrypt(
   self.apply_keystream(plaintext)
 }
 
+///|
 pub fn ChaCha20::encrypt_bytes(self : ChaCha20, plaintext : Bytes) -> Bytes {
   self.apply_keystream_bytes(plaintext)
 }
 
+///|
 pub fn ChaCha20::decrypt(
   self : ChaCha20,
   ciphertext : Array[UInt],
@@ -270,14 +308,17 @@ pub fn ChaCha20::decrypt(
   self.apply_keystream(ciphertext)
 }
 
+///|
 pub fn ChaCha20::decrypt_bytes(self : ChaCha20, ciphertext : Bytes) -> Bytes {
   self.apply_keystream_bytes(ciphertext)
 }
 
+///|
 pub struct XChaCha20 {
   inner : ChaCha20
 }
 
+///|
 fn xchacha20_from_uints_with_counter(
   key : Array[UInt],
   nonce : Array[UInt],
@@ -298,14 +339,18 @@ fn xchacha20_from_uints_with_counter(
 
   let derived_key_words = hchacha20(key_words, nonce_words)
   let derived_nonce_words = derived_nonce_from_xnonce(nonce)
-  let derived_inner = make_chacha20(derived_key_words, derived_nonce_words, counter)
+  let derived_inner = make_chacha20(
+    derived_key_words, derived_nonce_words, counter,
+  )
   Ok(XChaCha20::{ inner: derived_inner })
 }
 
+///|
 pub fn XChaCha20::new(key : Bytes, nonce : Bytes) -> Result[XChaCha20, String] {
   XChaCha20::new_with_counter(key, nonce, 0U)
 }
 
+///|
 pub fn XChaCha20::new_with_counter(
   key : Bytes,
   nonce : Bytes,
@@ -316,6 +361,7 @@ pub fn XChaCha20::new_with_counter(
   xchacha20_from_uints_with_counter(key_uints, nonce_uints, counter)
 }
 
+///|
 pub fn XChaCha20::apply_keystream(
   self : XChaCha20,
   input : Array[UInt],
@@ -323,6 +369,7 @@ pub fn XChaCha20::apply_keystream(
   self.inner.apply_keystream(input)
 }
 
+///|
 pub fn XChaCha20::apply_keystream_bytes(
   self : XChaCha20,
   input : Bytes,
@@ -330,6 +377,7 @@ pub fn XChaCha20::apply_keystream_bytes(
   self.inner.apply_keystream_bytes(input)
 }
 
+///|
 pub fn XChaCha20::encrypt(
   self : XChaCha20,
   plaintext : Array[UInt],
@@ -337,13 +385,12 @@ pub fn XChaCha20::encrypt(
   self.inner.encrypt(plaintext)
 }
 
-pub fn XChaCha20::encrypt_bytes(
-  self : XChaCha20,
-  plaintext : Bytes,
-) -> Bytes {
+///|
+pub fn XChaCha20::encrypt_bytes(self : XChaCha20, plaintext : Bytes) -> Bytes {
   self.inner.encrypt_bytes(plaintext)
 }
 
+///|
 pub fn XChaCha20::decrypt(
   self : XChaCha20,
   ciphertext : Array[UInt],
@@ -351,9 +398,7 @@ pub fn XChaCha20::decrypt(
   self.inner.decrypt(ciphertext)
 }
 
-pub fn XChaCha20::decrypt_bytes(
-  self : XChaCha20,
-  ciphertext : Bytes,
-) -> Bytes {
+///|
+pub fn XChaCha20::decrypt_bytes(self : XChaCha20, ciphertext : Bytes) -> Bytes {
   self.inner.decrypt_bytes(ciphertext)
 }

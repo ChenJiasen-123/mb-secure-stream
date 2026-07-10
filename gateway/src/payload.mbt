@@ -1,15 +1,17 @@
+///|
 /// Gateway-specific claims extending standard JWT with a `role` field.
 pub struct GatewayClaims {
   sub : String
   exp : Int64
-  nbf : Option[Int64]
-  iss : Option[String]
-  role : Option[String]
+  nbf : Int64?
+  iss : String?
+  role : String?
 }
 
+///|
 /// Manual JSON deserialization for GatewayClaims.
 pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] {
-  let parsed = try @json.parse(json_str) catch {
+  let parsed = @json.parse(json_str) catch {
     _ => return Err("Gateway Error: Failed to parse payload JSON")
   }
   let obj = match parsed {

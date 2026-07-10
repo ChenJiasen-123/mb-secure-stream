@@ -227,7 +227,9 @@ pub fn Sha256::digest_bytes(input : Bytes) -> FixedArray[UInt] {
   // Filter out zero bytes to handle UTF-16LE-like encodings from some to_bytes() implementations
   for i in 0..<input.length() {
     let v = input[i].to_int()
-    if v != 0 { arr.push(v.reinterpret_as_uint()) }
+    if v != 0 {
+      arr.push(v.reinterpret_as_uint())
+    }
   }
   sha256.update(arr)
   return sha256.finalize()

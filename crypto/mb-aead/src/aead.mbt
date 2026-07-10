@@ -1,5 +1,6 @@
 // ChaCha20-Poly1305 AEAD (RFC 8439 Section 2.8)
 
+///|
 fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   let arr : Array[UInt] = []
   for i in 0..<bytes.length() {
@@ -8,6 +9,7 @@ fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   arr
 }
 
+///|
 fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   let buf : Array[Byte] = []
   for value in values {
@@ -16,6 +18,7 @@ fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   Bytes::from_array(buf)
 }
 
+///|
 /// Encode a 64-bit value as 8 bytes in little-endian order.
 fn le64(value : UInt64) -> Array[UInt] {
   let out : Array[UInt] = []
@@ -30,6 +33,7 @@ fn le64(value : UInt64) -> Array[UInt] {
   out
 }
 
+///|
 /// Pad length to 16-byte boundary with zeros.
 fn pad16_zeros(data_len : Int) -> Array[UInt] {
   let remainder = data_len % 16
@@ -46,12 +50,10 @@ fn pad16_zeros(data_len : Int) -> Array[UInt] {
   out
 }
 
+///|
 /// Build the Poly1305 mac_data per RFC 8439 Section 2.8:
 /// AAD || pad(AAD) || ciphertext || pad(ciphertext) || le64(aad_len) || le64(ct_len)
-fn build_mac_data(
-  aad : Array[UInt],
-  ciphertext : Array[UInt],
-) -> Array[UInt] {
+fn build_mac_data(aad : Array[UInt], ciphertext : Array[UInt]) -> Array[UInt] {
   let mac_data : Array[UInt] = []
   // AAD
   for v in aad {
@@ -80,6 +82,7 @@ fn build_mac_data(
   mac_data
 }
 
+///|
 /// Constant-time comparison of two byte arrays.
 fn constant_time_eq(a : Array[UInt], b : Array[UInt]) -> Bool {
   if a.length() != b.length() {
@@ -92,6 +95,7 @@ fn constant_time_eq(a : Array[UInt], b : Array[UInt]) -> Bool {
   diff == 0U
 }
 
+///|
 /// Encrypt and authenticate using ChaCha20-Poly1305 AEAD.
 ///
 /// Returns (ciphertext, 16-byte tag) on success.
@@ -126,6 +130,7 @@ pub fn aead_encrypt(
   }
 }
 
+///|
 /// Decrypt and verify using ChaCha20-Poly1305 AEAD.
 ///
 /// Returns plaintext on success, error if authentication fails.
@@ -167,6 +172,7 @@ pub fn aead_decrypt(
   }
 }
 
+///|
 /// Encrypt and authenticate using ChaCha20-Poly1305 AEAD (Bytes API).
 pub fn aead_encrypt_bytes(
   key : Bytes,
@@ -184,6 +190,7 @@ pub fn aead_encrypt_bytes(
   }
 }
 
+///|
 /// Decrypt and verify using ChaCha20-Poly1305 AEAD (Bytes API).
 pub fn aead_decrypt_bytes(
   key : Bytes,

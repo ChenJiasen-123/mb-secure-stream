@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-aead"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-aead/src"
 
 // Values
 pub fn aead_decrypt(Array[UInt], Array[UInt], Array[UInt], Array[UInt], Array[UInt]) -> Result[Array[UInt], String]

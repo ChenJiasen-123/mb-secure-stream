@@ -1,6 +1,0 @@
-{
-  "is_main": false,
-  "test-import": [
-    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }
-  ]
-}

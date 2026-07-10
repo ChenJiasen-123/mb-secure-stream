@@ -1,3 +1,4 @@
+///|
 fn hex_to_uints(hex : String) -> Array[UInt] {
   let arr : Array[UInt] = []
   let bytes = hex.to_array()
@@ -11,6 +12,7 @@ fn hex_to_uints(hex : String) -> Array[UInt] {
   arr
 }
 
+///|
 fn hex_char_to_uint(c : Char) -> UInt {
   if c >= '0' && c <= '9' {
     (c.to_int() - 48).reinterpret_as_uint()
@@ -23,6 +25,7 @@ fn hex_char_to_uint(c : Char) -> UInt {
   }
 }
 
+///|
 fn uints_to_hex(arr : Array[UInt]) -> String {
   let mut s = ""
   for value in arr {
@@ -33,6 +36,7 @@ fn uints_to_hex(arr : Array[UInt]) -> String {
   s
 }
 
+///|
 fn nibble_to_hex(n : UInt) -> String {
   if n < 10U {
     (n.reinterpret_as_int() + 48).unsafe_to_char().to_string()
@@ -41,6 +45,7 @@ fn nibble_to_hex(n : UInt) -> String {
   }
 }
 
+///|
 fn ascii_to_uints(s : String) -> Array[UInt] {
   let arr : Array[UInt] = []
   let chars = s.to_array()
@@ -50,6 +55,7 @@ fn ascii_to_uints(s : String) -> Array[UInt] {
   arr
 }
 
+///|
 /// Test 1: RFC 8439 Section 2.5.2
 test "poly1305_rfc8439_section_2_5_2" {
   let key = hex_to_uints(
@@ -63,6 +69,7 @@ test "poly1305_rfc8439_section_2_5_2" {
   assert_eq(tag_hex, expected_hex)
 }
 
+///|
 /// Test 2: All zeros key produces zero tag
 test "poly1305_zero_key" {
   let key = Array::make(32, 0U)
@@ -72,6 +79,7 @@ test "poly1305_zero_key" {
   assert_eq(uints_to_hex(tag), uints_to_hex(expected_tag))
 }
 
+///|
 /// Test 3: Verify returns true for correct tag
 test "poly1305_verify_correct" {
   let key = hex_to_uints(
@@ -82,6 +90,7 @@ test "poly1305_verify_correct" {
   assert_true(poly1305_verify(key, message, tag))
 }
 
+///|
 /// Test 4: Verify returns false for wrong tag
 test "poly1305_verify_wrong_tag" {
   let key = hex_to_uints(
@@ -92,6 +101,7 @@ test "poly1305_verify_wrong_tag" {
   assert_false(poly1305_verify(key, message, tag16))
 }
 
+///|
 /// Test 5: r=0 means tag equals s
 test "poly1305_r_zero_tag_equals_s" {
   let key = hex_to_uints(

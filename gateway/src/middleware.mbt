@@ -1,3 +1,4 @@
+///|
 pub struct StreamContext {
   token : String
   mut is_allowed : Bool
@@ -5,11 +6,13 @@ pub struct StreamContext {
   mut user_role : String
 }
 
+///|
 /// Creates a new stream security context for a given token.
 pub fn new_stream_context(token : String) -> StreamContext {
   { token, is_allowed: false, error_message: "", user_role: "" }
 }
 
+///|
 /// Executes the security filter on the given stream context.
 /// Validates the JWT token against the provided key and current time,
 /// and populates the context's `is_allowed`, `user_role`, and `error_message` fields.
@@ -57,7 +60,8 @@ pub fn execute_security_filter(
       ctx.is_allowed = false
       ctx.error_message = match e {
         @mb_jwt.TokenExpired(_, _) => "Gateway Blocked: Token has expired"
-        @mb_jwt.TokenNotYetValid(_, _) => "Gateway Blocked: Token is not yet valid (nbf)"
+        @mb_jwt.TokenNotYetValid(_, _) =>
+          "Gateway Blocked: Token is not yet valid (nbf)"
         @mb_jwt.InvalidIssuer(_) => "Gateway Blocked: Invalid issuer"
         @mb_jwt.InvalidAudience(_) => "Gateway Blocked: Invalid audience"
         _ => "Gateway Blocked: Claims validation failed"

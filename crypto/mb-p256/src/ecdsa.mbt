@@ -1,6 +1,7 @@
 // ECDSA signing and verification for P-256 (FIPS 186-4).
 // Uses RFC 6979 deterministic nonce generation.
 
+///|
 /// ECDSA key pair.
 pub struct ECDSAKeyPair {
   /// Private key scalar (32 bytes, big-endian).
@@ -9,12 +10,14 @@ pub struct ECDSAKeyPair {
   public_key : Array[UInt]
 }
 
+///|
 /// ECDSA signature (r, s) each 32 bytes big-endian.
 pub(all) struct ECDSASignature {
   r : Array[UInt]
   s : Array[UInt]
 }
 
+///|
 fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   let arr : Array[UInt] = []
   for i in 0..<bytes.length() {
@@ -23,6 +26,7 @@ fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   arr
 }
 
+///|
 fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   let buf : Array[Byte] = []
   for value in values {
@@ -31,8 +35,11 @@ fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   Bytes::from_array(buf)
 }
 
+///|
 /// Generate key pair from a 32-byte private key.
-pub fn ecdsa_keygen(private_key_bytes : Array[UInt]) -> Result[ECDSAKeyPair, String] {
+pub fn ecdsa_keygen(
+  private_key_bytes : Array[UInt],
+) -> Result[ECDSAKeyPair, String] {
   if private_key_bytes.length() != 32 {
     return Err("Private key must be 32 bytes")
   }
@@ -62,6 +69,7 @@ pub fn ecdsa_keygen(private_key_bytes : Array[UInt]) -> Result[ECDSAKeyPair, Str
   Ok(ECDSAKeyPair::{ private_key: private_key_bytes, public_key: pub_key })
 }
 
+///|
 /// Parse a public key from uncompressed format (65 bytes: 0x04 || x || y).
 fn parse_public_key(pub_key : Array[UInt]) -> Result[ProjectivePoint, String] {
   if pub_key.length() != 65 || pub_key[0] != 0x04U {
@@ -93,6 +101,7 @@ fn parse_public_key(pub_key : Array[UInt]) -> Result[ProjectivePoint, String] {
   Ok(ProjectivePoint::{ x: x_mont, y: y_mont, z: fe_copy(field_one) })
 }
 
+///|
 /// RFC 6979 deterministic nonce generation for ECDSA.
 /// Produces a deterministic k value from the private key and message hash.
 fn rfc6979_generate_k(
@@ -171,6 +180,7 @@ fn rfc6979_generate_k(
   k_scalar
 }
 
+///|
 /// Sign a message hash using ECDSA with RFC 6979 deterministic nonce.
 pub fn ecdsa_sign(
   private_key : Array[UInt],
@@ -223,12 +233,10 @@ pub fn ecdsa_sign(
     return Err("Invalid nonce (s = 0)")
   }
 
-  Ok(ECDSASignature::{
-    r: sc_to_bytes(r),
-    s: sc_to_bytes(s),
-  })
+  Ok(ECDSASignature::{ r: sc_to_bytes(r), s: sc_to_bytes(s) })
 }
 
+///|
 /// Sign a message (not pre-hashed) using ECDSA. Hashes with SHA-256 first.
 pub fn ecdsa_sign_message(
   private_key : Array[UInt],
@@ -238,6 +246,7 @@ pub fn ecdsa_sign_message(
   ecdsa_sign(private_key, hash)
 }
 
+///|
 /// Verify an ECDSA signature against a message hash and public key.
 pub fn ecdsa_verify(
   public_key : Array[UInt],
@@ -289,6 +298,7 @@ pub fn ecdsa_verify(
   Ok(eq == 0U)
 }
 
+///|
 /// Verify an ECDSA signature against a message (not pre-hashed).
 pub fn ecdsa_verify_message(
   public_key : Array[UInt],
@@ -299,22 +309,32 @@ pub fn ecdsa_verify_message(
   ecdsa_verify(public_key, hash, signature)
 }
 
+///|
 /// Bytes API wrappers
 pub fn ecdsa_keygen_bytes(private_key : Bytes) -> Result[ECDSAKeyPair, String] {
   ecdsa_keygen(bytes_to_uint_array(private_key))
 }
 
+///|
 pub fn ecdsa_sign_bytes(
   private_key : Bytes,
   message : Bytes,
 ) -> Result[ECDSASignature, String] {
-  ecdsa_sign_message(bytes_to_uint_array(private_key), bytes_to_uint_array(message))
+  ecdsa_sign_message(
+    bytes_to_uint_array(private_key),
+    bytes_to_uint_array(message),
+  )
 }
 
+///|
 pub fn ecdsa_verify_bytes(
   public_key : Bytes,
   message : Bytes,
   signature : ECDSASignature,
 ) -> Result[Bool, String] {
-  ecdsa_verify_message(bytes_to_uint_array(public_key), bytes_to_uint_array(message), signature)
+  ecdsa_verify_message(
+    bytes_to_uint_array(public_key),
+    bytes_to_uint_array(message),
+    signature,
+  )
 }

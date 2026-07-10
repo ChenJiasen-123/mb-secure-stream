@@ -14,15 +14,20 @@
 //     }
 //   };
 
+///|
 #external
 priv type JsUint8Array
 
+///|
 fn js_new_uint8array(len : Int) -> JsUint8Array = "crypto" "newUint8Array"
 
+///|
 fn js_get_random_values(buf : JsUint8Array) -> Unit = "crypto" "getRandomValues"
 
+///|
 fn js_read_byte(buf : JsUint8Array, idx : Int) -> Int = "crypto" "readByte"
 
+///|
 pub fn getrandom(len : Int) -> Result[Bytes, String] {
   if len <= 0 {
     return Err("Length must be positive")

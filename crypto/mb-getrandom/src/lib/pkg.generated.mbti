@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-getrandom/lib"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-getrandom/src/lib"
 
 // Values
 pub fn getrandom(Int) -> Result[Bytes, String]

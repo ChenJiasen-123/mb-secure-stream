@@ -1,3 +1,4 @@
+///|
 fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   let arr : Array[UInt] = []
   for i in 0..<bytes.length() {
@@ -6,6 +7,7 @@ fn bytes_to_uint_array(bytes : Bytes) -> Array[UInt] {
   arr
 }
 
+///|
 fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   let buf : Array[Byte] = []
   for value in values {
@@ -14,6 +16,7 @@ fn uints_to_bytes(values : Array[UInt]) -> Bytes {
   Bytes::from_array(buf)
 }
 
+///|
 fn constant_time_eq(left : Array[UInt], right : Array[UInt]) -> Bool {
   if left.length() != right.length() {
     return false
@@ -25,6 +28,7 @@ fn constant_time_eq(left : Array[UInt], right : Array[UInt]) -> Bool {
   diff == 0U
 }
 
+///|
 /// Poly1305 MAC computation per RFC 8439 Section 2.5.
 ///
 /// Uses radix 2^26 representation with 5 limbs.
@@ -48,25 +52,40 @@ pub fn poly1305_mac(key : Array[UInt], message : Array[UInt]) -> Array[UInt] {
   r_bytes[12] = r_bytes[12] & 0xFCU
 
   // Convert r to 5 limbs of 26 bits
-  let r0 : UInt64 = ((r_bytes[0].to_uint64()) |
-    (r_bytes[1].to_uint64() << 8) |
-    (r_bytes[2].to_uint64() << 16) |
-    (r_bytes[3].to_uint64() << 24)) & 0x3FFFFFFUL
-  let r1 : UInt64 = ((r_bytes[3].to_uint64() >> 2) |
-    (r_bytes[4].to_uint64() << 6) |
-    (r_bytes[5].to_uint64() << 14) |
-    (r_bytes[6].to_uint64() << 22)) & 0x3FFFFFFUL
-  let r2 : UInt64 = ((r_bytes[6].to_uint64() >> 4) |
-    (r_bytes[7].to_uint64() << 4) |
-    (r_bytes[8].to_uint64() << 12) |
-    (r_bytes[9].to_uint64() << 20)) & 0x3FFFFFFUL
-  let r3 : UInt64 = ((r_bytes[9].to_uint64() >> 6) |
-    (r_bytes[10].to_uint64() << 2) |
-    (r_bytes[11].to_uint64() << 10) |
-    (r_bytes[12].to_uint64() << 18)) & 0x3FFFFFFUL
-  let r4 : UInt64 = (r_bytes[13].to_uint64() |
-    (r_bytes[14].to_uint64() << 8) |
-    (r_bytes[15].to_uint64() << 16)) & 0x3FFFFFFUL
+  let r0 : UInt64 = (
+      r_bytes[0].to_uint64() |
+      (r_bytes[1].to_uint64() << 8) |
+      (r_bytes[2].to_uint64() << 16) |
+      (r_bytes[3].to_uint64() << 24)
+    ) &
+    0x3FFFFFFUL
+  let r1 : UInt64 = (
+      (r_bytes[3].to_uint64() >> 2) |
+      (r_bytes[4].to_uint64() << 6) |
+      (r_bytes[5].to_uint64() << 14) |
+      (r_bytes[6].to_uint64() << 22)
+    ) &
+    0x3FFFFFFUL
+  let r2 : UInt64 = (
+      (r_bytes[6].to_uint64() >> 4) |
+      (r_bytes[7].to_uint64() << 4) |
+      (r_bytes[8].to_uint64() << 12) |
+      (r_bytes[9].to_uint64() << 20)
+    ) &
+    0x3FFFFFFUL
+  let r3 : UInt64 = (
+      (r_bytes[9].to_uint64() >> 6) |
+      (r_bytes[10].to_uint64() << 2) |
+      (r_bytes[11].to_uint64() << 10) |
+      (r_bytes[12].to_uint64() << 18)
+    ) &
+    0x3FFFFFFUL
+  let r4 : UInt64 = (
+      r_bytes[13].to_uint64() |
+      (r_bytes[14].to_uint64() << 8) |
+      (r_bytes[15].to_uint64() << 16)
+    ) &
+    0x3FFFFFFUL
 
   // Precompute r*5 values for modular reduction
   let s1 : UInt64 = r1 * 5UL
@@ -267,11 +286,13 @@ pub fn poly1305_mac(key : Array[UInt], message : Array[UInt]) -> Array[UInt] {
   tag
 }
 
+///|
 pub fn poly1305_mac_bytes(key : Bytes, message : Bytes) -> Bytes {
   let tag = poly1305_mac(bytes_to_uint_array(key), bytes_to_uint_array(message))
   uints_to_bytes(tag)
 }
 
+///|
 pub fn poly1305_verify(
   key : Array[UInt],
   message : Array[UInt],
@@ -281,6 +302,7 @@ pub fn poly1305_verify(
   constant_time_eq(expected, tag)
 }
 
+///|
 pub fn poly1305_verify_bytes(key : Bytes, message : Bytes, tag : Bytes) -> Bool {
   poly1305_verify(
     bytes_to_uint_array(key),

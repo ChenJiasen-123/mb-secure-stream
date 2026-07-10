@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt"
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt/src"
 
 import {
   "moonbitlang/core/debug",

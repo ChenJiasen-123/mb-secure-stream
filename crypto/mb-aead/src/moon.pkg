@@ -1,0 +1,12 @@
+import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-chacha/src" @chacha,
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-poly1305/src" @poly1305,
+}
+
+import {
+  "moonbitlang/core/encoding/utf8",
+} for "test"
+
+options(
+  "is-main": false,
+)

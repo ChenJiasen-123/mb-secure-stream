@@ -1,20 +1,23 @@
 // Base64URL encoding/decoding (RFC 4648)
 // URL-safe alphabet（ASCII): A-Za-z0-9-_ (no padding)
 
+///|
 let base64url_chars : FixedArray[Int] = [
-  65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,  // A-M
-  78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,  // N-Z
-  97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,  // a-m
-  110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122,  // n-z
-  48, 49, 50, 51, 52, 53, 54, 55, 56, 57,  // 0-9
-  45, 95  // - _
+  65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, // A-M
+   78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, // N-Z
+   97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, // a-m
+   110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, // n-z
+   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // 0-9
+   45, 95, // - _
 ]
 
-fn get_encode_char(index: Int) -> String {
+///|
+fn get_encode_char(index : Int) -> String {
   index.unsafe_to_char().to_string()
 }
 
-fn get_decode_value(ch: Int) -> Int {
+///|
+fn get_decode_value(ch : Int) -> Int {
   if ch >= 65 && ch <= 90 {
     // A-Z -> 0-25
     ch - 65
@@ -36,16 +39,18 @@ fn get_decode_value(ch: Int) -> Int {
   }
 }
 
-fn string_to_bytes_filtered(s: String) -> Array[Int] {
+///|
+fn string_to_bytes_filtered(s : String) -> Array[Int] {
   let raw = @utf8.encode(s)
   let result : Array[Int] = []
   for i in 0..<raw.length() {
     result.push(raw[i].to_int())
   }
-  result  
+  result
 }
 
-pub fn base64url_encode(data: Array[UInt]) -> String {
+///|
+pub fn base64url_encode(data : Array[UInt]) -> String {
   let mut result = ""
   let len = data.length()
   let mut i = 0
@@ -93,7 +98,8 @@ pub fn base64url_encode(data: Array[UInt]) -> String {
   result
 }
 
-pub fn base64url_encode_string(s: String) -> String {
+///|
+pub fn base64url_encode_string(s : String) -> String {
   let bytes = string_to_bytes_filtered(s)
   let uints : Array[UInt] = []
   for b in bytes {
@@ -102,7 +108,8 @@ pub fn base64url_encode_string(s: String) -> String {
   base64url_encode(uints)
 }
 
-pub fn base64url_decode(encoded: String) -> Array[UInt] {
+///|
+pub fn base64url_decode(encoded : String) -> Array[UInt] {
   let chars = string_to_bytes_filtered(encoded)
   let result : Array[UInt] = []
   let len = chars.length()
@@ -155,7 +162,8 @@ pub fn base64url_decode(encoded: String) -> Array[UInt] {
   result
 }
 
-pub fn base64url_decode_to_string(encoded: String) -> String {
+///|
+pub fn base64url_decode_to_string(encoded : String) -> String {
   let bytes = base64url_decode(encoded)
   let mut result = ""
   for b in bytes {
@@ -164,9 +172,14 @@ pub fn base64url_decode_to_string(encoded: String) -> String {
   result
 }
 
+///|
 /// Zero-copy base64url decode from a range within a source string.
 /// Decodes directly from the original string without creating intermediate substrings.
-pub fn base64url_decode_range(source: String, start: Int, end: Int) -> Array[UInt] {
+pub fn base64url_decode_range(
+  source : String,
+  start : Int,
+  end : Int,
+) -> Array[UInt] {
   let chars = source.to_array()
   let result : Array[UInt] = []
   let len = end
@@ -218,8 +231,13 @@ pub fn base64url_decode_range(source: String, start: Int, end: Int) -> Array[UIn
   result
 }
 
+///|
 /// Zero-copy base64url decode to string from a range within a source string.
-pub fn base64url_decode_range_to_string(source: String, start: Int, end: Int) -> String {
+pub fn base64url_decode_range_to_string(
+  source : String,
+  start : Int,
+  end : Int,
+) -> String {
   let bytes = base64url_decode_range(source, start, end)
   let mut result = ""
   for b in bytes {

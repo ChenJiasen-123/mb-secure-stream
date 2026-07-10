@@ -1,6 +1,7 @@
 # mb-secure-stream
 
-[![CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
+[![CI](https://www.gitlink.org.cn/ChenJiasen-123/mb-secure-stream/pipelines/badge.svg)](https://www.gitlink.org.cn/ChenJiasen-123/mb-secure-stream/devops)
+[![GitHub CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
 
 An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing.
 

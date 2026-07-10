@@ -157,19 +157,20 @@ cd ../../gateway && moon test
 
 ## Examples
 
-### Cloudflare Worker
+### Cloudflare Worker Example
 
-A production-ready JWT gateway example for Cloudflare Worker. Currently implemented in TypeScript using Web Crypto API. The underlying MoonBit library can be compiled to WASM for edge deployment.
+A production-ready JWT gateway (reverse proxy) deployed on Cloudflare Worker. This example demonstrates how to use the MoonBit cryptography library for JWT verification in a real-world edge computing scenario.
 
-**Features**:
-- JWT signature verification (HS256)
-- CORS handling with configurable allowed origins
-- Upstream proxy with `X-User-ID` and `X-User-Role` header forwarding
-- Security response headers (HSTS)
+**What it does**:
+1. **JWT Authentication**: Verifies `Authorization: Bearer <token>` using HMAC-SHA256
+2. **CORS Handling**: Manages cross-origin requests with configurable allowed origins
+3. **Request Forwarding**: Proxies authenticated requests to upstream server (`ORIGIN_URL`)
+4. **User Context Injection**: Adds `X-User-ID` and `X-User-Role` headers to upstream requests
+5. **Security Headers**: Adds HSTS and CORS headers to responses
+
+**Implementation**: Currently in TypeScript using Web Crypto API. The MoonBit library in this repo can be compiled to WASM (`moon build --target wasm-gc`) for similar edge deployments.
 
 See `examples/cloudflare-worker/README.md` for deployment instructions.
-
-**WASM Alternative**: The MoonBit library in this repository can be compiled to WASM using `moon build --target wasm-gc` for deployment on Cloudflare Workers, Fastly Compute, or Deno Deploy.
 
 ## Architecture
 

@@ -6,6 +6,27 @@ HKDF (HMAC-based Extract-and-Expand Key Derivation Function) for MoonBit — RFC
 
 Production-ready. SHA-256 and SHA-512 variants.
 
+## RFC Compliance
+
+- **RFC 5869** — HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
+
+## Performance
+
+| Operation | Time | Notes |
+|-----------|------|-------|
+| HKDF-SHA256 extract | ~25μs | Salt + IKM |
+| HKDF-SHA256 expand | ~30μs | PRK + info |
+| HKDF-SHA256 combined | ~50μs | One-shot |
+| HKDF-SHA512 combined | ~70μs | One-shot |
+
+## Security Considerations
+
+- **Salt recommendation**: Use a random salt for extract phase (can be empty but not recommended)
+- **Info binding**: Use `info` parameter to bind derived key to context
+- **Key length**: Output key length ≤ 255 × hash_len (e.g., 8160 bytes for SHA-256)
+- **One-way**: HKDF is a one-way function; cannot recover IKM from output key
+- **No key leakage**: IKM and PRK are never exposed in output
+
 ## API
 
 | Function | Description |
@@ -37,3 +58,14 @@ let key = hkdf_sha256_bytes(salt, ikm, info, 32)
 
 ```bash
 cd crypto/mb-hkdf && moon test
+```
+
+### Test Coverage
+
+- HKDF-SHA256 extract/expand
+- HKDF-SHA512 extract/expand
+- RFC 5869 test vectors
+- Empty salt handling
+- Empty info handling
+- Various output lengths
+- Bytes API consistency

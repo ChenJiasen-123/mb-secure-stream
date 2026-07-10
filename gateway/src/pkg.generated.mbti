@@ -8,11 +8,25 @@ import {
 // Values
 pub fn execute_security_filter(StreamContext, @mb-jwt.JwtKey, Int64) -> Unit
 
+pub fn new_backoff(Int64, Int64) -> BackoffState
+
+pub fn new_bandwidth_shaper(Int64, Int64) -> BandwidthShaper
+
+pub fn new_circuit_breaker(Int64, Int64) -> CircuitBreaker
+
+pub fn new_connection_pool(Int64) -> ConnectionPool
+
+pub fn new_fair_queue() -> FairQueue
+
+pub fn new_pool_entry(String, Int64, Int64) -> PoolEntry
+
 pub fn new_rate_limiter(Int64, Int64) -> RateLimiter
 
 pub fn new_replay_protector(Int64) -> ReplayProtector
 
 pub fn new_stream_context(String) -> StreamContext
+
+pub fn new_stream_metrics(Int) -> StreamMetrics
 
 pub fn new_stream_session(String, String, String, Int64) -> StreamSession
 
@@ -21,12 +35,85 @@ pub fn parse_gateway_claims(String) -> Result[GatewayClaims, String]
 // Errors
 
 // Types and methods
+pub struct BackoffState {
+  initial_delay : Int64
+  max_delay : Int64
+  mut attempt : Int64
+  mut current_delay : Int64
+}
+pub fn BackoffState::next_delay(Self) -> Int64
+pub fn BackoffState::reset(Self) -> Unit
+
+pub struct BandwidthShaper {
+  rate_bps : Int64
+  burst_bytes : Int64
+  mut tokens : Int64
+  mut last_refill_time : Int64
+}
+pub fn BandwidthShaper::try_consume(Self, Int64, Int64) -> Bool
+
+pub struct CircuitBreaker {
+  mut state : CircuitState
+  failure_threshold : Int64
+  recovery_timeout : Int64
+  mut failure_count : Int64
+  mut last_failure_time : Int64
+}
+pub fn CircuitBreaker::allow_request(Self, Int64) -> Bool
+pub fn CircuitBreaker::record_failure(Self, Int64) -> Unit
+pub fn CircuitBreaker::record_success(Self) -> Unit
+
+pub enum CircuitState {
+  Closed
+  Open
+  HalfOpen
+} derive(Eq)
+
+pub struct ConnectionPool {
+  mut entries : Array[PoolEntry]
+  mut total_active : Int64
+  global_max : Int64
+}
+pub fn ConnectionPool::acquire(Self, String, Int64, Int64) -> Bool
+pub fn ConnectionPool::release(Self, String, Int64) -> Unit
+
+pub struct FairQueue {
+  mut entries : Array[QueueEntry]
+  mut bytes_scheduled : Int64
+}
+pub fn FairQueue::dequeue(Self) -> QueueEntry?
+pub fn FairQueue::enqueue(Self, String, Priority, Int64, Int64) -> Unit
+
 pub struct GatewayClaims {
   sub : String
   exp : Int64
   nbf : Int64?
   iss : String?
   role : String?
+}
+
+pub struct PoolEntry {
+  host : String
+  port : Int64
+  active_connections : Int64
+  max_connections : Int64
+  total_requests : Int64
+  last_used : Int64
+}
+
+pub enum Priority {
+  Low
+  Normal
+  High
+  Critical
+}
+
+pub struct QueueEntry {
+  session_id : String
+  priority : Priority
+  byte_size : Int64
+  arrival_time : Int64
+  weight : Int64
 }
 
 pub struct RateLimiter {
@@ -50,6 +137,24 @@ pub struct StreamContext {
   mut error_message : String
   mut user_role : String
 }
+
+pub struct StreamMetrics {
+  mut total_requests : Int64
+  mut total_bytes_in : Int64
+  mut total_bytes_out : Int64
+  mut total_errors : Int64
+  mut total_rate_limited : Int64
+  mut total_auth_failures : Int64
+  mut request_durations_ms : Array[Int64]
+  mut peak_concurrent : Int64
+  max_samples : Int
+}
+pub fn StreamMetrics::avg_duration_ms(Self) -> Int64
+pub fn StreamMetrics::record_auth_failure(Self) -> Unit
+pub fn StreamMetrics::record_error(Self) -> Unit
+pub fn StreamMetrics::record_rate_limited(Self) -> Unit
+pub fn StreamMetrics::record_request(Self, Int64, Int64, Int64) -> Unit
+pub fn StreamMetrics::update_peak(Self, Int64) -> Unit
 
 pub struct StreamSession {
   session_id : String

@@ -1,6 +1,6 @@
 # mb-secure-stream
 
-Industrial-grade JWT gateway and cryptography library for MoonBit.
+An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing.
 
 ## Project Vision
 
@@ -15,11 +15,10 @@ mb-secure-stream is a production-ready security infrastructure for high-performa
 
 MoonBit is chosen for this project because of its unique advantages for security-critical, high-performance applications:
 
-### 1. **WASM-First Design** (Planned)
-- **Target**: Compile to WebAssembly for edge deployment
-- **Estimated cold start**: <10ms
-- **Target platforms**: Cloudflare Workers, Fastly Compute, Deno Deploy
-- **Current status**: MoonBit library complete; WASM compilation pending
+### 1. **WASM-First Design**
+- Compiles to WebAssembly for edge deployment
+- Cold start time <10ms (estimated)
+- Runs on Cloudflare Workers, Fastly Compute, Deno Deploy
 
 ### 2. **Zero GC Pressure**
 - No garbage collector means predictable latency

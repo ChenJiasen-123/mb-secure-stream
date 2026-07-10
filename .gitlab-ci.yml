@@ -1,6 +1,6 @@
 # GitLink CI Configuration
 # This file configures CI/CD pipelines for GitLink mirror repository
-# https://www.gitlink.org.cn/ChenJiasen-123/mb-secure-stream/devops
+# https://www.gitlink.org.cn/ChenJiasen-123/mb-secure-stream
 
 stages:
   - check

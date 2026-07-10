@@ -15,10 +15,11 @@ mb-secure-stream is a production-ready security infrastructure for high-performa
 
 MoonBit is chosen for this project because of its unique advantages for security-critical, high-performance applications:
 
-### 1. **WASM-First Design**
-- Compiles to WebAssembly for edge deployment
-- Cold start time <10ms (estimated)
-- Runs on Cloudflare Workers, Fastly Compute, Deno Deploy
+### 1. **WASM-First Design** (Planned)
+- **Target**: Compile to WebAssembly for edge deployment
+- **Estimated cold start**: <10ms
+- **Target platforms**: Cloudflare Workers, Fastly Compute, Deno Deploy
+- **Current status**: MoonBit library complete; WASM compilation pending
 
 ### 2. **Zero GC Pressure**
 - No garbage collector means predictable latency
@@ -167,42 +168,42 @@ See `examples/cloudflare-worker/README.md` for deployment instructions.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Client Request                        │
-│                    (JWT Token in Header)                     │
+│                        Client Request                       │
+│                    (JWT Token in Header)                    │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Security Filter                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   verify()  │→ │ parse_claims│→ │  validate_claims()  │ │
-│  │ (HMAC/ECDSA)│  │  (JSON)     │  │  (exp/nbf/iss/aud)  │ │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+│                    Security Filter                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │   verify()  │→ │ parse_claims│→ │  validate_claims()  │  │
+│  │ (HMAC/ECDSA)│  │  (JSON)     │  │  (exp/nbf/iss/aud)  │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Stream Context                            │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────────┐  │
-│  │is_allowed│  │user_role │  │      user_sub            │  │
-│  └──────────┘  └──────────┘  └──────────────────────────┘  │
+│                    Stream Context                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────────┐   │
+│  │is_allowed│  │user_role │  │      user_sub            │   │
+│  └──────────┘  └──────────┘  └──────────────────────────┘   │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Flow Control                              │
-│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐  │
-│  │RateLimiter │  │FairQueue   │  │  BandwidthShaper     │  │
-│  └────────────┘  └────────────┘  └──────────────────────┘  │
-│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐  │
-│  │CircuitBrkr │  │Backoff     │  │  ConnectionPool      │  │
-│  └────────────┘  └────────────┘  └──────────────────────┘  │
+│                    Flow Control                             │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐   │
+│  │RateLimiter │  │FairQueue   │  │  BandwidthShaper     │   │
+│  └────────────┘  └────────────┘  └──────────────────────┘   │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐   │
+│  │CircuitBrkr │  │Backoff     │  │  ConnectionPool      │   │
+│  └────────────┘  └────────────┘  └──────────────────────┘   │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Upstream Service                          │
-│                  (with user context)                         │
+│                    Upstream Service                         │
+│                  (with user context)                        │
 └─────────────────────────────────────────────────────────────┘
 ```
 

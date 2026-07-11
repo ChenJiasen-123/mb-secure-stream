@@ -51,33 +51,46 @@ MoonBit is chosen for this project because of its unique advantages for security
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| JWT verify (HS256) | **33.11 μs** ± 5.32 μs | `moon bench --target wasm-gc` |
-| JWT sign (HS256) | **32.59 μs** ± 1.55 μs | `moon bench --target wasm-gc` |
-| JWT decode (no verify) | **12.96 μs** ± 0.39 μs | `moon bench --target wasm-gc` |
-| Base64url encode (11 bytes) | **839 ns** ± 160 ns | `moon bench --target wasm-gc` |
-| Base64url decode (8 bytes) | **549 ns** ± 67 ns | `moon bench --target wasm-gc` |
+| JWT verify (HS256) | **24.09 μs** ± 0.87 μs | `moon bench --target wasm-gc` |
+| JWT sign (HS256) | **19.74 μs** ± 1.51 μs | `moon bench --target wasm-gc` |
+| JWT decode (no verify) | **14.90 μs** ± 0.87 μs | `moon bench --target wasm-gc` |
+| JWT sign (ES256) | **10.61 ms** ± 0.38 ms | `moon bench --target wasm-gc` |
+| JWT verify (ES256) | **20.65 ms** ± 0.47 ms | `moon bench --target wasm-gc` |
+| Base64url encode (11 bytes) | **1.04 μs** ± 0.04 μs | `moon bench --target wasm-gc` |
+| Base64url decode (8 bytes) | **590 ns** ± 14 ns | `moon bench --target wasm-gc` |
+| Security filter execute | **25.03 μs** ± 0.56 μs | `moon bench --target wasm-gc` |
+| Rate limiter (try_consume) | **13.37 ns** ± 2.06 ns | `moon bench --target wasm-gc` |
+| Replay protector (check_nonce) | **56.66 ns** ± 10.03 ns | `moon bench --target wasm-gc` |
+| Fair queue (dequeue) | **14.76 ns** ± 1.53 ns | `moon bench --target wasm-gc` |
+| Circuit breaker (allow_request) | **24.01 ns** ± 5.97 ns | `moon bench --target wasm-gc` |
+| Bandwidth shaper (try_consume) | **15.64 ns** ± 2.44 ns | `moon bench --target wasm-gc` |
+| Connection pool (acquire) | **17.77 ns** ± 2.97 ns | `moon bench --target wasm-gc` |
+| Stream metrics (record_request) | **9.71 μs** ± 3.88 μs | `moon bench --target wasm-gc` |
+| Backoff (next_delay) | **17.79 ns** ± 2.07 ns | `moon bench --target wasm-gc` |
 | Memory allocation | Minimal (no intermediate strings) | Design characteristic |
 | Test coverage | 150/150 tests passing | `moon test` |
 
-> **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` for the full benchmark suite.
+> **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` and `gateway/src/gateway_bench.mbt` for the full benchmark suite.
 
 ### Performance Comparison (HS256 Verify)
 
 | Library | Language | Time | Notes |
 |---------|----------|------|-------|
-| **mb-secure-stream** | MoonBit (WASM) | **33.11 μs** | Zero-copy, constant-time (measured) |
+| **mb-secure-stream** | MoonBit (WASM) | **24.09 μs** | Zero-copy, constant-time (measured) |
 | PyJWT | Python | ~500μs | CPython, interpreted |
-| jsonwebtoken | Node.js | ~100μs | V8 optimized |
+| jsonwebtoken | Node.js | ~100μs | V8 optim：`cd crypto/mb-jwt && moon bench --target wasm-gc`
+ized |
 | java-jwt | Java | ~80μs | JVM JIT compiled |
 | go-jwt | Go | ~60μs | Native compiled |
 | rust-jwt | Rust | ~40μs | Native, zero-cost abstractions |
 
 **Key Insights**:
-- MoonBit's WASM performance (**33.11 μs**) is faster than native Go (~60μs) and approaches Rust (~40μs)
-- **15x faster** than Python (PyJWT ~500μs)
-- **3x faster** than Node.js (jsonwebtoken ~100μs)
+- MoonBit's WASM performance (**24.09 μs**) is faster than native Go (~60μs) and Rust (~40μs)
+- **20x faster** than Python (PyJWT ~500μs)
+- **4x faster** than Node.js (jsonwebtoken ~100μs)
 - Near-native performance despite running in WASM sandbox
 - Zero GC pauses ensure consistent latency
+- Gateway operations (rate limiter, circuit breaker) complete in **nanoseconds**
 
 ## Security Features
 

@@ -1,6 +1,7 @@
 import {
   "ChenJiasen-123/mb-secure-stream/crypto/mb-jwt/src" @mb_jwt,
   "moonbitlang/core/json",
+  "moonbitlang/core/bench",
 }
 
 options(

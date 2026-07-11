@@ -8,6 +8,6 @@ repository = "https://github.com/ChenJiasen-123/mb-secure-stream"
 
 license = "Apache-2.0"
 
-keywords = [ ]
+keywords = [ "jwt", "crypto", "gateway", "security" ]
 
-description = ""
+description = "An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing."

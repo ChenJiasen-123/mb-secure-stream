@@ -78,8 +78,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 |---------|----------|------|-------|
 | **mb-secure-stream** | MoonBit (WASM) | **24.09 μs** | Zero-copy, constant-time (measured) |
 | PyJWT | Python | ~500μs | CPython, interpreted |
-| jsonwebtoken | Node.js | ~100μs | V8 optim：`cd crypto/mb-jwt && moon bench --target wasm-gc`
-ized |
+| jsonwebtoken | Node.js | ~100μs | V8 optimized |
 | java-jwt | Java | ~80μs | JVM JIT compiled |
 | go-jwt | Go | ~60μs | Native compiled |
 | rust-jwt | Rust | ~40μs | Native, zero-cost abstractions |

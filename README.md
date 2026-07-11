@@ -343,6 +343,66 @@ moon test
 # - Metrics and observability
 ```
 
+### Official Test Sources
+
+This project's test suite is based on the following official standards and test vectors:
+
+#### Cryptographic Standards
+- **RFC 8439** — ChaCha20 and Poly1305 for IETF Protocols
+  - ChaCha20 block cipher test vectors (Section 2.3.2)
+  - ChaCha20-Poly1305 AEAD test vectors (Section 2.8.2)
+  - Poly1305 one-time authenticator test vectors (Section 2.5.2)
+  
+- **RFC 7539** — ChaCha20 and Poly1305 for TLS (superseded by RFC 8439)
+
+- **RFC 4231** — Identifiers and Test Vectors for HMAC-SHA-224/256/384/512
+  - HMAC-SHA256 test cases 1-3
+  - HMAC-SHA512 test cases 1-2
+
+- **RFC 5869** — HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
+  - HKDF-SHA256 test cases from Appendix A (Test Case 1, Test Case 3)
+
+- **RFC 7518** — JSON Web Algorithms (JWA)
+  - ES256 (ECDSA P-256 with SHA-256) compliance
+
+- **RFC 7519** — JSON Web Token (JWT)
+  - Claims validation: exp, nbf, iss, aud (Sections 4.1.4, 4.1.5, 4.1.1, 4.1.3)
+  - Security considerations (Section 7.2)
+
+- **RFC 4648** §5 — Base64url encoding (no padding, URL-safe alphabet)
+
+- **RFC 2104** — HMAC: Keyed-Hashing for Message Authentication
+
+#### JWT Test Vectors
+- **jwt.io** — Standard JWT test vector (HS256 with "your-256-bit-secret")
+  - Header: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
+  - Payload: `{"sub":"1234567890","name":"John Doe","iat":1516239022}`
+
+#### Security Vulnerability Test Suites
+- **OWASP WSTG-CRYP-04** — JWT Vulnerability Matrix
+  - alg:none attack (CVE-2016-5431)
+  - Algorithm confusion / key confusion attacks
+  - Signature stripping attacks
+  - Payload tampering
+  - Header injection (kid manipulation)
+  - Weak secret brute-force resistance
+  - Cross-token signature replay
+
+- **jwt_tool** — Known CVE and attack test cases
+  - Truncated tokens (missing segments)
+  - Empty signature rejection
+  - Dots-only / malformed structure
+  - ES256 degenerate signatures (all-zero r/s)
+  - ES256 truncated signatures
+  - Base64url parser differential attacks
+
+#### P-256 (ECDSA) Tests
+- **SEC 1** — Elliptic Curve Cryptography
+  - Key generation (generator point verification)
+  - Sign/verify roundtrip
+  - ECDH key exchange
+  - Tampered message rejection
+
 ## License
 
 Apache 2.0

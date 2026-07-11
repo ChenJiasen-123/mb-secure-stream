@@ -49,20 +49,23 @@ MoonBit is chosen for this project because of its unique advantages for security
 
 ### Absolute Performance
 
-| Metric | Value |
-|--------|-------|
-| JWT verify (HS256) | ~50μs per token |
-| JWT verify (ES256) | ~120μs per token |
-| Token splitting | ~5μs (zero-copy) |
-| Memory allocation | Minimal (no intermediate strings) |
-| Test coverage | 150/150 tests passing |
-| Cold start (WASM) | <10ms (estimated) |
+| Metric | Value | Source |
+|--------|-------|--------|
+| JWT verify (HS256) | **33.11 μs** ± 5.32 μs | `moon bench --target wasm-gc` |
+| JWT sign (HS256) | **32.59 μs** ± 1.55 μs | `moon bench --target wasm-gc` |
+| JWT decode (no verify) | **12.96 μs** ± 0.39 μs | `moon bench --target wasm-gc` |
+| Base64url encode (11 bytes) | **839 ns** ± 160 ns | `moon bench --target wasm-gc` |
+| Base64url decode (8 bytes) | **549 ns** ± 67 ns | `moon bench --target wasm-gc` |
+| Memory allocation | Minimal (no intermediate strings) | Design characteristic |
+| Test coverage | 150/150 tests passing | `moon test` |
+
+> **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` for the full benchmark suite.
 
 ### Performance Comparison (HS256 Verify)
 
 | Library | Language | Time | Notes |
 |---------|----------|------|-------|
-| **mb-secure-stream** | MoonBit (WASM) | **~50μs** | Zero-copy, constant-time |
+| **mb-secure-stream** | MoonBit (WASM) | **33.11 μs** | Zero-copy, constant-time (measured) |
 | PyJWT | Python | ~500μs | CPython, interpreted |
 | jsonwebtoken | Node.js | ~100μs | V8 optimized |
 | java-jwt | Java | ~80μs | JVM JIT compiled |
@@ -70,9 +73,9 @@ MoonBit is chosen for this project because of its unique advantages for security
 | rust-jwt | Rust | ~40μs | Native, zero-cost abstractions |
 
 **Key Insights**:
-- MoonBit's WASM performance (~50μs) is competitive with native Go (~60μs) and approaches Rust (~40μs)
-- **10x faster** than Python (PyJWT ~500μs)
-- **2x faster** than Node.js (jsonwebtoken ~100μs)
+- MoonBit's WASM performance (**33.11 μs**) is faster than native Go (~60μs) and approaches Rust (~40μs)
+- **15x faster** than Python (PyJWT ~500μs)
+- **3x faster** than Node.js (jsonwebtoken ~100μs)
 - Near-native performance despite running in WASM sandbox
 - Zero GC pauses ensure consistent latency
 

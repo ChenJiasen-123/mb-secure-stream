@@ -217,7 +217,8 @@ if cb.allow_request(current_time) && rp.check_nonce(nonce, current_time) {
 | `sign(payload, key)` | `payload: String` (JSON), `key: JwtKey` | `Result[String, JWTError]` | Create signed JWT token |
 | `verify(token, key)` | `token: String`, `key: JwtKey` | `Result[String, JWTError]` | Verify JWT and return payload JSON |
 | `decode(token)` | `token: String` | `Result[String, JWTError]` | Decode without verification |
-| `validate_claims(payload, time, iss, aud)` | `payload: JWTPayload`, `time: Int64` | `Result[Unit, JWTError]` | Validate exp, nbf, iss, aud |
+| `decode_header(token)` | `token: String` | `Result[String, JWTError]` | Decode header without verification |
+| `validate_claims(payload, current_time, expected_iss, expected_aud)` | `payload: JWTPayload`, `current_time: Int64`, `expected_iss: String?`, `expected_aud: String?` | `Result[Unit, JWTError]` | Validate exp, nbf, iss, aud |
 
 #### Key Types
 

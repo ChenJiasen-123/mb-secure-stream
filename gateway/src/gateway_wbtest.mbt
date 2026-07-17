@@ -387,6 +387,7 @@ test "security_filter_valid_token" {
   let ctx = new_stream_context(token)
   execute_security_filter(ctx, key, 1000000L)
   assert_true(ctx.is_allowed)
+  assert_eq(ctx.user_sub, "user1")
   assert_eq(ctx.user_role, "admin")
 }
 

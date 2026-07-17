@@ -57,13 +57,12 @@ priv struct TokenParts {
 /// Zero-copy token splitter: finds the two '.' positions
 /// and returns index ranges without allocating substrings.
 fn split_token_indices(token : String) -> Result[TokenParts, JWTError] {
-  let chars = token.to_array()
-  let len = chars.length()
+  let len = token.length()
   let mut first_dot = -1
   let mut second_dot = -1
 
   for i in 0..<len {
-    if chars[i] == '.' {
+    if token[i] == '.' {
       if first_dot < 0 {
         first_dot = i
       } else {

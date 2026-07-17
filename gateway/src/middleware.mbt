@@ -3,13 +3,14 @@ pub struct StreamContext {
   token : String
   mut is_allowed : Bool
   mut error_message : String
+  mut user_sub : String
   mut user_role : String
 }
 
 ///|
 /// Creates a new stream security context for a given token.
 pub fn new_stream_context(token : String) -> StreamContext {
-  { token, is_allowed: false, error_message: "", user_role: "" }
+  { token, is_allowed: false, error_message: "", user_sub: "", user_role: "" }
 }
 
 ///|
@@ -69,6 +70,7 @@ pub fn execute_security_filter(
     }
     Ok(_) => {
       ctx.is_allowed = true
+      ctx.user_sub = claims.sub
       ctx.user_role = match claims.role {
         Some(r) => r
         None => "guest"

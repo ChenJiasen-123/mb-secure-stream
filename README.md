@@ -4,12 +4,47 @@
 
 An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing.
 
+## Acknowledgements
+
+This project is a **derivative work** based on **[moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto)** (Apache-2.0). The nine cryptographic modules listed below (Sections 1–9) are adapted from that upstream project with modifications for the gateway integration context. See each module's README for detailed change scope.
+
+## License
+
+Licensed under the **Apache License, Version 2.0** (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+<http://www.apache.org/licenses/LICENSE-2.0>
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an **"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+This project contains code adapted from **[moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto)** (commit range `main`), which is also licensed under Apache-2.0.
+
+========================================================================
+
+### Modules Adapted from moonbit-crypto/mb-crypto
+
+The following table lists each cryptographic module, its upstream source, the license (Apache-2.0), and the scope of modifications made in this repository:
+
+| # | Module | Upstream Source | License | Reference / Modification Scope |
+|---|--------|-----------------|---------|-------------------------------|
+| 1 | `crypto/mb-hash` | [moonbit-crypto/mb-crypto/mb-hash](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hash) | Apache-2.0 | SHA-256 and SHA-512 implementation adapted verbatim; added `Sha256::digest_string` and `Sha512::digest_string` convenience methods |
+| 2 | `crypto/mb-hmac` | [moonbit-crypto/mb-crypto/mb-hmac](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hmac) | Apache-2.0 | HMAC-SHA256 and HMAC-SHA512 adapted verbatim; no semantic changes |
+| 3 | `crypto/mb-chacha` | [moonbit-crypto/mb-crypto/mb-chacha](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-chacha) | Apache-2.0 | ChaCha20/XChaCha20 stream ciphers adapted verbatim; added `encrypt_bytes`/`decrypt_bytes` convenience wrappers |
+| 4 | `crypto/mb-poly1305` | [moonbit-crypto/mb-crypto/mb-poly1305](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-poly1305) | Apache-2.0 | Poly1305 one-time MAC adapted verbatim; added `poly1305_mac_bytes` / `poly1305_verify_bytes` Bytes API |
+| 5 | `crypto/mb-aead` | [moonbit-crypto/mb-crypto/mb-aead](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-aead) | Apache-2.0 | ChaCha20-Poly1305 AEAD adapted verbatim; added `aead_encrypt_bytes` / `aead_decrypt_bytes` Bytes API convenience wrappers |
+| 6 | `crypto/mb-p256` | [moonbit-crypto/mb-crypto/mb-p256](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-p256) | Apache-2.0 | ECDSA P-256 adapted verbatim; added `ecdsa_sign_message`/`ecdsa_verify_message` wrappers for JWT integration |
+| 7 | `crypto/mb-hkdf` | [moonbit-crypto/mb-crypto/mb-hkdf](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hkdf) | Apache-2.0 | HKDF adapted verbatim; added `_bytes` convenience wrappers |
+| 8 | `crypto/mb-getrandom` | [moonbit-crypto/mb-crypto/mb-getrandom](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-getrandom) | Apache-2.0 | OS CSPRNG adapted verbatim; no semantic changes |
+| 9 | `crypto/mb-jwt` | Built on top of `mb-hash`, `mb-hmac`, `mb-p256`, `mb-base64url` from [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-jwt) | Apache-2.0 | JWT sign/verify (HS256, ES256) — original implementation in this repository using upstream crypto primitives; adds constant-time verification, `alg:none` rejection, claims validation |
+| 10 | `gateway` | This repository (original) | Apache-2.0 | JWT security filter middleware, flow control (rate limiter, circuit breaker, fair queue, bandwidth shaper, connection pool, backoff, replay protection), stream metrics |
+
+> **Note**: The upstream repository [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto) is itself licensed under Apache-2.0. Modifications in this repository are limited to adding convenience wrappers and integration shims; no cryptographic algorithms were changed.
+
 ## Project Vision
 
 mb-secure-stream is a production-ready security infrastructure for high-performance stream processing. It provides:
 
 - **Zero-trust security**: Every request is authenticated and authorized at the edge
-- **High performance**: Sub-millisecond latency with zero-copy optimizations
+- **High performance**: Sub-millisecond latency with index-based token splitting (no intermediate string allocations)
 - **Edge-native**: Designed for Cloudflare Workers, Fastly Compute, and WASM runtimes
 - **Composable**: Modular design allows picking only what you need
 
@@ -27,7 +62,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 
 ### 2. **Zero GC Pressure**
 - No garbage collector means predictable latency
-- Zero-copy token splitting reduces memory allocations
+- Index-based token parsing reduces memory allocations
 - Suitable for high-throughput stream processing
 
 ### 3. **Type Safety**
@@ -67,7 +102,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 | Connection pool (acquire) | **17.77 ns** ± 2.97 ns | `moon bench --target wasm-gc` |
 | Stream metrics (record_request) | **9.71 μs** ± 3.88 μs | `moon bench --target wasm-gc` |
 | Backoff (next_delay) | **17.79 ns** ± 2.07 ns | `moon bench --target wasm-gc` |
-| Memory allocation | Minimal (no intermediate strings) | Design characteristic |
+| Memory allocation | Minimal (no intermediate strings in token splitting) | Design characteristic |
 | Test coverage | 150/150 tests passing | `moon test` |
 
 > **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` and `gateway/src/gateway_bench.mbt` for the full benchmark suite.
@@ -76,7 +111,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 
 | Library | Language | Time | Notes |
 |---------|----------|------|-------|
-| **mb-secure-stream** | MoonBit (WASM) | **24.09 μs** | Zero-copy, constant-time (measured) |
+| **mb-secure-stream** | MoonBit (WASM) | **24.09 μs** | Index-based token parsing, constant-time (measured) |
 | PyJWT | Python | ~500μs | CPython, interpreted |
 | jsonwebtoken | Node.js | ~100μs | V8 optimized |
 | java-jwt | Java | ~80μs | JVM JIT compiled |
@@ -97,7 +132,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 - **Constant-time verification**: Prevents timing attacks on signature comparison
 - **Algorithm enforcement**: Rejects `alg:none` to prevent signature bypass (CVE-2016-5431)
 - **Algorithm confusion prevention**: Strict algorithm matching prevents HS256/ES256 confusion attacks
-- **Zero-copy token splitting**: Efficient token parsing without intermediate allocations
+- **Index-based token splitting**: Efficient token parsing via direct string indexing (avoids `to_array()` allocations)
 
 ### Gateway Security
 - **JWT verification**: HS256 (HMAC-SHA256) and ES256 (ECDSA P-256)
@@ -124,8 +159,9 @@ let ctx = new_stream_context(jwt_token)
 execute_security_filter(ctx, jwt_key, current_time)
 if ctx.is_allowed {
   // Forward to upstream with user context
-  request.headers["X-User-ID"] = ctx.user_sub
-  request.headers["X-User-Role"] = ctx.user_role
+  // ctx.user_sub is populated from the JWT "sub" claim
+  // ctx.user_role is populated from the JWT "role" claim (or "guest" if absent)
+  forward_request(ctx.user_sub, ctx.user_role)
 }
 ```
 
@@ -242,7 +278,8 @@ struct StreamContext {
   token: String           // Input: JWT token
   mut is_allowed: Bool    // Output: true if valid
   mut error_message: String // Output: error reason if invalid
-  mut user_role: String   // Output: user role ("admin", "guest", etc.)
+  mut user_sub: String    // Output: JWT "sub" claim (user ID)
+  mut user_role: String   // Output: JWT "role" claim ("admin", "guest", etc.)
 }
 ```
 
@@ -260,10 +297,9 @@ execute_security_filter(ctx, jwt_key, current_time)
 // Check result
 if ctx.is_allowed {
   // Success: access granted
-  println("Access allowed, role: \{ctx.user_role}")
+  println("Access allowed, sub: \{ctx.user_sub}, role: \{ctx.user_role}")
   // Forward request with user context
-  request.headers["X-User-ID"] = ctx.user_sub
-  request.headers["X-User-Role"] = ctx.user_role
+  forward_request(ctx.user_sub, ctx.user_role)
 } else {
   // Failure: access denied
   println("Access denied: \{ctx.error_message}")

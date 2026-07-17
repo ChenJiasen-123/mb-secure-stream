@@ -131,6 +131,7 @@ pub struct StreamContext {
   token : String
   mut is_allowed : Bool
   mut error_message : String
+  mut user_sub : String
   mut user_role : String
 }
 

@@ -231,7 +231,7 @@ pub fn verify(token : String, key : JwtKey) -> Result[String, JWTError] {
       for i in 32..<64 {
         s.push(sig_raw[i])
       }
-      let sig = @p256.ECDSASignature::{ r, s }
+      let sig = @p256.ECDSASignature::{ r, s, }
 
       match @p256.ecdsa_verify_message(public_key, input_uints, sig) {
         Err(e) => Err(CryptoError(e))

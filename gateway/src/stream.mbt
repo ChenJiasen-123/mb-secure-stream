@@ -11,7 +11,7 @@ pub struct RateLimiter {
 /// Creates a new rate limiter with the given capacity and refill rate.
 /// `max_tokens` is the burst capacity, `refill_rate` is the steady-state rate (tokens/second).
 pub fn new_rate_limiter(max_tokens : Int64, refill_rate : Int64) -> RateLimiter {
-  { max_tokens, refill_rate, tokens: max_tokens, last_refill_time: 0L }
+  { max_tokens, refill_rate, tokens: max_tokens, last_refill_time: 0L, }
 }
 
 ///|
@@ -47,7 +47,7 @@ pub struct ReplayProtector {
 /// Creates a new replay protector with the given window size.
 /// `window_size` is how long a nonce should be remembered (in seconds).
 pub fn new_replay_protector(window_size : Int64) -> ReplayProtector {
-  { seen_nonces: Map([], capacity=0), window_size }
+  { seen_nonces: Map([], capacity=0), window_size, }
 }
 
 ///|

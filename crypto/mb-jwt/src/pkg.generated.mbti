@@ -79,4 +79,3 @@ pub(all) enum JwtKey {
 // Type aliases
 
 // Traits
-

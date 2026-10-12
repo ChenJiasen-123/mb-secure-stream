@@ -17,4 +17,3 @@ pub fn aead_encrypt_bytes(Bytes, Bytes, Bytes, Bytes) -> Result[(Bytes, Bytes), 
 // Type aliases
 
 // Traits
-

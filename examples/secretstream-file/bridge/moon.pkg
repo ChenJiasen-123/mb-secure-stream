@@ -1,0 +1,23 @@
+import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src" @stream,
+}
+
+supported_targets = "js"
+
+options(
+  link: {
+    "js": {
+      "exports": [
+        "writer_new",
+        "writer_header",
+        "writer_push",
+        "writer_push_record",
+        "reader_new",
+        "reader_pull",
+        "reader_pull_record",
+        "reader_finish",
+      ],
+      "format": "cjs",
+    },
+  },
+)

@@ -78,7 +78,7 @@ pub fn JWTError::to_debug_string(self : JWTError) -> String {
 ///|
 /// Creates a new JWT Header with the given algorithm and type.
 pub fn new_jwt_header(alg : String, typ : String) -> JWTHeader {
-  { alg, typ }
+  { alg, typ, }
 }
 
 ///|
@@ -92,7 +92,7 @@ pub fn new_jwt_payload(
   iat : Int64?,
   jti : String?,
 ) -> JWTPayload {
-  { iss, sub, aud, exp, nbf, iat, jti }
+  { iss, sub, aud, exp, nbf, iat, jti, }
 }
 
 ///|
@@ -102,5 +102,5 @@ pub fn new_jwt(
   payload : JWTPayload,
   signature : String,
 ) -> JWT {
-  { header, payload, signature }
+  { header, payload, signature, }
 }

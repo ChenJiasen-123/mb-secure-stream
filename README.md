@@ -2,7 +2,13 @@
 
 [![GitHub CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
 
-An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing.
+A MoonBit cryptography and JWT gateway project. The current development focus is experimental libsodium-compatible secretstream authenticated encryption, with independent interoperability tests and bounded file I/O.
+
+## October 2026 development
+
+The new [secretstream package](crypto/mb-secretstream/README.md) implements libsodium `crypto_secretstream_xchacha20poly1305` frames, including REKEY and FINAL. The [file example](examples/secretstream-file/README.md) demonstrates both directions of interoperability with PyNaCl/libsodium, rejects incomplete streams and publishes plaintext only after complete verification. Its MBSS0001 envelope is project-specific, not a libsodium file format.
+
+Public random-header sending currently supports JavaScript only. Native/Wasm sender integration, further differential testing and security review remain pending. The implementation has not been audited; performance and constant-time behavior are not guaranteed. Existing crypto adaptations and gateway code are historical work, distinct from this new protocol implementation.
 
 ## Acknowledgements
 
@@ -41,7 +47,7 @@ The following table lists each cryptographic module, its upstream source, the li
 
 ## Project Vision
 
-mb-secure-stream is a production-ready security infrastructure for high-performance stream processing. It provides:
+mb-secure-stream explores security infrastructure for stream processing. Its design goals are:
 
 - **Zero-trust security**: Every request is authenticated and authorized at the edge
 - **High performance**: Sub-millisecond latency with index-based token splitting (no intermediate string allocations)

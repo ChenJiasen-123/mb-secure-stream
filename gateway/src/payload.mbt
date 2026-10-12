@@ -40,5 +40,5 @@ pub fn parse_gateway_claims(json_str : String) -> Result[GatewayClaims, String] 
     _ => None
   }
 
-  Ok({ sub, exp, nbf, iss, role })
+  Ok({ sub, exp, nbf, iss, role, })
 }

@@ -169,4 +169,3 @@ pub fn StreamSession::record_packet(Self, Int64, Int64) -> Unit
 // Type aliases
 
 // Traits
-

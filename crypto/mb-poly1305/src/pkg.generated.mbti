@@ -17,4 +17,3 @@ pub fn poly1305_verify_bytes(Bytes, Bytes, Bytes) -> Bool
 // Type aliases
 
 // Traits
-

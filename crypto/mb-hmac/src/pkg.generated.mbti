@@ -41,4 +41,3 @@ pub fn verify_hmac_sha512_bytes(Bytes, Bytes, Array[UInt]) -> Bool
 // Type aliases
 
 // Traits
-

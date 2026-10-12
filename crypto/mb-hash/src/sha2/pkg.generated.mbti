@@ -48,4 +48,3 @@ pub fn Sha512::update(Self, Array[UInt]) -> Unit
 // Type aliases
 
 // Traits
-

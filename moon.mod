@@ -10,4 +10,4 @@ license = "Apache-2.0"
 
 keywords = [ "jwt", "crypto", "gateway", "security" ]
 
-description = "An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing."
+description = "MoonBit cryptography and JWT gateway with experimental libsodium-compatible secretstream authenticated encryption and independent interoperability tests."

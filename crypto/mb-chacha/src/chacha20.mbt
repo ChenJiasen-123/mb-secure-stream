@@ -199,7 +199,7 @@ fn make_chacha20(
   nonce_words : FixedArray[UInt],
   counter : UInt,
 ) -> ChaCha20 {
-  ChaCha20::{ key_words, nonce_words, counter }
+  ChaCha20::{ key_words, nonce_words, counter, }
 }
 
 ///|
@@ -342,7 +342,7 @@ fn xchacha20_from_uints_with_counter(
   let derived_inner = make_chacha20(
     derived_key_words, derived_nonce_words, counter,
   )
-  Ok(XChaCha20::{ inner: derived_inner })
+  Ok(XChaCha20::{ inner: derived_inner, })
 }
 
 ///|

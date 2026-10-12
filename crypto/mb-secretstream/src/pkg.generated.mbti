@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src"
+
+// Values
+pub fn init_pull(Array[UInt], Array[UInt]) -> Result[SecretStream, String]
+
+pub fn init_pull_bytes(Bytes, Bytes) -> Result[SecretStream, String]
+
+// Errors
+
+// Types and methods
+pub struct SecretStream {
+  // private fields
+}
+pub fn SecretStream::finish(Self) -> Result[Unit, String]
+pub fn SecretStream::pull(Self, Array[UInt], Array[UInt]) -> Result[(Array[UInt], UInt), String]
+pub fn SecretStream::pull_bytes(Self, Bytes, Bytes) -> Result[(Bytes, UInt), String]
+
+pub struct SecretStreamWriter {
+  // private fields
+}
+pub fn SecretStreamWriter::header(Self) -> Bytes
+pub fn SecretStreamWriter::push(Self, Bytes, Bytes, UInt) -> Result[Bytes, String]
+
+// Type aliases
+
+// Traits

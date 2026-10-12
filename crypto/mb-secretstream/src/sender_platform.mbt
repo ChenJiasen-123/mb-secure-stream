@@ -1,6 +1,8 @@
 ///|
-/// JavaScript/Native sender with a fresh header from the host/OS CSPRNG.
+/// Sender with a fresh header from the backend's host/OS CSPRNG.
 /// Entropy failure is an error; there is no deterministic fallback.
+/// Wasm requires the crypto imports documented by mb-getrandom. A host
+/// exception traps the call before a writer is returned.
 pub fn init_push(key : Bytes) -> Result[SecretStreamWriter, String] {
   if key.length() != 32 {
     return Err("Invalid key length")

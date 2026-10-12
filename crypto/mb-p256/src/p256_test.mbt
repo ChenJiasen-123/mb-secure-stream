@@ -56,7 +56,7 @@ test "keygen with d=1 gives generator" {
   let d = hex_to_uints(
     "0000000000000000000000000000000000000000000000000000000000000001",
   )
-  match derive_public_key(d) {
+  match @src.derive_public_key(d) {
     Ok(pub_key) => {
       assert_eq(pub_key.length(), 65)
       assert_eq(pub_key[0], 0x04U) // uncompressed
@@ -83,7 +83,7 @@ test "keygen with d=2 gives 2G" {
   let d = hex_to_uints(
     "0000000000000000000000000000000000000000000000000000000000000002",
   )
-  match derive_public_key(d) {
+  match @src.derive_public_key(d) {
     Ok(pub_key) => {
       let x_hex = uints_to_hex(pub_key.iter().drop(1).take(32).collect())
       let y_hex = uints_to_hex(pub_key.iter().drop(33).take(32).collect())
@@ -108,12 +108,12 @@ test "ecdsa sign and verify round trip" {
   let private_key = hex_to_uints(
     "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721",
   )
-  match ecdsa_keygen(private_key) {
+  match @src.ecdsa_keygen(private_key) {
     Ok(keypair) => {
       let message = hex_to_uints("48656c6c6f") // "Hello"
-      match ecdsa_sign_message(private_key, message) {
+      match @src.ecdsa_sign_message(private_key, message) {
         Ok(sig) =>
-          match ecdsa_verify_message(keypair.public_key, message, sig) {
+          match @src.ecdsa_verify_message(keypair.public_key, message, sig) {
             Ok(valid) => assert_true(valid)
             Err(e) => {
               println("verify error: \{e}")
@@ -139,13 +139,13 @@ test "ecdsa rejects tampered message" {
   let private_key = hex_to_uints(
     "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721",
   )
-  match ecdsa_keygen(private_key) {
+  match @src.ecdsa_keygen(private_key) {
     Ok(keypair) => {
       let message = hex_to_uints("48656c6c6f") // "Hello"
       let tampered = hex_to_uints("48656c6c6e") // "Helln"
-      match ecdsa_sign_message(private_key, message) {
+      match @src.ecdsa_sign_message(private_key, message) {
         Ok(sig) =>
-          match ecdsa_verify_message(keypair.public_key, tampered, sig) {
+          match @src.ecdsa_verify_message(keypair.public_key, tampered, sig) {
             Ok(valid) => assert_true(!valid)
             Err(_) => assert_true(true) // Error is also acceptable
           }
@@ -171,9 +171,9 @@ test "ecdh key exchange" {
   let bob_priv = hex_to_uints(
     "0000000000000000000000000000000000000000000000000000000000000002",
   )
-  match (derive_public_key(alice_priv), derive_public_key(bob_priv)) {
+  match (@src.derive_public_key(alice_priv), @src.derive_public_key(bob_priv)) {
     (Ok(alice_pub), Ok(bob_pub)) =>
-      match (ecdh(alice_priv, bob_pub), ecdh(bob_priv, alice_pub)) {
+      match (@src.ecdh(alice_priv, bob_pub), @src.ecdh(bob_priv, alice_pub)) {
         (Ok(shared1), Ok(shared2)) => {
           // Both parties should derive the same shared secret
           assert_eq(shared1.length(), 32)

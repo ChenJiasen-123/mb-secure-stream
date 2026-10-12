@@ -63,7 +63,7 @@ test "poly1305_rfc8439_section_2_5_2" {
   )
   let message = ascii_to_uints("Cryptographic Forum Research Group")
   let expected_tag = hex_to_uints("a8061dc1305136c6c22b8baf0c0127a9")
-  let tag = poly1305_mac(key, message)
+  let tag = @src.poly1305_mac(key, message)
   let tag_hex = uints_to_hex(tag)
   let expected_hex = uints_to_hex(expected_tag)
   assert_eq(tag_hex, expected_hex)
@@ -75,7 +75,7 @@ test "poly1305_zero_key" {
   let key = Array::make(32, 0U)
   let message : Array[UInt] = [0U, 1U, 2U, 3U]
   let expected_tag = Array::make(16, 0U)
-  let tag = poly1305_mac(key, message)
+  let tag = @src.poly1305_mac(key, message)
   assert_eq(uints_to_hex(tag), uints_to_hex(expected_tag))
 }
 
@@ -87,7 +87,7 @@ test "poly1305_verify_correct" {
   )
   let message = ascii_to_uints("Cryptographic Forum Research Group")
   let tag = hex_to_uints("a8061dc1305136c6c22b8baf0c0127a9")
-  assert_true(poly1305_verify(key, message, tag))
+  assert_true(@src.poly1305_verify(key, message, tag))
 }
 
 ///|
@@ -98,7 +98,7 @@ test "poly1305_verify_wrong_tag" {
   )
   let message = ascii_to_uints("Cryptographic Forum Research Group")
   let tag16 : Array[UInt] = Array::make(16, 0U)
-  assert_false(poly1305_verify(key, message, tag16))
+  assert_false(@src.poly1305_verify(key, message, tag16))
 }
 
 ///|
@@ -109,6 +109,6 @@ test "poly1305_r_zero_tag_equals_s" {
   )
   let message = ascii_to_uints("Hello world!")
   let expected_tag = hex_to_uints("36e5f6b5c5e06070f0efca96227a863e")
-  let tag = poly1305_mac(key, message)
+  let tag = @src.poly1305_mac(key, message)
   assert_eq(uints_to_hex(tag), uints_to_hex(expected_tag))
 }

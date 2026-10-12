@@ -28,7 +28,7 @@ fn hex_to_uints(hex : String) -> Array[UInt] {
 ///|
 fn uints_to_hex(arr : Array[UInt]) -> String {
   let hex_chars = "0123456789abcdef"
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for i in 0..<arr.length() {
     let b = arr[i]
     let hi = ((b >> 4) & 0xFU).reinterpret_as_int()
@@ -53,14 +53,14 @@ test "hkdf_sha256 test case 1" {
   let length = 42
 
   // Test extract
-  let prk = hkdf_extract_sha256(salt, ikm)
+  let prk = @src.hkdf_extract_sha256(salt, ikm)
   let prk_hex = uints_to_hex(prk)
   assert_eq(
     prk_hex, "077709362c2e32df0ddc3f0dc47bba6390b6c73bb50f9c3122ec844ad7c2b3e5",
   )
 
   // Test expand
-  let okm = hkdf_expand_sha256(prk, info, length)
+  let okm = @src.hkdf_expand_sha256(prk, info, length)
   match okm {
     Ok(result) => {
       let okm_hex = uints_to_hex(result)
@@ -72,7 +72,7 @@ test "hkdf_sha256 test case 1" {
   }
 
   // Test combined
-  let combined = hkdf_sha256(salt, ikm, info, length)
+  let combined = @src.hkdf_sha256(salt, ikm, info, length)
   match combined {
     Ok(result) => {
       let combined_hex = uints_to_hex(result)
@@ -94,14 +94,14 @@ test "hkdf_sha256 test case 3 - empty salt and info" {
   let length = 42
 
   // Test extract
-  let prk = hkdf_extract_sha256(salt, ikm)
+  let prk = @src.hkdf_extract_sha256(salt, ikm)
   let prk_hex = uints_to_hex(prk)
   assert_eq(
     prk_hex, "19ef24a32c717b167f33a91d6f648bdf96596776afdb6377ac434c1c293ccb04",
   )
 
   // Test combined
-  let combined = hkdf_sha256(salt, ikm, info, length)
+  let combined = @src.hkdf_sha256(salt, ikm, info, length)
   match combined {
     Ok(result) => {
       let combined_hex = uints_to_hex(result)
@@ -119,7 +119,7 @@ test "hkdf_sha256 test case 3 - empty salt and info" {
 test "hkdf_expand_sha256 rejects excessive length" {
   let prk = Array::make(32, 0U)
   let info : Array[UInt] = []
-  let result = hkdf_expand_sha256(prk, info, 8161)
+  let result = @src.hkdf_expand_sha256(prk, info, 8161)
   match result {
     Ok(_) => fail("expected error for excessive length")
     Err(_) => ()
@@ -132,7 +132,7 @@ test "hkdf_expand_sha256 rejects excessive length" {
 test "hkdf_expand_sha256 rejects zero length" {
   let prk = Array::make(32, 0U)
   let info : Array[UInt] = []
-  let result = hkdf_expand_sha256(prk, info, 0)
+  let result = @src.hkdf_expand_sha256(prk, info, 0)
   match result {
     Ok(_) => fail("expected error for zero length")
     Err(_) => ()
@@ -149,7 +149,7 @@ test "hkdf_sha256_bytes test case 1" {
   let ikm = uints_to_bytes_test(ikm_arr)
   let salt = uints_to_bytes_test(salt_arr)
   let info = uints_to_bytes_test(info_arr)
-  let result = hkdf_sha256_bytes(salt, ikm, info, 42)
+  let result = @src.hkdf_sha256_bytes(salt, ikm, info, 42)
   match result {
     Ok(okm) => {
       let okm_uints = bytes_to_uints_test(okm)

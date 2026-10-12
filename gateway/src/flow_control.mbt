@@ -216,3 +216,6 @@ pub fn CircuitBreaker::allow_request(
     HalfOpen => true // probe request allowed
   }
 }
+
+///|
+pub extend CircuitState with Eq::{not_equal, equal}

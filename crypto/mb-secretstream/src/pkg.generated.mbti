@@ -6,6 +6,8 @@ pub fn init_pull(Array[UInt], Array[UInt]) -> Result[SecretStream, String]
 
 pub fn init_pull_bytes(Bytes, Bytes) -> Result[SecretStream, String]
 
+pub fn init_push(Bytes) -> Result[SecretStreamWriter, String]
+
 // Errors
 
 // Types and methods

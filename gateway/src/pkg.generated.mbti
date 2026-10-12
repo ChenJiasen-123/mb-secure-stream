@@ -64,6 +64,8 @@ pub enum CircuitState {
   Open
   HalfOpen
 } derive(Eq)
+pub fn CircuitState::equal(Self, Self) -> Bool
+pub fn CircuitState::not_equal(Self, Self) -> Bool
 
 pub struct ConnectionPool {
   mut entries : Array[PoolEntry]

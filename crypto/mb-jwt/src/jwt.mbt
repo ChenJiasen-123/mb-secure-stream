@@ -92,7 +92,7 @@ fn validate_header_algorithm(
   header_json : String,
   expected_alg : String,
 ) -> Result[Unit, JWTError] {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in header_json.to_lower().iter() {
     match ch {
       ' ' | '\n' | '\r' | '\t' => ()

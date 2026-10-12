@@ -39,3 +39,13 @@ node --test tools/test_secretstream_cli.cjs
 第一条验证命令比较双方解密文件哈希，检查八类损坏输入、失败清理和已有输出保护。第二条对比 800 帧密文/明文/tag，并检查畸形输入拒绝后的恢复。结果是测试证据，不是安全审计。
 
 常见问题：缺少 bridge 时先执行构建；已有输出必须换用新路径；缺少 FINAL 表示文件未完整接收；不支持硬链接的文件系统会拒绝发布，不能以覆盖写入绕过。
+
+## 一键备份与恢复演示
+
+完成上述构建和依赖安装后，执行：
+
+```sh
+python examples/secure-backup/demo.py backup-demo.json
+```
+
+报告路径须不存在。[演示说明](../examples/secure-backup/README.md)包含双向恢复、截断拒绝、已有输出保护和应用边界。

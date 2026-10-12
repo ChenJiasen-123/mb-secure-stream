@@ -35,7 +35,7 @@ flowchart LR
 | 目的 | 入口 |
 |---|---|
 | 安装已发布库或从源码构建 | [安装与复现](docs/getting-started.md) |
-| 加密并恢复合成文件 | [文件 CLI 示例](examples/secretstream-file/README.md) |
+| 加密并恢复合成文件 | [安全恢复演示](examples/secure-backup/README.md) / [文件 CLI](examples/secretstream-file/README.md) |
 | 复现双向互通、篡改和截断拒绝 | [独立验证说明](docs/getting-started.md#独立互通与异常输入) |
 | 了解 WasmGC 宿主接入 | [Node Web Crypto 宿主示例](examples/secretstream-wasm/README.md) |
 | 集成到自己的程序 | [独立接口指南](docs/secretstream-api.md) |
@@ -60,7 +60,7 @@ flowchart LR
 
 欢迎报告可复现问题、平台验证和接入体验。[提交 Issue](https://github.com/ChenJiasen-123/mb-secure-stream/issues)，附工具链版本、操作系统、完整命令和经过脱敏的错误信息。请使用合成文件复现，不提交私钥、凭据或私人明文。
 
-后续重点：完整安全恢复应用示例、类型化标签与错误、分配分析和优化、外部试用反馈。已有验证不能替代独立安全审查。
+后续重点：备份应用的实际接入、类型化标签与错误、分配分析和优化、外部试用反馈。已有验证不能替代独立安全审查。
 
 ## 许可证
 

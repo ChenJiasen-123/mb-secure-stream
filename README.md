@@ -88,7 +88,12 @@ MoonBit is chosen for this project because of its unique advantages for security
 
 ## Performance
 
-### Absolute Performance
+### Historical JWT benchmark samples
+
+These values predate the secretstream work and were not rerun for 0.2.0.
+They do not measure secretstream, establish timing-attack resistance, or support
+comparisons with libraries on other machines. Reproduce the benchmark commands
+on the intended environment before making deployment decisions.
 
 | Metric | Value | Source |
 |--------|-------|--------|
@@ -109,33 +114,16 @@ MoonBit is chosen for this project because of its unique advantages for security
 | Stream metrics (record_request) | **9.71 μs** ± 3.88 μs | `moon bench --target wasm-gc` |
 | Backoff (next_delay) | **17.79 ns** ± 2.07 ns | `moon bench --target wasm-gc` |
 | Memory allocation | Minimal (no intermediate strings in token splitting) | Design characteristic |
-| Test coverage | 150/150 tests passing | `moon test` |
+| Current test result | 155/155 tests passing | `moon test --deny-warn` |
 
 > **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` and `gateway/src/gateway_bench.mbt` for the full benchmark suite.
 
-### Performance Comparison (HS256 Verify)
-
-| Library | Language | Time | Notes |
-|---------|----------|------|-------|
-| **mb-secure-stream** | MoonBit (WASM) | **24.09 μs** | Index-based token parsing, constant-time (measured) |
-| PyJWT | Python | ~500μs | CPython, interpreted |
-| jsonwebtoken | Node.js | ~100μs | V8 optimized |
-| java-jwt | Java | ~80μs | JVM JIT compiled |
-| go-jwt | Go | ~60μs | Native compiled |
-| rust-jwt | Rust | ~40μs | Native, zero-cost abstractions |
-
-**Key Insights**:
-- MoonBit's WASM performance (**24.09 μs**) is faster than native Go (~60μs) and Rust (~40μs)
-- **20x faster** than Python (PyJWT ~500μs)
-- **4x faster** than Node.js (jsonwebtoken ~100μs)
-- Near-native performance despite running in WASM sandbox
-- Zero GC pauses ensure consistent latency
-- Gateway operations (rate limiter, circuit breaker) complete in **nanoseconds**
+No controlled cross-library comparison or GC-pause measurement is provided.
 
 ## Security Features
 
 ### Cryptographic Security
-- **Constant-time verification**: Prevents timing attacks on signature comparison
+- **Signature comparison**: Equal-length authentication values use an accumulator comparison; compiled constant-time behavior and timing-attack resistance are not established.
 - **Algorithm enforcement**: Rejects `alg:none` to prevent signature bypass (CVE-2016-5431)
 - **Algorithm confusion prevention**: Strict algorithm matching prevents HS256/ES256 confusion attacks
 - **Index-based token splitting**: Efficient token parsing via direct string indexing (avoids `to_array()` allocations)
@@ -153,7 +141,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 - **Stateless**: No external dependencies, suitable for edge deployment
 - **Input validation**: Comprehensive bounds checking and type validation
 - **Fail-safe**: Always verify before using decrypted data
-- **Constant-time**: No data-dependent branches in critical paths
+- **Security review**: Implementation-level checks do not replace platform-specific side-channel analysis or an independent audit.
 
 ## Use Cases
 
@@ -350,7 +338,7 @@ cd ../../gateway && moon test
 
 ### Cloudflare Worker Example
 
-A production-ready JWT gateway (reverse proxy) deployed on Cloudflare Worker. This example demonstrates how to use the MoonBit cryptography library for JWT verification in a real-world edge computing scenario.
+A JWT gateway (reverse proxy) example for Cloudflare Workers. The current example uses TypeScript and Web Crypto; it does not establish production readiness or a deployed MoonBit gateway.
 
 **What it does**:
 1. **JWT Authentication**: Verifies `Authorization: Bearer <token>` using HMAC-SHA256

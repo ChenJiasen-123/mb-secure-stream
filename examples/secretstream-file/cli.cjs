@@ -41,7 +41,7 @@ function run(mode, input, output, keyFile, chunk = 65536) {
   if (fs.existsSync(output)) throw new Error('Output already exists');
   const temporary = output + '.part-' + crypto.randomBytes(12).toString('hex');
   let source, sink;
-  let inputBytes = 0, outputBytes = 0, frames = 0;
+  let inputBytes = 0, outputBytes = 0, frames = 0, maxPlaintextFrameBytes = 0;
   const started = performance.now();
   try {
     source = fs.openSync(input, 'r');
@@ -58,6 +58,7 @@ function run(mode, input, output, keyFile, chunk = 65536) {
         const frame = mb.writer_push(writer, new Uint8Array(buffer.subarray(0, n)), false);
         record(sink, frame);
         inputBytes += n;
+        maxPlaintextFrameBytes = Math.max(maxPlaintextFrameBytes, n);
         outputBytes += 4 + frame.length;
         frames++;
       }
@@ -79,6 +80,7 @@ function run(mode, input, output, keyFile, chunk = 65536) {
         writeAll(sink, message);
         inputBytes += 4 + length;
         outputBytes += message.length;
+        maxPlaintextFrameBytes = Math.max(maxPlaintextFrameBytes, message.length);
         frames++;
       }
       mb.reader_finish(reader);
@@ -89,7 +91,9 @@ function run(mode, input, output, keyFile, chunk = 65536) {
     // Same-directory hard link publishes a verified file without overwriting.
     fs.linkSync(temporary, output);
     fs.unlinkSync(temporary);
-    return {mode, inputBytes, outputBytes, frames, chunkBytes: chunk,
+    // Decryption follows input record lengths, not the CLI's chunk argument.
+    return {mode, inputBytes, outputBytes, frames, chunkBytes: mode === 'seal' ? chunk : null,
+      maxPlaintextFrameBytes,
       elapsedSeconds: (performance.now() - started) / 1000,
       peakRssMiB: process.resourceUsage().maxRSS / 1024,
       node: process.version};

@@ -114,7 +114,7 @@ on the intended environment before making deployment decisions.
 | Stream metrics (record_request) | **9.71 μs** ± 3.88 μs | `moon bench --target wasm-gc` |
 | Backoff (next_delay) | **17.79 ns** ± 2.07 ns | `moon bench --target wasm-gc` |
 | Memory allocation | Minimal (no intermediate strings in token splitting) | Design characteristic |
-| Current test result | 155/155 tests passing | `moon test --deny-warn` |
+| Current test result | 156/156 tests passing | `moon test --deny-warn` |
 
 > **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` and `gateway/src/gateway_bench.mbt` for the full benchmark suite.
 

@@ -59,3 +59,22 @@ They cover boundary and random lengths, AAD, repeated REKEY, PUSH, FINAL,
 authentication failure without state advancement and injected host entropy
 failure. A payload seed is recorded; OS-generated headers intentionally remain
 random. These checks are evidence of tested behavior, not an audit.
+
+The same harness mutates each received stream with random bit flips,
+truncation, short frames, trailing bytes, wrong AAD, replay and reordered
+frames. Independent libsodium must reject each candidate without changing
+its state; MoonBit must reject all candidates and then recover the correct
+plaintext/tag from the original frame. Calling `finish()` before each valid
+frame must reject incomplete input without preventing later recovery.
+At the default 32 streams this checks 5,536 malformed inputs and 800 early
+completion checks. Change `--seed` for additional cases; this bounded mutation
+campaign is not an exhaustive fuzzer or a security audit.
+
+Counter-wrap regression vectors in fixtures/counter-wrap.json use independent
+PyNaCl/libsodium ciphertext and next-state values. The test positions the internal
+32-bit counter at 0xfffffffe, checks automatic rekey, then explicit REKEY and
+FINAL, including rejection without state advancement for a damaged frame.
+Regenerate with python tools/generate_secretstream_counter_vectors.py, followed
+by moon fmt crypto/mb-secretstream. State positioning is test-only; the public
+API does not expose nonce or key mutation.
+

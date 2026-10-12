@@ -4,20 +4,16 @@ ChaCha20-Poly1305 AEAD (Authenticated Encryption with Associated Data) for MoonB
 
 ## Status
 
-Production-ready. Encrypt-and-authenticate with a single call.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 8439** — ChaCha20 and Poly1305 for IETF Protocols
 - **RFC 7539** — ChaCha20 and Poly1305 for TLS
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| AEAD encrypt (1KB) | ~15μs | ChaCha20-Poly1305 |
-| AEAD decrypt (1KB) | ~18μs | Includes tag verification |
-| AEAD encrypt (1MB) | ~12ms | Streaming |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 
@@ -25,7 +21,6 @@ Production-ready. Encrypt-and-authenticate with a single call.
 - **Tag verification**: Always verify the Poly1305 tag before using decrypted data
 - **Nonce uniqueness**: Never reuse a nonce with the same key (catastrophic failure)
 - **AAD binding**: Associated data is authenticated but not encrypted
-- **Constant-time**: Tag verification uses constant-time comparison
 - **Key size**: Requires 32-byte (256-bit) keys
 
 ## API

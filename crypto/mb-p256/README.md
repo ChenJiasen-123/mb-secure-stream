@@ -4,9 +4,9 @@ ECDSA P-256 (secp256r1) public-key signatures for MoonBit.
 
 ## Status
 
-Production-ready. RFC 7518 compliant.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 7518** — JSON Web Algorithms (JWA) — ES256
 - **FIPS 186-4** — Digital Signature Standard (DSS)
@@ -14,40 +14,24 @@ Production-ready. RFC 7518 compliant.
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Key generation | ~500μs | P-256 keypair |
-| Sign | ~200μs | ECDSA P-256 + SHA-256 |
-| Verify | ~120μs | ASN.1 parsing + curve verification |
-| Public key derivation | ~150μs | From private key |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 
 - **Curve security**: P-256 provides ~128-bit security level
 - **Deterministic signatures**: Uses RFC 6979 deterministic k to prevent nonce-reuse attacks
-- **Constant-time**: Scalar multiplication uses constant-time algorithms
 - **Point validation**: Public keys are validated before use
 - **Signature validation**: Strict ASN.1 DER parsing prevents malformed signature attacks
 
 ## API
 
-| Function | Description |
-|----------|-------------|
-| `p256_generate_keypair()` | Generate a new P-256 keypair |
-| `p256_sign(private_key, message)` | Sign message (Array[UInt]) |
-| `p256_sign_bytes(private_key, message)` | Sign message (Bytes) |
-| `p256_verify(public_key, message, signature)` | Verify signature (Array[UInt]) |
-| `p256_verify_bytes(public_key, message, signature)` | Verify signature (Bytes) |
-| `derive_public_key(private_key)` | Derive public key from private key |
+- `derive_public_key(private_key)` derives a public key.
+- `ecdsa_keygen(private_key)` and `ecdsa_keygen_bytes(private_key)` derive a key pair from caller-supplied private key material; they do not generate random keys.
+- `ecdsa_sign_message(private_key, message)` and `ecdsa_verify_message(public_key, message, signature)` operate on messages.
+- `ecdsa_sign` / `ecdsa_verify` operate on hashes; consult `src/pkg.generated.mbti` for exact types and Bytes variants.
+- `ecdh` / `ecdh_bytes` provide shared-secret derivation.
 
-## Usage
-
-```moonbit
-let (public_key, private_key) = p256_generate_keypair()
-let message = string_to_uints("hello")
-let sig = p256_sign(private_key, message)
-let ok = p256_verify(public_key, message, sig)
-```
+Handle Result errors and source private keys from a secure random generator. Do not treat these primitives as an audited protocol implementation.
 
 ## Tests
 

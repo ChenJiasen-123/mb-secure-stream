@@ -4,41 +4,32 @@ JWT (JSON Web Tokens) for MoonBit — HS256 and ES256 signing/verification.
 
 ## Status
 
-Production-ready. RFC 7519 with constant-time verification and zero-copy token splitting.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 7519** — JSON Web Tokens (JWT)
 - **RFC 7515** — JSON Web Signature (JWS)
-- **RFC 7516** — JSON Web Encryption (JWE) (partial)
 - **RFC 7518** — JSON Web Algorithms (JWA)
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| HS256 sign | ~30μs | HMAC-SHA256 |
-| HS256 verify | ~50μs | Constant-time comparison |
-| ES256 sign | ~200μs | ECDSA P-256 + SHA-256 |
-| ES256 verify | ~120μs | ASN.1 parsing + curve verification |
-| Token splitting | ~5μs | Zero-copy `Bytes::from_array` |
-| Memory allocation | Minimal | No intermediate string copies |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 
-- **Timing attack resistance**: All signature comparisons use constant-time algorithms (`constant_time_eq`)
+`verify` checks the signature and returns the payload; applications must separately validate claims and authorization policy. `decode` and `decode_header` do not authenticate their outputs. Use a strong randomly generated HS256 secret; the short strings below are demonstration placeholders.
+
 - **Algorithm confusion prevention**: Strict algorithm matching prevents HS256/ES256 confusion attacks
 - **alg:none rejection**: Blocks CVE-2016-5431 and variants (case-insensitive, whitespace-tolerant)
 - **Signature strip detection**: Rejects tokens with missing or empty signatures
-- **Input validation**: Comprehensive bounds checking for all cryptographic operations
-- **Stateless design**: No external dependencies, suitable for edge deployment
 
 ## API
 
 | Function | Description |
 |----------|-------------|
 | `sign(payload, key)` | Create signed JWT (HS256 or ES256) |
-| `verify(token, key)` | Constant-time verify + decode |
+| `verify(token, key)` | Verify signature and decode; validate claims separately |
 | `decode(token)` | Decode without verification |
 | `decode_header(token)` | Decode header without verification |
 | `validate_claims(payload, current_time, expected_iss, expected_aud)` | Validate exp, nbf, iss, aud |
@@ -62,7 +53,7 @@ let token = match @mb_jwt.sign(payload, key) {
 }
 
 match @mb_jwt.verify(token, key) {
-  Ok(p) => println("Valid: " + p)
+  Ok(p) => println("Signature verified; claims still need validation: " + p)
   Err(e) => println("Invalid: \{e}")
 }
 ```
@@ -84,7 +75,7 @@ cd crypto/mb-jwt && moon test
 - Truncated token rejection
 - Payload tampering detection
 - Header injection prevention
-- Weak secret resistance
+- Empty or invalid key handling (not a guarantee against weak secrets)
 - Cross-token signature reuse prevention
 - Expired token rejection
 - Not-before (nbf) enforcement

@@ -1,0 +1,44 @@
+name: External trial feedback
+description: Report an independent installation or synthetic backup trial
+title: "[Trial] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Follow docs/try-it.md. Use synthetic data only. Do not include keys, credentials, or private plaintext. A trial is usability evidence, not a security audit.
+  - type: input
+    id: revision
+    attributes:
+      label: Tested version or commit
+      description: Include git rev-parse HEAD, or Mooncakes package version.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, filesystem, MoonBit, Node and Python versions; note any local modifications.
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Outcome
+      options:
+        - Completed independently using the documentation
+        - Completed with assistance or documentation changes
+        - Could not complete
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Commands, results and confusing steps
+      description: Include sanitized errors and expected versus observed behavior. Attach only synthetic reports, and identify which commands actually ran.
+    validations:
+      required: true
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Intended use and missing capabilities
+      description: Describe whether the interface and file format fit your application.

@@ -5,10 +5,10 @@
 ## 选择版本
 
 - 已发布库：Mooncakes 0.2.0，运行 [独立消费者](../examples/published-consumer/README.md)。
-- 新演示、类型化接口和优化：开发分支 `docs/trial-and-evidence`，尚未合并或发布。记录实际 `git rev-parse HEAD`，不要把它当作 0.2.0。
+- 新演示、类型化接口和优化：开发分支 `docs/reviewer-feedback`，尚未合并或发布。记录实际 `git rev-parse HEAD`，不要把它当作 0.2.0。
 
 ```sh
-git clone --branch docs/trial-and-evidence https://github.com/ChenJiasen-123/mb-secure-stream.git
+git clone --branch docs/reviewer-feedback https://github.com/ChenJiasen-123/mb-secure-stream.git
 cd mb-secure-stream
 git rev-parse HEAD
 moon build --target js examples/secretstream-file/bridge
@@ -38,3 +38,5 @@ python tools/verify_published_install.py trial-install.json
 - 希望接入的真实场景，以及当前接口/文件格式是否满足需求。
 
 不要上传密钥、私人明文、凭据或敏感数据。可附合成演示报告。没有实际反馈前，不宣称存在外部用户或已完成外部评审。
+
+记录规范和待填反馈台账见 [外部反馈](external-feedback.md)。

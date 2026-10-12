@@ -1,0 +1,75 @@
+{
+  "repeats": 3,
+  "sizesMiB": [
+    16
+  ],
+  "chunksBytes": [
+    1048576
+  ],
+  "nodeOptions": "",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.10",
+  "node": "v24.18.0",
+  "sourceSha256": {
+    "examples/secretstream-file/cli.cjs": "773dae2d9f087c63be09d74a9255e710b8a03eef929f6ebfef31359c7dd0fd28",
+    "tools/verify_secretstream_files.py": "eeca0ceb29dab9a27a30527888f509f55a51757b8669cb2f0a26300397d169e8",
+    "tools/measure_secretstream_repeated.py": "f9f34bd218eef6f0ab33cce81287978306a46699327e1561ecec458c0c8e842d",
+    "_build/js/debug/build/examples/secretstream-file/bridge/bridge.js": "fed482c55cc863bc16ae1be9ffb2a3f675e39f5fbe5646946b09971220119b24"
+  },
+  "summary": [
+    {
+      "chunkBytes": 1048576,
+      "sizeMiB": 16,
+      "operation": "moonSeal",
+      "samples": 3,
+      "elapsedSeconds": {
+        "min": 2.7466698999999997,
+        "median": 2.8305434,
+        "max": 2.9238746
+      },
+      "peakRssMiB": {
+        "min": 340.63671875,
+        "median": 366.0546875,
+        "max": 366.2109375
+      }
+    },
+    {
+      "chunkBytes": 1048576,
+      "sizeMiB": 16,
+      "operation": "moonOpen",
+      "samples": 3,
+      "elapsedSeconds": {
+        "min": 2.7029370999999998,
+        "median": 2.7636504,
+        "max": 2.7892747
+      },
+      "peakRssMiB": {
+        "min": 380.75390625,
+        "median": 388.3125,
+        "max": 388.5703125
+      }
+    }
+  ],
+  "rawRuns": [
+    {
+      "iteration": 1,
+      "chunkBytes": 1048576,
+      "rawFile": "\u5206\u914d\u4f18\u5316\u524d\u91cd\u590d\u6d4b\u91cf-chunk1048576-run1.json",
+      "sha256": "0bcdcb4c5cc957f741e475a9c59abbced3dd3d3294d99fbbaccd7455dde802e6"
+    },
+    {
+      "iteration": 2,
+      "chunkBytes": 1048576,
+      "rawFile": "\u5206\u914d\u4f18\u5316\u524d\u91cd\u590d\u6d4b\u91cf-chunk1048576-run2.json",
+      "sha256": "839e4740facd36af008e60859d0384a3133530c296a5312ade6fb9600ec67a7b"
+    },
+    {
+      "iteration": 3,
+      "chunkBytes": 1048576,
+      "rawFile": "\u5206\u914d\u4f18\u5316\u524d\u91cd\u590d\u6d4b\u91cf-chunk1048576-run3.json",
+      "sha256": "dfb054d5c18b065228237a3e3ac321212cb7b8864d534bc8acfd3e39c4358cc8"
+    }
+  ],
+  "notes": "Alternating chunk order; fresh Node process per operation; synthetic repeated-byte input; total process peak RSS including V8/JIT/GC. Min/median/max are descriptive only. Do not compare different NODE_OPTIONS as identical configurations.",
+  "rawFileEncodingNote": "Published raw JSON normalized to LF; hashes refer to these repository copies. Measurement values unchanged."
+}

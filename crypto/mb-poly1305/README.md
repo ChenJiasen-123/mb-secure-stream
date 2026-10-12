@@ -4,7 +4,7 @@ Poly1305 one-time authenticator for MoonBit (RFC 7539).
 
 ## Status
 
-Production-ready. Constant-time MAC computation and verification.
+Experimental, unaudited implementation. Compiled constant-time behavior and production safety are not established.
 
 ## RFC Compliance
 
@@ -13,17 +13,13 @@ Production-ready. Constant-time MAC computation and verification.
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Poly1305 MAC (1KB) | ~8μs | 32-byte key |
-| Poly1305 verify (1KB) | ~10μs | Constant-time comparison |
-| Poly1305 MAC (1MB) | ~6ms | Streaming |
+No validated portable performance guarantee. See [allocation optimization evidence](../../docs/allocation-optimization.md) for a bounded synthetic JS measurement and its limits.
 
 ## Security Considerations
 
 - **One-time authenticator**: Poly1305 is a one-time MAC; never reuse the key for multiple messages
 - **Key size**: Requires 32-byte (256-bit) keys
-- **Constant-time verification**: Uses `constant_time_eq` to prevent timing attacks
+- **Verification**: Equal-length tags use an accumulator comparison; compiled timing-attack resistance is not established
 - **Tag size**: 16-byte (128-bit) authentication tag
 - **Combined with ChaCha20**: Typically used as ChaCha20-Poly1305 AEAD
 

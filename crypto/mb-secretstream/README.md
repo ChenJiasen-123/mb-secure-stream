@@ -15,11 +15,13 @@ The reader consumes an externally supplied 24-byte header and key. On the JS
 backend, `init_push(Bytes)` now returns a separate writer with a fresh header
 from the existing OS/Web Crypto CSPRNG provider. Entropy failure is an error.
 The deterministic sender is internal and exists only to compare test vectors.
-Never reuse a key/header pair. The same factory is enabled for Native using the
-existing OS entropy shim. Native verification is included in Linux CI, but has
-not yet been run successfully: this Windows checkout has only MinGW, whereas
-MoonBit requires an MSVC-compatible Windows toolchain. Do not claim verified
-Native support until the CI/platform tests pass. Wasm sender integration is pending.
+Never reuse a key/header pair. The same factory uses the existing OS entropy
+shim on Native; Linux Native protocol and random-header tests pass in CI.
+Windows Native remains unverified: this Windows checkout has only MinGW,
+whereas MoonBit requires an MSVC-compatible Windows toolchain.
+Wasm uses mb-getrandom's host crypto imports and remains unverified. A host
+exception traps the operation before a writer is returned; applications must
+handle host instantiation/call failures. No weak entropy fallback is provided.
 
 The wrapper accepts standard tags 0–3, treats FINAL as terminal, and requires
 `finish()` at transport EOF. Authentication of each frame alone cannot prove

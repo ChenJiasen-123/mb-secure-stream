@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — release candidate, not yet published
+## 0.2.0
 
 - Add experimental libsodium-compatible XChaCha20-Poly1305 secretstream with
   Bytes APIs, separate random-header writer, AAD, PUSH, REKEY and FINAL handling.

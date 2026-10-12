@@ -87,6 +87,9 @@ jobs:
           python tools/verify_secretstream_files.py verification/interop-64k.json 1 --chunk-bytes 65536
           python examples/secure-backup/demo.py verification/backup-demo.json
 
+      - name: Published Mooncakes consumer installation
+        run: python tools/verify_published_install.py verification/published-consumer.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: secretstream-interoperability

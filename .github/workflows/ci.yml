@@ -74,6 +74,9 @@ jobs:
         run: |
           python -m pip install -r tools/requirements-dev.txt
           mkdir -p verification
+          python tools/generate_secretstream_counter_vectors.py
+          moon fmt crypto/mb-secretstream
+          git diff --exit-code -- crypto/mb-secretstream/fixtures/counter-wrap.json crypto/mb-secretstream/src/counter_wrap_wbtest.mbt
           python tools/verify_secretstream_differential.py verification/differential.json
           python tools/verify_secretstream_files.py verification/interop-4k.json 1 --chunk-bytes 4096
           python tools/verify_secretstream_files.py verification/interop-64k.json 1 --chunk-bytes 65536

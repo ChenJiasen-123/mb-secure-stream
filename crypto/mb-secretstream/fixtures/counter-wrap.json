@@ -1,0 +1,58 @@
+{
+  "oracle": "PyNaCl 1.6.2 bundled libsodium",
+  "layoutReference": "https://github.com/jedisct1/libsodium/blob/89e500718da7e1fc90e168bd88e18d1060f54db3/src/libsodium/include/sodium/crypto_secretstream_xchacha20poly1305.h",
+  "key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "header": "000102030405060708090a0b0c0d0e0f1011121314151617",
+  "initialCounter": 4294967294,
+  "testOnlyForcedCounter": true,
+  "vectors": [
+    {
+      "message": "",
+      "aad": "",
+      "tag": 0,
+      "frame": "f9ecddc933c9b46fde913a89d1985ad4e9",
+      "nextKey": "51e3ff45a895675c4b33b46c64f4a9ace110d34df6a2ceab486372bacbd3eff6",
+      "nextNonce": "fffffffffcccdb20dda179c9"
+    },
+    {
+      "message": "01264b7095badf04294e7398bde2072c51",
+      "aad": "010c17",
+      "tag": 0,
+      "frame": "c49310588b99c74ee22c9265248ce414b39b69b0b49b7d2ab20dde60477ed2367463",
+      "nextKey": "0df88f5e4f87d2d17a24195b70121d84e2151f82b571e0ec10693157c91e37a7",
+      "nextNonce": "01000000a0188df1e8866310"
+    },
+    {
+      "message": "02274c7196bbe0052a4f7499bee3082d52779cc1e60b30557a9fc4e90e33587da2c7",
+      "aad": "020d18232e39",
+      "tag": 0,
+      "frame": "0bc4bae8fe9e02b1be891aa19d0f65f906dd21ca8b1f22b889995835c8ed3f956ceafdbfb5715d1ac2809012f8cc34031a1a75",
+      "nextKey": "0df88f5e4f87d2d17a24195b70121d84e2151f82b571e0ec10693157c91e37a7",
+      "nextNonce": "020000001fadfcacf244e380"
+    },
+    {
+      "message": "03284d7297bce1062b50759abfe4092e53789dc2e70c31567ba0c5ea0f34597ea3c8ed12375c81a6cbf0153a5f84a9cef3183d",
+      "aad": "030e19242f3a45505b",
+      "tag": 2,
+      "frame": "cca6a084ad950f2896085dc0c72c048b7cd5906605d881c3425ab0b39acc11b43a724bd292c02a40933fd53152fa3c678176bccf1e040e97cb01dfe1e194f20e89a045de",
+      "nextKey": "6d0decaa1b6bedcb8b1f70d50f167a4928c5242df111064aba819a036c0c8e29",
+      "nextNonce": "0100000041cdbbe15347077e"
+    },
+    {
+      "message": "04294e7398bde2072c51769bc0e50a2f54799ec3e80d32577ca1c6eb10355a7fa4c9ee13385d82a7ccf1163b6085aacff4193e6388add2f71c41668bb0d5fa1f44698eb3",
+      "aad": "040f1a25303b46515c67727d",
+      "tag": 0,
+      "frame": "c4f1f8364374fe220c2789b5066dfddabce61649db2a3ddbc0c6e5d8376093d30896170b4d489ebfde18fdbad09665971ddd5de27c778de4cefae86fb8d0aaae9bcb6964bdeac9895319c4927bd16cf6c4c28f00a8",
+      "nextKey": "6d0decaa1b6bedcb8b1f70d50f167a4928c5242df111064aba819a036c0c8e29",
+      "nextNonce": "02000000ab0432b24a839505"
+    },
+    {
+      "message": "052a4f7499bee3082d52779cc1e60b30557a9fc4e90e33587da2c7ec11365b80a5caef14395e83a8cdf2173c6186abd0f51a3f6489aed3f81d42678cb1d6fb20456a8fb4d9fe23486d92b7dc01264b7095badf0429",
+      "aad": "05101b26313c47525d68737e89949f",
+      "tag": 3,
+      "frame": "73cae1f22eb6f4213023d6319a1b9a392b957d208f0678a792c4c1f86928ca529d5cea064d04d85cc45d2d350ab59369d2772713abc86f656d2a6f5cf7c802a70cf20a4f003e8d33377c9c83121f4ef68ee31204721c245d4754413c3feb512771814c3eb672",
+      "nextKey": "82166567b942bf7d8cbdc395f93e1ba0f86deb9166df10e624f12d7a400e3d80",
+      "nextNonce": "01000000df453a0d3e18558a"
+    }
+  ]
+}

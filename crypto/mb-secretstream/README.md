@@ -59,3 +59,12 @@ They cover boundary and random lengths, AAD, repeated REKEY, PUSH, FINAL,
 authentication failure without state advancement and injected host entropy
 failure. A payload seed is recorded; OS-generated headers intentionally remain
 random. These checks are evidence of tested behavior, not an audit.
+
+Counter-wrap regression vectors in fixtures/counter-wrap.json use independent
+PyNaCl/libsodium ciphertext and next-state values. The test positions the internal
+32-bit counter at 0xfffffffe, checks automatic rekey, then explicit REKEY and
+FINAL, including rejection without state advancement for a damaged frame.
+Regenerate with python tools/generate_secretstream_counter_vectors.py, followed
+by moon fmt crypto/mb-secretstream. State positioning is test-only; the public
+API does not expose nonce or key mutation.
+

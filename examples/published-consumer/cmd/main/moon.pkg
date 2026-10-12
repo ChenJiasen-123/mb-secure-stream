@@ -1,0 +1,5 @@
+import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src" @stream,
+}
+
+pkgtype(kind: "executable")

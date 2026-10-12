@@ -58,6 +58,9 @@ flowchart LR
 
 ## 贡献与反馈
 
+[十分钟试用](docs/try-it.md) · [三分钟演示](docs/demo-script.md) · [本期贡献与证据](docs/contributions.md)
+
+
 欢迎报告可复现问题、平台验证和接入体验。[提交 Issue](https://github.com/ChenJiasen-123/mb-secure-stream/issues)，附工具链版本、操作系统、完整命令和经过脱敏的错误信息。请使用合成文件复现，不提交私钥、凭据或私人明文。
 
 后续重点：备份应用的实际接入、类型化接口的发布与接入、分配分析和优化、外部试用反馈。已有验证不能替代独立安全审查。

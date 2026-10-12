@@ -40,7 +40,7 @@ The following table lists each cryptographic module, its upstream source, the li
 | 6 | `crypto/mb-p256` | [moonbit-crypto/mb-crypto/mb-p256](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-p256) | Apache-2.0 | ECDSA P-256 adapted verbatim; added `ecdsa_sign_message`/`ecdsa_verify_message` wrappers for JWT integration |
 | 7 | `crypto/mb-hkdf` | [moonbit-crypto/mb-crypto/mb-hkdf](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hkdf) | Apache-2.0 | HKDF adapted verbatim; added `_bytes` convenience wrappers |
 | 8 | `crypto/mb-getrandom` | [moonbit-crypto/mb-crypto/mb-getrandom](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-getrandom) | Apache-2.0 | OS CSPRNG adapted verbatim; no semantic changes |
-| 9 | `crypto/mb-jwt` | Built on top of `mb-hash`, `mb-hmac`, `mb-p256`, `mb-base64url` from [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-jwt) | Apache-2.0 | JWT sign/verify (HS256, ES256) — original implementation in this repository using upstream crypto primitives; adds constant-time verification, `alg:none` rejection, claims validation |
+| 9 | `crypto/mb-jwt` | Built on top of `mb-hash`, `mb-hmac`, `mb-p256`, `mb-base64url` from [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-jwt) | Apache-2.0 | JWT sign/verify (HS256, ES256) — original implementation in this repository using upstream crypto primitives; adds signature comparison, `alg:none` rejection, claims validation |
 | 10 | `gateway` | This repository (original) | Apache-2.0 | JWT security filter middleware, flow control (rate limiter, circuit breaker, fair queue, bandwidth shaper, connection pool, backoff, replay protection), stream metrics |
 
 > **Note**: The upstream repository [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto) is itself licensed under Apache-2.0. Modifications in this repository are limited to adding convenience wrappers and integration shims; no cryptographic algorithms were changed.
@@ -189,7 +189,7 @@ if cb.allow_request(current_time) && rp.check_nonce(nonce, current_time) {
 
 | Module | Description |
 |--------|-------------|
-| `crypto/mb-jwt` | JWT sign/verify (HS256, ES256) with constant-time verification |
+| `crypto/mb-jwt` | JWT sign/verify (HS256, ES256) with signature and claims validation |
 | `crypto/mb-hmac` | HMAC-SHA256 and HMAC-SHA512 |
 | `crypto/mb-hash` | SHA-2 family (SHA-256, SHA-512) |
 | `crypto/mb-chacha` | ChaCha20 and XChaCha20 stream ciphers (RFC 8439) |

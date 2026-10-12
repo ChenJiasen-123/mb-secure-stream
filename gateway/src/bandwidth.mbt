@@ -14,7 +14,7 @@ pub fn new_bandwidth_shaper(
   rate_bps : Int64,
   burst_bytes : Int64,
 ) -> BandwidthShaper {
-  { rate_bps, burst_bytes, tokens: burst_bytes, last_refill_time: 0L }
+  { rate_bps, burst_bytes, tokens: burst_bytes, last_refill_time: 0L, }
 }
 
 ///|
@@ -79,7 +79,7 @@ pub struct ConnectionPool {
 ///|
 /// Creates a new connection pool with limits.
 pub fn new_connection_pool(global_max : Int64) -> ConnectionPool {
-  { entries: [], total_active: 0L, global_max }
+  { entries: [], total_active: 0L, global_max, }
 }
 
 ///|

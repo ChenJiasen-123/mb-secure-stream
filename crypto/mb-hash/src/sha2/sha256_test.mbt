@@ -1,7 +1,7 @@
 ///|
 test "empty string sha256" {
   let input : Array[UInt] = []
-  let result = Sha256::digest(input)
+  let result = @sha2.Sha256::digest(input)
   let expected : FixedArray[UInt] = [
     0xe3U, 0xb0U, 0xc4U, 0x42U, 0x98U, 0xfcU, 0x1cU, 0x14U, 0x9aU, 0xfbU, 0xf4U,
     0xc8U, 0x99U, 0x6fU, 0xb9U, 0x24U, 0x27U, 0xaeU, 0x41U, 0xe4U, 0x64U, 0x9bU,
@@ -15,7 +15,7 @@ test "empty string sha256" {
 ///|
 test "single a sha256" {
   let input : Array[UInt] = [0x61U] // "a"
-  let result = Sha256::digest(input)
+  let result = @sha2.Sha256::digest(input)
   let expected : FixedArray[UInt] = [
     0xcaU, 0x97U, 0x81U, 0x12U, 0xcaU, 0x1bU, 0xbdU, 0xcaU, 0xfaU, 0xc2U, 0x31U,
     0xb3U, 0x9aU, 0x23U, 0xdcU, 0x4dU, 0xa7U, 0x86U, 0xefU, 0xf8U, 0x14U, 0x7cU,
@@ -69,7 +69,7 @@ test "single a sha256" {
 ///|
 test "abc sha256" {
   let input : Array[UInt] = [0x61U, 0x62U, 0x63U] // "abc"
-  let result = Sha256::digest(input)
+  let result = @sha2.Sha256::digest(input)
   let expected : FixedArray[UInt] = [
     0xbaU, 0x78U, 0x16U, 0xbfU, 0x8fU, 0x01U, 0xcfU, 0xeaU, 0x41U, 0x41U, 0x40U,
     0xdeU, 0x5dU, 0xaeU, 0x22U, 0x23U, 0xb0U, 0x03U, 0x61U, 0xa3U, 0x96U, 0x17U,
@@ -91,7 +91,7 @@ test "long message sha256" {
     0x6cU, 0x6dU, 0x6eU, 0x6fU, 0x6dU, 0x6eU, 0x6fU, 0x70U, 0x6eU, 0x6fU, 0x70U,
     0x71U,
   ]
-  let result = Sha256::digest(input)
+  let result = @sha2.Sha256::digest(input)
   let expected : FixedArray[UInt] = [
     0x24U, 0x8dU, 0x6aU, 0x61U, 0xd2U, 0x06U, 0x38U, 0xb8U, 0xe5U, 0xc0U, 0x26U,
     0x93U, 0x0cU, 0x3eU, 0x60U, 0x39U, 0xa3U, 0x3cU, 0xe4U, 0x59U, 0x64U, 0xffU,
@@ -104,7 +104,7 @@ test "long message sha256" {
 
 ///|
 test "sha256 incremental update" {
-  let sha = Sha256::new()
+  let sha = @sha2.Sha256::new()
   sha.update([0x61U, 0x62U]) // "ab"
   sha.update([0x63U]) // "c"
   let result = sha.finalize()
@@ -125,7 +125,7 @@ test "sha256 multiple blocks" {
   for i in 0..<65 {
     input.push((i % 256).reinterpret_as_uint())
   }
-  let result = Sha256::digest(input)
+  let result = @sha2.Sha256::digest(input)
   let expected : FixedArray[UInt] = [
     0x4bU, 0xfdU, 0x2cU, 0x8bU, 0x6fU, 0x1eU, 0xecU, 0x7aU, 0x2aU, 0xfeU, 0xb4U,
     0x8bU, 0x93U, 0x4eU, 0xe4U, 0xb2U, 0x69U, 0x41U, 0x82U, 0x02U, 0x7eU, 0x6dU,
@@ -143,7 +143,7 @@ test "hash_to_hex format" {
     0x0bU, 0x0cU, 0x0dU, 0x0eU, 0x0fU, 0x10U, 0x11U, 0x12U, 0x13U, 0x14U, 0x15U,
     0x16U, 0x17U, 0x18U, 0x19U, 0x1aU, 0x1bU, 0x1cU, 0x1dU, 0x1eU, 0x1fU,
   ]
-  let hex = hash_to_hex(hash)
+  let hex = @sha2.hash_to_hex(hash)
   let expected = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
   assert_eq(hex, expected)
 }
@@ -151,8 +151,8 @@ test "hash_to_hex format" {
 ///|
 test "empty hash hex" {
   let input : Array[UInt] = []
-  let result = Sha256::digest(input)
-  let hex = hash_to_hex(result)
+  let result = @sha2.Sha256::digest(input)
+  let hex = @sha2.hash_to_hex(result)
   let expected = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   assert_eq(hex, expected)
 }
@@ -160,8 +160,8 @@ test "empty hash hex" {
 ///|
 test "abc hash hex" {
   let input : Array[UInt] = [0x61U, 0x62U, 0x63U] // "abc"
-  let result = Sha256::digest(input)
-  let hex = hash_to_hex(result)
+  let result = @sha2.Sha256::digest(input)
+  let hex = @sha2.hash_to_hex(result)
   let expected = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
   assert_eq(hex, expected)
 }

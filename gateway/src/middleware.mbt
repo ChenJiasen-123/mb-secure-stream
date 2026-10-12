@@ -10,7 +10,7 @@ pub struct StreamContext {
 ///|
 /// Creates a new stream security context for a given token.
 pub fn new_stream_context(token : String) -> StreamContext {
-  { token, is_allowed: false, error_message: "", user_sub: "", user_role: "" }
+  { token, is_allowed: false, error_message: "", user_sub: "", user_role: "", }
 }
 
 ///|
@@ -22,6 +22,11 @@ pub fn execute_security_filter(
   key : @mb_jwt.JwtKey,
   current_time : Int64,
 ) -> Unit {
+  // Revalidation must never retain identity or errors from a previous result.
+  ctx.is_allowed = false
+  ctx.error_message = ""
+  ctx.user_sub = ""
+  ctx.user_role = ""
   let payload_json = match @mb_jwt.verify(ctx.token, key) {
     Err(e) => {
       ctx.is_allowed = false

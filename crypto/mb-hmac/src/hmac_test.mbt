@@ -45,7 +45,7 @@ test "RFC4231 test case 1 (SHA-256)" {
   let data = uints_to_bytes([
     0x48U, 0x69U, 0x20U, 0x54U, 0x68U, 0x65U, 0x72U, 0x65U,
   ])
-  let mac = hmac_sha256_bytes(data, key)
+  let mac = @src.hmac_sha256_bytes(data, key)
   let expected = hex_to_uints(
     "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7",
   )
@@ -62,7 +62,7 @@ test "RFC4231 test case 2 (SHA-256)" {
     0x77U, 0x61U, 0x6eU, 0x74U, 0x20U, 0x66U, 0x6fU, 0x72U, 0x20U, 0x6eU, 0x6fU,
     0x74U, 0x68U, 0x69U, 0x6eU, 0x67U, 0x3fU,
   ])
-  let mac = hmac_sha256_bytes(data, key)
+  let mac = @src.hmac_sha256_bytes(data, key)
   let expected = hex_to_uints(
     "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843",
   )
@@ -75,7 +75,7 @@ test "RFC4231 test case 2 (SHA-256)" {
 test "RFC4231 test case 3 (SHA-256)" {
   let key = uints_to_bytes(Array::make(20, 0xaaU))
   let data = uints_to_bytes(Array::make(50, 0xddU))
-  let mac = hmac_sha256_bytes(data, key)
+  let mac = @src.hmac_sha256_bytes(data, key)
   let expected = hex_to_uints(
     "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe",
   )
@@ -90,7 +90,7 @@ test "RFC4231 test case 1 (SHA-512)" {
   let data = uints_to_bytes([
     0x48U, 0x69U, 0x20U, 0x54U, 0x68U, 0x65U, 0x72U, 0x65U,
   ])
-  let mac = hmac_sha512_bytes(data, key)
+  let mac = @src.hmac_sha512_bytes(data, key)
   let expected = hex_to_uints(
     "87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854",
   )
@@ -107,7 +107,7 @@ test "RFC4231 test case 2 (SHA-512)" {
     0x77U, 0x61U, 0x6eU, 0x74U, 0x20U, 0x66U, 0x6fU, 0x72U, 0x20U, 0x6eU, 0x6fU,
     0x74U, 0x68U, 0x69U, 0x6eU, 0x67U, 0x3fU,
   ])
-  let mac = hmac_sha512_bytes(data, key)
+  let mac = @src.hmac_sha512_bytes(data, key)
   let expected = hex_to_uints(
     "164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737",
   )

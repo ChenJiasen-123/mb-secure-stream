@@ -2,7 +2,13 @@
 
 [![GitHub CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
 
-An industrial-grade, high-performance JWT gateway and cryptography library for MoonBit, featuring constant-time verification, streaming AEAD protection (ChaCha20-Poly1305), and production-ready flow control middleware for API security and edge computing.
+A MoonBit cryptography and JWT gateway project. The current development focus is experimental libsodium-compatible secretstream authenticated encryption, with independent interoperability tests and bounded file I/O.
+
+## October 2026 development
+
+The new [secretstream package](crypto/mb-secretstream/README.md) implements libsodium `crypto_secretstream_xchacha20poly1305` frames, including REKEY and FINAL. The [file example](examples/secretstream-file/README.md) demonstrates both directions of interoperability with PyNaCl/libsodium, rejects incomplete streams and publishes plaintext only after complete verification. Its MBSS0001 envelope is project-specific, not a libsodium file format.
+
+Public random-header sending uses each backend's CSPRNG provider. JavaScript and Linux Native have passed protocol and random-header tests in CI. A [WasmGC Node Web Crypto host example](examples/secretstream-wasm/README.md) checks random headers and entropy failures. Windows Native, linear-memory Wasm and other WasmGC hosts remain unverified. Further differential testing and security review remain pending. The implementation has not been audited; performance and constant-time behavior are not guaranteed. Existing crypto adaptations and gateway code are historical work, distinct from this new protocol implementation.
 
 ## Acknowledgements
 
@@ -34,14 +40,14 @@ The following table lists each cryptographic module, its upstream source, the li
 | 6 | `crypto/mb-p256` | [moonbit-crypto/mb-crypto/mb-p256](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-p256) | Apache-2.0 | ECDSA P-256 adapted verbatim; added `ecdsa_sign_message`/`ecdsa_verify_message` wrappers for JWT integration |
 | 7 | `crypto/mb-hkdf` | [moonbit-crypto/mb-crypto/mb-hkdf](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hkdf) | Apache-2.0 | HKDF adapted verbatim; added `_bytes` convenience wrappers |
 | 8 | `crypto/mb-getrandom` | [moonbit-crypto/mb-crypto/mb-getrandom](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-getrandom) | Apache-2.0 | OS CSPRNG adapted verbatim; no semantic changes |
-| 9 | `crypto/mb-jwt` | Built on top of `mb-hash`, `mb-hmac`, `mb-p256`, `mb-base64url` from [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-jwt) | Apache-2.0 | JWT sign/verify (HS256, ES256) — original implementation in this repository using upstream crypto primitives; adds constant-time verification, `alg:none` rejection, claims validation |
+| 9 | `crypto/mb-jwt` | Built on top of `mb-hash`, `mb-hmac`, `mb-p256`, `mb-base64url` from [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-jwt) | Apache-2.0 | JWT sign/verify (HS256, ES256) — original implementation in this repository using upstream crypto primitives; adds signature comparison, `alg:none` rejection, claims validation |
 | 10 | `gateway` | This repository (original) | Apache-2.0 | JWT security filter middleware, flow control (rate limiter, circuit breaker, fair queue, bandwidth shaper, connection pool, backoff, replay protection), stream metrics |
 
 > **Note**: The upstream repository [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto) is itself licensed under Apache-2.0. Modifications in this repository are limited to adding convenience wrappers and integration shims; no cryptographic algorithms were changed.
 
 ## Project Vision
 
-mb-secure-stream is a production-ready security infrastructure for high-performance stream processing. It provides:
+mb-secure-stream explores security infrastructure for stream processing. Its design goals are:
 
 - **Zero-trust security**: Every request is authenticated and authorized at the edge
 - **High performance**: Sub-millisecond latency with index-based token splitting (no intermediate string allocations)
@@ -82,7 +88,12 @@ MoonBit is chosen for this project because of its unique advantages for security
 
 ## Performance
 
-### Absolute Performance
+### Historical JWT benchmark samples
+
+These values predate the secretstream work and were not rerun for 0.2.0.
+They do not measure secretstream, establish timing-attack resistance, or support
+comparisons with libraries on other machines. Reproduce the benchmark commands
+on the intended environment before making deployment decisions.
 
 | Metric | Value | Source |
 |--------|-------|--------|
@@ -103,33 +114,16 @@ MoonBit is chosen for this project because of its unique advantages for security
 | Stream metrics (record_request) | **9.71 μs** ± 3.88 μs | `moon bench --target wasm-gc` |
 | Backoff (next_delay) | **17.79 ns** ± 2.07 ns | `moon bench --target wasm-gc` |
 | Memory allocation | Minimal (no intermediate strings in token splitting) | Design characteristic |
-| Test coverage | 150/150 tests passing | `moon test` |
+| Current test result | 155/155 tests passing | `moon test --deny-warn` |
 
 > **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` and `gateway/src/gateway_bench.mbt` for the full benchmark suite.
 
-### Performance Comparison (HS256 Verify)
-
-| Library | Language | Time | Notes |
-|---------|----------|------|-------|
-| **mb-secure-stream** | MoonBit (WASM) | **24.09 μs** | Index-based token parsing, constant-time (measured) |
-| PyJWT | Python | ~500μs | CPython, interpreted |
-| jsonwebtoken | Node.js | ~100μs | V8 optimized |
-| java-jwt | Java | ~80μs | JVM JIT compiled |
-| go-jwt | Go | ~60μs | Native compiled |
-| rust-jwt | Rust | ~40μs | Native, zero-cost abstractions |
-
-**Key Insights**:
-- MoonBit's WASM performance (**24.09 μs**) is faster than native Go (~60μs) and Rust (~40μs)
-- **20x faster** than Python (PyJWT ~500μs)
-- **4x faster** than Node.js (jsonwebtoken ~100μs)
-- Near-native performance despite running in WASM sandbox
-- Zero GC pauses ensure consistent latency
-- Gateway operations (rate limiter, circuit breaker) complete in **nanoseconds**
+No controlled cross-library comparison or GC-pause measurement is provided.
 
 ## Security Features
 
 ### Cryptographic Security
-- **Constant-time verification**: Prevents timing attacks on signature comparison
+- **Signature comparison**: Equal-length authentication values use an accumulator comparison; compiled constant-time behavior and timing-attack resistance are not established.
 - **Algorithm enforcement**: Rejects `alg:none` to prevent signature bypass (CVE-2016-5431)
 - **Algorithm confusion prevention**: Strict algorithm matching prevents HS256/ES256 confusion attacks
 - **Index-based token splitting**: Efficient token parsing via direct string indexing (avoids `to_array()` allocations)
@@ -147,7 +141,7 @@ MoonBit is chosen for this project because of its unique advantages for security
 - **Stateless**: No external dependencies, suitable for edge deployment
 - **Input validation**: Comprehensive bounds checking and type validation
 - **Fail-safe**: Always verify before using decrypted data
-- **Constant-time**: No data-dependent branches in critical paths
+- **Security review**: Implementation-level checks do not replace platform-specific side-channel analysis or an independent audit.
 
 ## Use Cases
 
@@ -195,7 +189,7 @@ if cb.allow_request(current_time) && rp.check_nonce(nonce, current_time) {
 
 | Module | Description |
 |--------|-------------|
-| `crypto/mb-jwt` | JWT sign/verify (HS256, ES256) with constant-time verification |
+| `crypto/mb-jwt` | JWT sign/verify (HS256, ES256) with signature and claims validation |
 | `crypto/mb-hmac` | HMAC-SHA256 and HMAC-SHA512 |
 | `crypto/mb-hash` | SHA-2 family (SHA-256, SHA-512) |
 | `crypto/mb-chacha` | ChaCha20 and XChaCha20 stream ciphers (RFC 8439) |
@@ -344,7 +338,7 @@ cd ../../gateway && moon test
 
 ### Cloudflare Worker Example
 
-A production-ready JWT gateway (reverse proxy) deployed on Cloudflare Worker. This example demonstrates how to use the MoonBit cryptography library for JWT verification in a real-world edge computing scenario.
+A JWT gateway (reverse proxy) example for Cloudflare Workers. The current example uses TypeScript and Web Crypto; it does not establish production readiness or a deployed MoonBit gateway.
 
 **What it does**:
 1. **JWT Authentication**: Verifies `Authorization: Bearer <token>` using HMAC-SHA256

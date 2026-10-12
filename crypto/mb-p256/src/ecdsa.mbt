@@ -66,7 +66,7 @@ pub fn ecdsa_keygen(
     pub_key.push(v)
   }
 
-  Ok(ECDSAKeyPair::{ private_key: private_key_bytes, public_key: pub_key })
+  Ok(ECDSAKeyPair::{ private_key: private_key_bytes, public_key: pub_key, })
 }
 
 ///|
@@ -98,7 +98,7 @@ fn parse_public_key(pub_key : Array[UInt]) -> Result[ProjectivePoint, String] {
     return Err("Point not on curve")
   }
 
-  Ok(ProjectivePoint::{ x: x_mont, y: y_mont, z: fe_copy(field_one) })
+  Ok(ProjectivePoint::{ x: x_mont, y: y_mont, z: fe_copy(field_one), })
 }
 
 ///|
@@ -233,7 +233,7 @@ pub fn ecdsa_sign(
     return Err("Invalid nonce (s = 0)")
   }
 
-  Ok(ECDSASignature::{ r: sc_to_bytes(r), s: sc_to_bytes(s) })
+  Ok(ECDSASignature::{ r: sc_to_bytes(r), s: sc_to_bytes(s), })
 }
 
 ///|

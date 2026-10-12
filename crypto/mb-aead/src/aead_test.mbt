@@ -64,7 +64,7 @@ test "aead encrypt RFC 8439" {
   )
   let expected_tag = hex_to_uints("1ae10b594f09e26a7e902ecbd0600691")
 
-  match aead_encrypt(key, nonce, aad, plaintext) {
+  match @src.aead_encrypt(key, nonce, aad, plaintext) {
     Ok((ct, tag)) => {
       assert_eq(ct.length(), expected_ct.length())
       for i in 0..<ct.length() {
@@ -112,7 +112,7 @@ test "aead decrypt RFC 8439" {
     "742e",
   )
 
-  match aead_decrypt(key, nonce, aad, ciphertext, tag) {
+  match @src.aead_decrypt(key, nonce, aad, ciphertext, tag) {
     Ok(pt) => {
       assert_eq(pt.length(), expected_pt.length())
       for i in 0..<pt.length() {
@@ -149,7 +149,7 @@ test "aead decrypt rejects tampered ciphertext" {
   // Tamper with ciphertext
   ciphertext[0] = ciphertext[0] ^ 0x01U
 
-  match aead_decrypt(key, nonce, aad, ciphertext, tag) {
+  match @src.aead_decrypt(key, nonce, aad, ciphertext, tag) {
     Ok(_) => assert_true(false) // should have failed
     Err(msg) => assert_eq(msg, "Authentication failed")
   }
@@ -165,9 +165,9 @@ test "aead round trip" {
   let aad = hex_to_uints("aabbccdd")
   let plaintext = hex_to_uints("48656c6c6f20576f726c6421") // "Hello World!"
 
-  match aead_encrypt(key, nonce, aad, plaintext) {
+  match @src.aead_encrypt(key, nonce, aad, plaintext) {
     Ok((ct, tag)) =>
-      match aead_decrypt(key, nonce, aad, ct, tag) {
+      match @src.aead_decrypt(key, nonce, aad, ct, tag) {
         Ok(pt) => {
           assert_eq(pt.length(), plaintext.length())
           for i in 0..<pt.length() {

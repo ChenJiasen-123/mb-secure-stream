@@ -41,4 +41,3 @@ pub fn XChaCha20::new_with_counter(Bytes, Bytes, UInt) -> Result[Self, String]
 // Type aliases
 
 // Traits
-

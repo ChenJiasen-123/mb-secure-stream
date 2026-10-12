@@ -1,0 +1,13 @@
+import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-chacha/src" @chacha,
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-poly1305/src" @poly,
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-getrandom/src/lib" @random,
+}
+
+import {
+  "moonbitlang/core/encoding/hex",
+} for "wbtest"
+
+options(
+  targets: { "sender_platform_wbtest.mbt": [ "js", "native" ] },
+)

@@ -40,7 +40,7 @@ pub struct FairQueue {
 ///|
 /// Creates a new fair queue scheduler.
 pub fn new_fair_queue() -> FairQueue {
-  { entries: [], bytes_scheduled: 0L }
+  { entries: [], bytes_scheduled: 0L, }
 }
 
 ///|
@@ -58,7 +58,7 @@ pub fn FairQueue::enqueue(
     High => 4L
     Critical => 8L
   }
-  let entry = { session_id, priority, byte_size, arrival_time, weight }
+  let entry = { session_id, priority, byte_size, arrival_time, weight, }
   self.entries = self.entries + [entry]
 }
 
@@ -124,7 +124,7 @@ pub struct BackoffState {
 /// Creates a new backoff state.
 /// `initial_delay` in ms, `max_delay` in ms.
 pub fn new_backoff(initial_delay : Int64, max_delay : Int64) -> BackoffState {
-  { initial_delay, max_delay, attempt: 0L, current_delay: initial_delay }
+  { initial_delay, max_delay, attempt: 0L, current_delay: initial_delay, }
 }
 
 ///|
@@ -216,3 +216,6 @@ pub fn CircuitBreaker::allow_request(
     HalfOpen => true // probe request allowed
   }
 }
+
+///|
+pub extend CircuitState with Eq::{not_equal, equal}

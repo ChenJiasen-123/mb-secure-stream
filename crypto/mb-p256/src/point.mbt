@@ -60,7 +60,7 @@ fn point_identity() -> ProjectivePoint {
 fn point_generator() -> ProjectivePoint {
   let gx = fe_to_mont(gen_x_raw)
   let gy = fe_to_mont(gen_y_raw)
-  ProjectivePoint::{ x: gx, y: gy, z: fe_copy(field_one) }
+  ProjectivePoint::{ x: gx, y: gy, z: fe_copy(field_one), }
 }
 
 ///|
@@ -82,7 +82,7 @@ fn point_to_affine(p : ProjectivePoint) -> AffinePoint {
   let z_inv = fe_inv(p.z)
   let x = fe_mul(p.x, z_inv)
   let y = fe_mul(p.y, z_inv)
-  AffinePoint::{ x: fe_from_mont(x), y: fe_from_mont(y), infinity: false }
+  AffinePoint::{ x: fe_from_mont(x), y: fe_from_mont(y), infinity: false, }
 }
 
 /// Convert affine to projective (reserved for future extensions).
@@ -173,7 +173,7 @@ fn point_add(p1 : ProjectivePoint, p2 : ProjectivePoint) -> ProjectivePoint {
   let z3d = fe_mul(t5e, z3c)
   let z3e = fe_add(z3d, t0d)
 
-  ProjectivePoint::{ x: x3f, y: y3b, z: z3e }
+  ProjectivePoint::{ x: x3f, y: y3b, z: z3e, }
 }
 
 ///|
@@ -217,7 +217,7 @@ fn point_double(p : ProjectivePoint) -> ProjectivePoint {
   let z3f = fe_add(z3e, z3e) // Z3 = Z3+Z3
   let z3g = fe_add(z3f, z3f) // Z3 = Z3+Z3
 
-  ProjectivePoint::{ x: x3d, y: y3e, z: z3g }
+  ProjectivePoint::{ x: x3d, y: y3e, z: z3g, }
 }
 
 ///|

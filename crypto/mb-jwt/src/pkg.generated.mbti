@@ -43,6 +43,9 @@ pub struct JWT {
   payload : JWTPayload
   signature : String
 } derive(Eq, @debug.Debug)
+pub fn JWT::equal(Self, Self) -> Bool
+pub fn JWT::not_equal(Self, Self) -> Bool
+pub fn JWT::to_repr(Self) -> @debug.Repr
 
 pub enum JWTError {
   InvalidFormat
@@ -54,12 +57,20 @@ pub enum JWTError {
   InvalidIssuer(String)
   InvalidAudience(String)
 } derive(Eq, @debug.Debug)
+pub fn JWTError::equal(Self, Self) -> Bool
+pub fn JWTError::not_equal(Self, Self) -> Bool
 pub fn JWTError::to_debug_string(Self) -> String
+pub fn JWTError::to_repr(Self) -> @debug.Repr
 
 pub struct JWTHeader {
   alg : String
   typ : String
 } derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+pub fn JWTHeader::equal(Self, Self) -> Bool
+pub fn JWTHeader::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn JWTHeader::not_equal(Self, Self) -> Bool
+pub fn JWTHeader::to_json(Self) -> Json
+pub fn JWTHeader::to_repr(Self) -> @debug.Repr
 
 pub struct JWTPayload {
   iss : String?
@@ -70,13 +81,20 @@ pub struct JWTPayload {
   iat : Int64?
   jti : String?
 } derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+pub fn JWTPayload::equal(Self, Self) -> Bool
+pub fn JWTPayload::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn JWTPayload::not_equal(Self, Self) -> Bool
+pub fn JWTPayload::to_json(Self) -> Json
+pub fn JWTPayload::to_repr(Self) -> @debug.Repr
 
 pub(all) enum JwtKey {
   HS256(String)
   ES256(Array[UInt])
 } derive(Eq, @debug.Debug)
+pub fn JwtKey::equal(Self, Self) -> Bool
+pub fn JwtKey::not_equal(Self, Self) -> Bool
+pub fn JwtKey::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 
 // Traits
-

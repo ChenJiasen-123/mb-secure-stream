@@ -4,7 +4,7 @@ test "chacha20 block matches RFC 8439 test vector" {
     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
   )
   let nonce = hex_to_bytes("000000090000004a00000000")
-  match ChaCha20::new_with_counter(key, nonce, 1U) {
+  match @src.ChaCha20::new_with_counter(key, nonce, 1U) {
     Ok(cipher) => {
       let block = cipher.generate_block()
       let expected = hex_to_bytes(
@@ -45,7 +45,7 @@ test "chacha20 encrypts RFC 8439 sample plaintext" {
     "874d",
   )
 
-  match ChaCha20::new_with_counter(key, nonce, 1U) {
+  match @src.ChaCha20::new_with_counter(key, nonce, 1U) {
     Ok(cipher) => {
       let ciphertext = cipher.apply_keystream_bytes(plaintext)
       let expected_uints = bytes_to_uint_array(expected)
@@ -74,7 +74,7 @@ test "xchacha20 derives the expected subkey" {
     nonce_words[i] = load_le32_from_uints(nonce_uints, i * 4)
   }
 
-  let derived = hchacha20(key_words, nonce_words)
+  let derived = @src.hchacha20(key_words, nonce_words)
   let expected = [
     0x423b4182U, 0xfe7bb227U, 0x50420ed3U, 0x737d878aU, 0xd5e4f9a0U, 0x53a8748aU,
     0x13c42ec1U, 0xdcecd326U,

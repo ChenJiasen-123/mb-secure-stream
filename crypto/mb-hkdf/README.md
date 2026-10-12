@@ -4,20 +4,15 @@ HKDF (HMAC-based Extract-and-Expand Key Derivation Function) for MoonBit — RFC
 
 ## Status
 
-Production-ready. SHA-256 and SHA-512 variants.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 5869** — HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| HKDF-SHA256 extract | ~25μs | Salt + IKM |
-| HKDF-SHA256 expand | ~30μs | PRK + info |
-| HKDF-SHA256 combined | ~50μs | One-shot |
-| HKDF-SHA512 combined | ~70μs | One-shot |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 

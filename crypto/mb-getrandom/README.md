@@ -4,45 +4,27 @@ Secure random bytes for MoonBit — platform-native CSPRNG.
 
 ## Status
 
-Production-ready. Uses OS-level secure random sources.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 4086** — Randomness Requirements for Security
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| getrandom(32 bytes) | ~5μs | OS CSPRNG |
-| getrandom(1KB) | ~10μs | Linear scaling |
-| getrandom_bytes(32) | ~5μs | Returns new Bytes object |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 
 - **Cryptographically secure**: Uses OS-level CSPRNG (/dev/urandom, getrandom(), CryptGenRandom)
-- **Non-blocking**: Never blocks on entropy pool (uses /dev/urandom, not /dev/random)
 - **No userland PRNG**: Avoids weak userland random number generators
-- **Thread-safe**: Safe for concurrent use
 - **Fail-safe**: Returns error if OS random source unavailable
 
 ## API
 
-| Function | Description |
-|----------|-------------|
-| `getrandom(length)` | Fill buffer with secure random bytes |
-| `getrandom_bytes(length)` | Return a new `Bytes` filled with secure random data |
+`getrandom(length : Int) -> Result[Bytes, String]` allocates and returns random bytes. Non-positive lengths return an error. There is no public buffer-fill overload or `getrandom_bytes` function.
 
-## Usage
-
-```moonbit
-// Generate 32 random bytes for a secret key
-let key = getrandom_bytes(32)
-
-// Fill existing buffer
-let mut buf : Array[UInt] = Array::make(16, 0U)
-getrandom(16, buf)
-```
+JS uses host crypto facilities and native uses the platform shim. Wasm requires the documented crypto host imports: a host exception can trap instead of returning an error. Availability and blocking behavior depend on the host.
 
 ## Tests
 
@@ -53,7 +35,6 @@ cd crypto/mb-getrandom && moon test
 ### Test Coverage
 
 - Random byte generation
-- Buffer filling
 - Statistical randomness (basic)
 - Error handling
 - Various lengths

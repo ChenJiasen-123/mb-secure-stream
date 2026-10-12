@@ -144,15 +144,15 @@ fn check_input(
   state : SecretStream,
   data : Array[UInt],
   aad : Array[UInt],
-) -> Result[Unit, String] {
+) -> Result[Unit, StreamError] {
   if state.finished {
-    return Err("Stream already finalized")
+    return Err(Finalized)
   }
   if data.length() > 1048593 ||
     aad.length() > 1048576 ||
     !valid_bytes(data) ||
     !valid_bytes(aad) {
-    return Err("Invalid bytes or frame exceeds prototype limit")
+    return Err(InvalidInput)
   }
   Ok(())
 }
@@ -165,16 +165,16 @@ fn push(
   message : Array[UInt],
   aad : Array[UInt],
   tag : UInt,
-) -> Result[Array[UInt], String] {
+) -> Result[Array[UInt], StreamError] {
   match check_input(state, message, aad) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
   if message.length() > 1048576 {
-    return Err("Message exceeds prototype limit")
+    return Err(FrameTooLarge)
   }
   if tag > 3U {
-    return Err("Unsupported tag")
+    return Err(UnsupportedTag)
   }
   let tagblock = Array::make(64, 0U)
   tagblock[0] = tag
@@ -194,17 +194,17 @@ fn push(
 }
 
 ///|
-pub fn SecretStream::pull(
+fn pull_checked(
   state : SecretStream,
   frame : Array[UInt],
   aad : Array[UInt],
-) -> Result[(Array[UInt], UInt), String] {
+) -> Result[(Array[UInt], UInt), StreamError] {
   match check_input(state, frame, aad) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
   if frame.length() < 17 {
-    return Err("Truncated frame")
+    return Err(TruncatedFrame)
   }
   let block = crypt(state, Array::make(64, 0U), 1U)
   let tag = frame[0] ^ block[0]
@@ -216,10 +216,10 @@ pub fn SecretStream::pull(
     mismatch = mismatch | (authenticator[i] ^ frame[frame.length() - 16 + i])
   }
   if mismatch != 0U {
-    return Err("Authentication failed")
+    return Err(AuthenticationFailed)
   }
   if tag > 3U {
-    return Err("Unsupported tag")
+    return Err(UnsupportedTag)
   }
   let message = crypt(state, ciphertext, 2U)
   advance(state, authenticator, tag)
@@ -233,5 +233,13 @@ pub fn SecretStream::finish(state : SecretStream) -> Result[Unit, String] {
     Ok(())
   } else {
     Err("Missing FINAL frame")
+  }
+}
+
+///|
+pub fn SecretStream::pull(state : SecretStream, frame : Array[UInt], aad : Array[UInt]) -> Result[(Array[UInt], UInt), String] {
+  match pull_checked(state, frame, aad) {
+    Ok(value) => Ok(value)
+    Err(error) => Err(legacy_error(error))
   }
 }

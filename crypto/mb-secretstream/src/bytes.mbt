@@ -32,7 +32,7 @@ pub fn SecretStreamWriter::push(
   }
   match push(self.state, to_uints(message), to_uints(aad), tag) {
     Ok(frame) => Ok(to_bytes(frame))
-    Err(e) => Err(e)
+    Err(e) => Err(legacy_error(e))
   }
 }
 

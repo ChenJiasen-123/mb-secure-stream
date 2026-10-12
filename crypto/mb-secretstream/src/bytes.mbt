@@ -5,7 +5,7 @@ fn to_uints(bytes : Bytes) -> Array[UInt] {
 
 ///|
 fn to_bytes(data : Array[UInt]) -> Bytes {
-  Bytes::from_array(data.map(b => b.to_byte()))
+  Bytes::makei(data.length(), i => data[i].to_byte())
 }
 
 ///|
@@ -16,7 +16,7 @@ pub struct SecretStreamWriter {
 
 ///|
 pub fn SecretStreamWriter::header(self : SecretStreamWriter) -> Bytes {
-  to_bytes(to_uints(self.stream_header))
+  Bytes::makei(self.stream_header.length(), i => self.stream_header[i])
 }
 
 ///|

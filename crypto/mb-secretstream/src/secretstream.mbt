@@ -68,10 +68,10 @@ fn crypt(
 }
 
 ///|
-fn append64(out : Array[UInt], value : Int) -> Unit {
+fn store64(out : Array[UInt], offset : Int, value : Int) -> Unit {
   let v = value.to_uint64()
   for i in 0..<8 {
-    out.push(((v >> (8 * i)) & 255UL).to_uint())
+    out[offset + i] = ((v >> (8 * i)) & 255UL).to_uint()
   }
 }
 
@@ -82,25 +82,24 @@ fn mac(
   block : Array[UInt],
   ciphertext : Array[UInt],
 ) -> Array[UInt] {
-  let input : Array[UInt] = []
-  for b in aad {
-    input.push(b)
-  }
-  for _ in 0..<((16 - aad.length() % 16) % 16) {
-    input.push(0U)
-  }
-  for b in block {
-    input.push(b)
-  }
-  for b in ciphertext {
-    input.push(b)
-  }
   // libsodium's historical padding is mlen % 16, not (-mlen) % 16.
-  for _ in 0..<(ciphertext.length() % 16) {
-    input.push(0U)
+  let block_offset = aad.length() + (16 - aad.length() % 16) % 16
+  let ciphertext_offset = block_offset + 64
+  let lengths_offset = ciphertext_offset +
+    ciphertext.length() +
+    ciphertext.length() % 16
+  let input = Array::make(lengths_offset + 16, 0U)
+  for i in 0..<aad.length() {
+    input[i] = aad[i]
   }
-  append64(input, aad.length())
-  append64(input, 64 + ciphertext.length())
+  for i in 0..<64 {
+    input[block_offset + i] = block[i]
+  }
+  for i in 0..<ciphertext.length() {
+    input[ciphertext_offset + i] = ciphertext[i]
+  }
+  store64(input, lengths_offset, aad.length())
+  store64(input, lengths_offset + 8, 64 + ciphertext.length())
   @poly.poly1305_mac(crypt(state, Array::make(32, 0U), 0U), input)
 }
 
@@ -182,12 +181,13 @@ fn push(
   let encrypted_tagblock = crypt(state, tagblock, 1U)
   let ciphertext = crypt(state, message, 2U)
   let authenticator = mac(state, aad, encrypted_tagblock, ciphertext)
-  let out = [encrypted_tagblock[0]]
-  for b in ciphertext {
-    out.push(b)
+  let out = Array::make(ciphertext.length() + 17, 0U)
+  out[0] = encrypted_tagblock[0]
+  for i in 0..<ciphertext.length() {
+    out[1 + i] = ciphertext[i]
   }
-  for b in authenticator {
-    out.push(b)
+  for i in 0..<16 {
+    out[1 + ciphertext.length() + i] = authenticator[i]
   }
   advance(state, authenticator, tag)
   Ok(out)

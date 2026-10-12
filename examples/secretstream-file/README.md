@@ -78,3 +78,22 @@ When setting `NODE_OPTIONS=--max-old-space-size=64`, that option is recorded in
 the results and applies to V8 old-space, not a 64 MiB total RSS limit. Report
 unrestricted measurements separately. No measured results imply an audit,
 constant-time machine code, production readiness, or superiority to native C.
+
+For repeated measurements with separate raw JSON files and descriptive
+min/median/max summaries:
+
+```sh
+python tools/measure_secretstream_repeated.py repeated.json --repeats 3 --sizes 1 16 --chunks 65536 1048576
+```
+
+Chunk order alternates between rounds. Each round also reruns both directions
+of interoperability and the negative cases; this is not an isolated primitive
+benchmark. The summary records the runtime, platform, `NODE_OPTIONS` and source
+hashes. Run a different output prefix when changing heap options; keep the raw
+files with the summary. Three samples do not establish a confidence interval.
+
+CLI metrics report the configured `chunkBytes` only for encryption. Decryption
+uses record lengths from its input and reports `chunkBytes: null`; both modes
+report `maxPlaintextFrameBytes` actually processed. Earlier versions reported
+the unused default CLI chunk value during decryption, so use the harness's
+top-level `chunkBytes` to interpret those historical measurement files.

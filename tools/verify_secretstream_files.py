@@ -55,6 +55,9 @@ def main(output, sizes, chunk_bytes=65536):
             command([sys.executable, REFERENCE, 'open', encrypted, pyout, key])
             command([sys.executable, REFERENCE, 'seal', source, reference, key, CHUNK])
             moon_open = command(['node', CLI, 'open', reference, moonout, key])
+            assert moon_seal['chunkBytes'] == CHUNK
+            assert moon_open['chunkBytes'] is None, 'Open must report input framing, not a configured chunk'
+            assert moon_seal['maxPlaintextFrameBytes'] == moon_open['maxPlaintextFrameBytes'] == min(size * 1048576, CHUNK)
             expected = digest(source)
             assert expected == digest(pyout) == digest(moonout), 'File hash mismatch'
             results['cases'].append(dict(sizeMiB=size, sha256=expected,

@@ -60,6 +60,7 @@ jobs:
         run: |
           moon test crypto/mb-secretstream/src --target js
           moon build --target js examples/secretstream-file/bridge
+          node --test tools/test_secretstream_cli.cjs
 
       - name: Secretstream Native protocol and OS entropy tests
         run: moon test crypto/mb-secretstream/src --target native

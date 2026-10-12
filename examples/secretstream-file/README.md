@@ -14,6 +14,7 @@ same-directory hard links. The optional reference tests require Python 3.12 and
 From the repository root:
 
 ```sh
+node examples/secretstream-file/cli.cjs --help
 moon build --target js examples/secretstream-file/bridge
 node examples/secretstream-file/cli.cjs seal INPUT ENCRYPTED KEYFILE
 node examples/secretstream-file/cli.cjs open ENCRYPTED RESTORED KEYFILE

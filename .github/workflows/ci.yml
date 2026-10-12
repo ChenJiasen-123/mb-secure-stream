@@ -60,6 +60,7 @@ jobs:
         run: |
           moon test crypto/mb-secretstream/src --target js
           moon build --target js examples/secretstream-file/bridge
+          node --test tools/test_secretstream_cli.cjs
 
       - name: Secretstream Native protocol and OS entropy tests
         run: moon test crypto/mb-secretstream/src --target native
@@ -80,6 +81,7 @@ jobs:
           python tools/verify_secretstream_differential.py verification/differential.json
           python tools/verify_secretstream_files.py verification/interop-4k.json 1 --chunk-bytes 4096
           python tools/verify_secretstream_files.py verification/interop-64k.json 1 --chunk-bytes 65536
+          python examples/secure-backup/demo.py verification/backup-demo.json
 
       - uses: actions/upload-artifact@v4
         with:

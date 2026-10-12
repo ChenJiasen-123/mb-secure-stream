@@ -39,7 +39,7 @@ pub fn writer_push_record(
   writer : @stream.SecretStreamWriter,
   message : Bytes,
   aad : Bytes,
-  tag : UInt,
+  tag : UInt32,
 ) -> Bytes {
   writer.push(message, aad, tag).unwrap()
 }
@@ -49,6 +49,6 @@ pub fn reader_pull_record(
   reader : @stream.SecretStream,
   frame : Bytes,
   aad : Bytes,
-) -> (Bytes, UInt) {
+) -> (Bytes, UInt32) {
   reader.pull_bytes(frame, aad).unwrap()
 }

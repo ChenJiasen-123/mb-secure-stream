@@ -3,7 +3,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const mb = require(path.resolve(__dirname, '../../_build/js/debug/build/examples/secretstream-file/bridge/bridge.js'));
+const BRIDGE = path.resolve(__dirname, '../../_build/js/debug/build/examples/secretstream-file/bridge/bridge.js');
+const USAGE = 'Usage: node examples/secretstream-file/cli.cjs seal|open INPUT OUTPUT KEYFILE [CHUNK_BYTES:1..1048576]';
 const MAGIC = Buffer.from('MBSS0001');
 const MAX = 1024 * 1024;
 
@@ -23,7 +24,11 @@ function exact(fd, length, eofAllowed = false) {
 
 function writeAll(fd, bytes) {
   let offset = 0;
-  while (offset < bytes.length) offset += fs.writeSync(fd, bytes, offset, bytes.length - offset);
+  while (offset < bytes.length) {
+    const written = fs.writeSync(fd, bytes, offset, bytes.length - offset);
+    if (written <= 0) throw new Error('File write made no progress');
+    offset += written;
+  }
 }
 
 function record(fd, frame) {
@@ -35,7 +40,10 @@ function record(fd, frame) {
 
 function run(mode, input, output, keyFile, chunk = 65536) {
   if (!['seal', 'open'].includes(mode) || !Number.isInteger(chunk) || chunk < 1 || chunk > MAX)
-    throw new Error('Usage: node cli.cjs seal|open INPUT OUTPUT KEYFILE [CHUNK_BYTES:1..1048576]');
+    throw new Error(USAGE);
+  if (!fs.existsSync(BRIDGE))
+    throw new Error('MoonBit JS bridge is not built. From the repository root run: moon build --target js examples/secretstream-file/bridge');
+  const mb = require(BRIDGE);
   const key = fs.readFileSync(keyFile);
   if (key.length !== 32) throw new Error('Key file must contain exactly 32 binary bytes');
   if (fs.existsSync(output)) throw new Error('Output already exists');
@@ -107,9 +115,15 @@ function run(mode, input, output, keyFile, chunk = 65536) {
 
 if (require.main === module) {
   try {
-    const [mode, input, output, keyFile, size] = process.argv.slice(2);
-    if (!input || !output || !keyFile) throw new Error('Missing arguments');
-    console.log(JSON.stringify(run(mode, input, output, keyFile, size === undefined ? 65536 : Number(size))));
+    const args = process.argv.slice(2);
+    if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
+      console.log(USAGE + '\nCHUNK_BYTES controls encryption only; decryption follows input records.\nBuild first: moon build --target js examples/secretstream-file/bridge');
+    } else {
+      if (args.length < 4 || args.length > 5) throw new Error(USAGE);
+      const [mode, input, output, keyFile, size] = args;
+      if (size !== undefined && !/^[0-9]+$/.test(size)) throw new Error(USAGE);
+      console.log(JSON.stringify(run(mode, input, output, keyFile, size === undefined ? 65536 : Number(size))));
+    }
   } catch (error) {
     console.error(error.message || String(error));
     process.exitCode = 1;

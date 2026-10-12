@@ -1,0 +1,80 @@
+{
+  "chunkBytes": 1048576,
+  "sizesMiB": [
+    16
+  ],
+  "nodeOptions": "",
+  "cases": [
+    {
+      "sizeMiB": 16,
+      "sha256": "341aacac661ccb210720bedaa9ead5d668fe5ea41a73532fc147c71e34040df1",
+      "moonSeal": {
+        "mode": "seal",
+        "inputBytes": 16777216,
+        "outputBytes": 16777605,
+        "frames": 17,
+        "chunkBytes": 1048576,
+        "maxPlaintextFrameBytes": 1048576,
+        "elapsedSeconds": 2.0739199,
+        "peakRssMiB": 382.37890625,
+        "node": "v24.18.0"
+      },
+      "moonOpen": {
+        "mode": "open",
+        "inputBytes": 16777605,
+        "outputBytes": 16777216,
+        "frames": 17,
+        "chunkBytes": null,
+        "maxPlaintextFrameBytes": 1048576,
+        "elapsedSeconds": 1.9373547999999998,
+        "peakRssMiB": 385.30859375,
+        "node": "v24.18.0"
+      },
+      "crossImplementationHashesMatch": true
+    }
+  ],
+  "negativeCases": [
+    {
+      "name": "tampered",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "missing-final",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "truncated-prefix",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "trailing-after-final",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "oversized-prefix",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "invalid-header",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "empty-stream",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    },
+    {
+      "name": "short-prefix",
+      "bothReject": true,
+      "noPublishedOrPartialOutput": true
+    }
+  ],
+  "existingOutputPreserved": true,
+  "measurementNotes": "Fresh Node process per operation; process.resourceUsage().maxRSS, including runtime/JIT/GC. Synthetic repeated-byte files, not a production throughput claim."
+}

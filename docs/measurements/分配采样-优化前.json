@@ -1,0 +1,132 @@
+{
+  "node": "v24.18.0",
+  "samplingInterval": 32768,
+  "includesCollectedObjects": true,
+  "metrics": {
+    "mode": "seal",
+    "inputBytes": 4194304,
+    "outputBytes": 4194441,
+    "frames": 5,
+    "chunkBytes": 1048576,
+    "maxPlaintextFrameBytes": 1048576,
+    "elapsedSeconds": 1.1649349,
+    "peakRssMiB": 274.13671875,
+    "node": "v24.18.0"
+  },
+  "sampledBytes": 853167200,
+  "functions": [
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto13mb_2dpoly13053src13poly1305__mac",
+      "sampledBytes": 654702960
+    },
+    {
+      "functionName": "_M0MPC15array5Array4makeGjE",
+      "sampledBytes": 100666592
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto11mb_2dchacha3src15chacha20__block",
+      "sampledBytes": 58096496
+    },
+    {
+      "functionName": "_M0MPC15array5Array5makeiGjE",
+      "sampledBytes": 33554496
+    },
+    {
+      "functionName": "_M0MPC14uint4UInt10to__uint64",
+      "sampledBytes": 3410088
+    },
+    {
+      "functionName": "$make_array_len_and_init",
+      "sampledBytes": 1018912
+    },
+    {
+      "functionName": "(anonymous)",
+      "sampledBytes": 317752
+    },
+    {
+      "functionName": "compileForInternalLoader",
+      "sampledBytes": 295632
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto11mb_2dchacha3src14quarter__round",
+      "sampledBytes": 163888
+    },
+    {
+      "functionName": "internalBinding",
+      "sampledBytes": 98512
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto11mb_2dchacha3src14chacha20__core",
+      "sampledBytes": 98368
+    },
+    {
+      "functionName": "readFileSync",
+      "sampledBytes": 75240
+    },
+    {
+      "functionName": "set",
+      "sampledBytes": 69016
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto17mb_2dsecretstream3src3mac",
+      "sampledBytes": 66232
+    },
+    {
+      "functionName": "wrapSafe",
+      "sampledBytes": 65712
+    },
+    {
+      "functionName": "entries",
+      "sampledBytes": 65568
+    },
+    {
+      "functionName": "post",
+      "sampledBytes": 39920
+    },
+    {
+      "functionName": "closeSync",
+      "sampledBytes": 33408
+    },
+    {
+      "functionName": "resourceUsage",
+      "sampledBytes": 33048
+    },
+    {
+      "functionName": "createSupportedAlgorithms",
+      "sampledBytes": 32928
+    },
+    {
+      "functionName": "PerformanceNodeTiming",
+      "sampledBytes": 32832
+    },
+    {
+      "functionName": "_M0DTPC16result6ResultGRP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto17mb_2dsecretstream3src18SecretStreamWritersE2Ok",
+      "sampledBytes": 32832
+    },
+    {
+      "functionName": "next",
+      "sampledBytes": 32800
+    },
+    {
+      "functionName": "isURL",
+      "sampledBytes": 32800
+    },
+    {
+      "functionName": "deserializePackageJSON",
+      "sampledBytes": 32800
+    },
+    {
+      "functionName": "slice",
+      "sampledBytes": 32800
+    },
+    {
+      "functionName": "createDictionaryConverter",
+      "sampledBytes": 32784
+    },
+    {
+      "functionName": "_M0MP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto17mb_2dsecretstream3src18SecretStreamWriter4push",
+      "sampledBytes": 32784
+    }
+  ],
+  "notes": "Sampled JS heap allocations including startup; not exact allocation counts, retained heap or total process RSS."
+}

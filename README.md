@@ -42,7 +42,7 @@ flowchart LR
 
 ## 已有证据与限制
 
-- 开发分支全仓 158 项 MoonBit 测试、secretstream JS 8 项测试；CLI 启动与写入故障回归纳入修复分支 CI。精确结果以对应提交的 CI 为准。
+- 开发分支全仓 159 项 MoonBit 测试、secretstream JS 8 项测试；CLI 启动与写入故障回归纳入修复分支 CI。精确结果以对应提交的 CI 为准。
 - 独立差分默认验证 32 条流 / 800 帧，逐字节比较密文及明文/tag，检查 5,536 次畸形输入拒绝和 800 次提前完成检查后的恢复。
 - 文件验证包含双向哈希匹配、八类损坏输入、临时文件清理及已有输出保护；重复测量工具保存各轮原始结果和运行参数。
 - JS、Linux Native 和 Node Web Crypto WasmGC 有运行证据。Windows Native、其他 WasmGC 宿主及线性内存 Wasm 尚未验证。

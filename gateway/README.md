@@ -1,12 +1,12 @@
 # Gateway — Stream Security & Flow Control Middleware
 
-Production-grade security filter, rate limiting, bandwidth shaping, connection pooling, and production metrics for MoonBit stream processing.
+Experimental security filter, rate limiting, bandwidth shaping, connection pooling, and request metrics for MoonBit stream processing.
 
 ## Status
 
-Production-ready. Designed for API gateways, WebSocket proxies, and edge computing deployments.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 7519** — JSON Web Tokens (JWT)
 - **RFC 7515** — JSON Web Signature (JWS)
@@ -14,17 +14,7 @@ Production-ready. Designed for API gateways, WebSocket proxies, and edge computi
 
 ## Performance
 
-| Component | Operation | Time | Notes |
-|-----------|-----------|------|-------|
-| Security Filter | JWT verify (HS256) | ~50μs | Includes claims validation |
-| Security Filter | JWT verify (ES256) | ~120μs | Includes claims validation |
-| RateLimiter | try_consume | ~1μs | Token bucket check |
-| FairQueue | enqueue | ~2μs | Array append |
-| FairQueue | dequeue | ~10μs | Priority search + removal |
-| BandwidthShaper | try_consume | ~1μs | Token bucket check |
-| ConnectionPool | acquire | ~5μs | Hash lookup |
-| CircuitBreaker | allow_request | ~0.5μs | State check |
-| StreamMetrics | record_request | ~1μs | Counter increment |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 
@@ -32,8 +22,6 @@ Production-ready. Designed for API gateways, WebSocket proxies, and edge computi
 - **Algorithm enforcement**: Rejects `alg:none` and algorithm confusion (CVE-2016-5431)
 - **Claims validation**: Strict exp/nbf/iss/aud checking with current time binding
 - **Replay protection**: Nonce-based sliding window prevents token replay
-- **Stateless design**: No external dependencies, suitable for edge deployment
-- **Input validation**: Comprehensive bounds checking and type validation
 
 ## Architecture
 
@@ -55,7 +43,7 @@ Token → verify() → parse_claims() → validate_claims() → StreamContext
          ├─────────────────┤
          │ ReplayProtector │── Nonce-based replay prevention
          ├─────────────────┤
-         │ StreamMetrics   │── Production observability
+         │ StreamMetrics   │── Request counters and timings
          └─────────────────┘
 ```
 
@@ -63,7 +51,7 @@ Token → verify() → parse_claims() → validate_claims() → StreamContext
 
 | Step | Function | Purpose |
 |------|----------|---------|
-| 1 | `verify(token, key)` | Constant-time HMAC/ECDSA signature check |
+| 1 | `verify(token, key)` | HMAC/ECDSA signature check |
 | 2 | `parse_gateway_claims(json)` | Extract sub, exp, nbf, iss, role |
 | 3 | `validate_claims(payload, time)` | Check exp, nbf, iss, aud |
 
@@ -160,7 +148,7 @@ if sess.is_expired(300L, current_time) {  // 5 min timeout
 }
 ```
 
-### Production Metrics
+### Request Metrics
 Comprehensive observability for stream operations.
 
 ```moonbit

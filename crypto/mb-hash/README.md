@@ -4,26 +4,22 @@ SHA-2 family hash functions for MoonBit — SHA-256 and SHA-512.
 
 ## Status
 
-Production-ready. Streaming and one-shot API.
+Experimental implementation. Tests cover selected behavior and vectors; they do not establish production readiness or side-channel resistance.
 
-## RFC Compliance
+## Reference standards
 
 - **RFC 6234** — SHA-2 Hash Functions
 - **FIPS 180-4** — Secure Hash Standard (SHS)
 
 ## Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| SHA-256 | ~15μs | 64-byte block |
-| SHA-512 | ~25μs | 128-byte block |
-| Streaming (1MB) | ~2ms | Incremental hashing |
+No reproducible per-operation benchmark is published for this module. See the repository measurement reports for the specific configurations measured.
 
 ## Security Considerations
 
-- **Constant-time operations**: No data-dependent branches in critical paths
+Raw hashes do not authenticate messages. Use HMAC with a secret key for message authentication.
+
 - **Padding validation**: Strict adherence to RFC 6234 padding rules
-- **Length extension resistance**: SHA-256/512 are not vulnerable to length extension attacks (unlike SHA-1/MD5)
 - **No MD5/SHA-1**: Only modern, secure hash functions
 
 ## API

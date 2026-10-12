@@ -1,0 +1,116 @@
+{
+  "node": "v24.18.0",
+  "samplingInterval": 32768,
+  "includesCollectedObjects": true,
+  "metrics": {
+    "mode": "seal",
+    "inputBytes": 4194304,
+    "outputBytes": 4194441,
+    "frames": 5,
+    "chunkBytes": 1048576,
+    "maxPlaintextFrameBytes": 1048576,
+    "elapsedSeconds": 0.7737403,
+    "peakRssMiB": 259.4921875,
+    "node": "v24.18.0"
+  },
+  "sampledBytes": 448707248,
+  "functions": [
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto13mb_2dpoly13053src13poly1305__mac",
+      "sampledBytes": 250244856
+    },
+    {
+      "functionName": "_M0MPC15array5Array4makeGjE",
+      "sampledBytes": 100666592
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto11mb_2dchacha3src15chacha20__block",
+      "sampledBytes": 60607200
+    },
+    {
+      "functionName": "_M0MPC15array5Array5makeiGjE",
+      "sampledBytes": 33554496
+    },
+    {
+      "functionName": "_M0MPC14uint4UInt10to__uint64",
+      "sampledBytes": 1114744
+    },
+    {
+      "functionName": "compileForInternalLoader",
+      "sampledBytes": 726720
+    },
+    {
+      "functionName": "(anonymous)",
+      "sampledBytes": 363496
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto11mb_2dchacha3src14quarter__round",
+      "sampledBytes": 229440
+    },
+    {
+      "functionName": "$make_array_len_and_init",
+      "sampledBytes": 165744
+    },
+    {
+      "functionName": "internalBinding",
+      "sampledBytes": 135656
+    },
+    {
+      "functionName": "wrapSafe",
+      "sampledBytes": 132192
+    },
+    {
+      "functionName": "readFileSync",
+      "sampledBytes": 106864
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto13mb_2dpoly13053src13load__block32",
+      "sampledBytes": 106304
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto11mb_2dchacha3src14chacha20__core",
+      "sampledBytes": 98720
+    },
+    {
+      "functionName": "post",
+      "sampledBytes": 75024
+    },
+    {
+      "functionName": "toSorted",
+      "sampledBytes": 66224
+    },
+    {
+      "functionName": "entries",
+      "sampledBytes": 65568
+    },
+    {
+      "functionName": "_M0FP516ChenJiasen_2d12320mb_2dsecure_2dstream6crypto17mb_2dsecretstream3src3mac",
+      "sampledBytes": 50208
+    },
+    {
+      "functionName": "_M0TPB8MutLocalGmE",
+      "sampledBytes": 33072
+    },
+    {
+      "functionName": "getDeprecationWarningEmitter",
+      "sampledBytes": 32832
+    },
+    {
+      "functionName": "PerformanceNodeTiming",
+      "sampledBytes": 32832
+    },
+    {
+      "functionName": "resolveForCJSWithHooks",
+      "sampledBytes": 32832
+    },
+    {
+      "functionName": "randomBytes",
+      "sampledBytes": 32832
+    },
+    {
+      "functionName": "deprecate",
+      "sampledBytes": 32800
+    }
+  ],
+  "notes": "Sampled JS heap allocations including startup; not exact allocation counts, retained heap or total process RSS."
+}

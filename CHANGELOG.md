@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased (development branches; not on Mooncakes)
+
+- Add automatic counter-wrap rekey vectors and malformed-stream differential checks.
+- Fix CLI startup/help and MoonBit 0.10.15 bridge formatting.
+- Add typed tags/errors and public reader/writer interfaces, keeping compatibility APIs.
+- Add synthetic cross-language backup recovery walkthrough, architecture diagrams,
+  independent published consumer tutorial, trial and presentation guides.
+- Reduce Poly1305 block-packing allocations; include independent integer vectors and
+  raw repeated measurements. Peak process RSS is not claimed to improve.
+- Keep homepage free of API code and move integration details to dedicated docs.
+
+Some items are still in dependent PRs; see docs/contributions.md for merge state.
+
 ## 0.2.0
 
 - Add experimental libsodium-compatible XChaCha20-Poly1305 secretstream with

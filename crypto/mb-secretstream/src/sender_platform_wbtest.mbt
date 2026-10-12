@@ -16,3 +16,16 @@ test "random sender roundtrip and independent headers" {
   assert_true(writer.push(b"", b"", 0U) is Err(_))
   assert_true(init_push(b"short") is Err(_))
 }
+
+///|
+test "typed random sender and independent headers" {
+  assert_true(new_writer(b"short") is Err(InvalidKey))
+  let key = Bytes::make(32, b'\x42')
+  let writer = new_writer(key).unwrap()
+  let other = new_writer(key).unwrap()
+  assert_true(writer.header() != other.header())
+  let reader = new_reader(key, writer.header()).unwrap()
+  let frame = writer.write(b"public typed API", b"", Final).unwrap()
+  assert_eq(reader.read(frame, b""), Ok((b"public typed API", Final)))
+  assert_eq(reader.finish(), Ok(()))
+}

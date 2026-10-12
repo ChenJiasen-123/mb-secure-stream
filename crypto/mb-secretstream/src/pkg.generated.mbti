@@ -1,12 +1,20 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 pub fn init_pull(Array[UInt], Array[UInt]) -> Result[SecretStream, String]
 
 pub fn init_pull_bytes(Bytes, Bytes) -> Result[SecretStream, String]
 
 pub fn init_push(Bytes) -> Result[SecretStreamWriter, String]
+
+pub fn new_reader(Bytes, Bytes) -> Result[StreamReader, StreamError]
+
+pub fn new_writer(Bytes) -> Result[StreamWriter, StreamError]
 
 // Errors
 
@@ -23,6 +31,44 @@ pub struct SecretStreamWriter {
 }
 pub fn SecretStreamWriter::header(Self) -> Bytes
 pub fn SecretStreamWriter::push(Self, Bytes, Bytes, UInt) -> Result[Bytes, String]
+
+pub(all) enum StreamError {
+  InvalidKey
+  InvalidHeader
+  InvalidInput
+  FrameTooLarge
+  TruncatedFrame
+  AuthenticationFailed
+  UnsupportedTag
+  Finalized
+  MissingFinal
+  EntropyUnavailable(String)
+} derive(Eq, @debug.Debug)
+pub fn StreamError::equal(Self, Self) -> Bool
+pub fn StreamError::not_equal(Self, Self) -> Bool
+pub fn StreamError::to_repr(Self) -> @debug.Repr
+
+pub struct StreamReader {
+  // private fields
+}
+pub fn StreamReader::finish(Self) -> Result[Unit, StreamError]
+pub fn StreamReader::read(Self, Bytes, Bytes) -> Result[(Bytes, StreamTag), StreamError]
+
+pub(all) enum StreamTag {
+  Message
+  Push
+  Rekey
+  Final
+} derive(Eq, @debug.Debug)
+pub fn StreamTag::equal(Self, Self) -> Bool
+pub fn StreamTag::not_equal(Self, Self) -> Bool
+pub fn StreamTag::to_repr(Self) -> @debug.Repr
+
+pub struct StreamWriter {
+  // private fields
+}
+pub fn StreamWriter::header(Self) -> Bytes
+pub fn StreamWriter::write(Self, Bytes, Bytes, StreamTag) -> Result[Bytes, StreamError]
 
 // Type aliases
 

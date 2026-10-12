@@ -10,12 +10,14 @@ moon add ChenJiasen-123/mb-secure-stream@0.2.0
 
 具体包路径、导入和完整流生命周期见 [secretstream 接口指南](secretstream-api.md)。发布包与 GitHub 开发分支可能不同；安装 0.2.0 不会得到尚未发布的改动。
 
-## 从源码运行文件示例
+## 从开发源码运行文件示例
+
+以下使用待合并的试用分支；当前 main 未包含全部示例。安装 0.2.0 与运行开发分支是不同路径。
 
 需要 MoonBit 0.10.15、Node 24，以及支持同目录硬链接的文件系统。Python 只用于独立互通验证，依赖建议安装到虚拟环境。
 
 ```sh
-git clone https://github.com/ChenJiasen-123/mb-secure-stream.git
+git clone --branch docs/trial-and-evidence https://github.com/ChenJiasen-123/mb-secure-stream.git
 cd mb-secure-stream
 moon check --deny-warn
 moon test --deny-warn
@@ -49,3 +51,5 @@ python examples/secure-backup/demo.py backup-demo.json
 ```
 
 报告路径须不存在。[演示说明](../examples/secure-backup/README.md)包含双向恢复、截断拒绝、已有输出保护和应用边界。
+
+全新发布包消费者的详细命令见 [独立消费者教程](../examples/published-consumer/README.md)。

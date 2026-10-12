@@ -102,6 +102,8 @@ pub fn poly1305_mac(key : Array[UInt], message : Array[UInt]) -> Array[UInt] {
 
   let msg_len = message.length()
   let mut offset = 0
+  // Reuse the local block; clear the unused tail before the final partial block.
+  let block = FixedArray::make(17, 0U)
 
   while offset < msg_len {
     // Determine block size
@@ -109,44 +111,22 @@ pub fn poly1305_mac(key : Array[UInt], message : Array[UInt]) -> Array[UInt] {
     let block_size = if remaining < 16 { remaining } else { 16 }
 
     // Read block bytes into a temporary buffer (up to 17 bytes with the hibit)
-    let block = FixedArray::make(17, 0U)
+    for i in block_size..<17 {
+      block[i] = 0U
+    }
     for i in 0..<block_size {
       block[i] = message[offset + i] & 0xFFU
     }
     // Append 0x01 after the block bytes
     block[block_size] = 1U
 
-    // Convert block to 5 limbs (little-endian)
-    let b0 : UInt64 = block[0].to_uint64() |
-      (block[1].to_uint64() << 8) |
-      (block[2].to_uint64() << 16) |
-      (block[3].to_uint64() << 24)
-    let n0 : UInt64 = b0 & 0x3FFFFFFUL
-
-    let b1 : UInt64 = block[3].to_uint64() |
-      (block[4].to_uint64() << 8) |
-      (block[5].to_uint64() << 16) |
-      (block[6].to_uint64() << 24)
-    let n1 : UInt64 = (b1 >> 2) & 0x3FFFFFFUL
-
-    let b2 : UInt64 = block[6].to_uint64() |
-      (block[7].to_uint64() << 8) |
-      (block[8].to_uint64() << 16) |
-      (block[9].to_uint64() << 24)
-    let n2 : UInt64 = (b2 >> 4) & 0x3FFFFFFUL
-
-    let b3 : UInt64 = block[9].to_uint64() |
-      (block[10].to_uint64() << 8) |
-      (block[11].to_uint64() << 16) |
-      (block[12].to_uint64() << 24)
-    let n3 : UInt64 = (b3 >> 6) & 0x3FFFFFFUL
-
-    let b4 : UInt64 = block[12].to_uint64() |
-      (block[13].to_uint64() << 8) |
-      (block[14].to_uint64() << 16) |
-      (block[15].to_uint64() << 24) |
-      (block[16].to_uint64() << 32)
-    let n4 : UInt64 = (b4 >> 8) & 0x3FFFFFFUL
+    // Pack bytes in UInt before converting each 26-bit limb to UInt64.
+    // All shifts below fit in 32 bits; products/reduction still use UInt64.
+    let n0 = (load_block32(block, 0) & 0x3FFFFFFU).to_uint64()
+    let n1 = ((load_block32(block, 3) >> 2) & 0x3FFFFFFU).to_uint64()
+    let n2 = ((load_block32(block, 6) >> 4) & 0x3FFFFFFU).to_uint64()
+    let n3 = ((load_block32(block, 9) >> 6) & 0x3FFFFFFU).to_uint64()
+    let n4 = (((load_block32(block, 12) >> 8) | (block[16] << 24)) & 0x3FFFFFFU).to_uint64()
 
     // Add block to accumulator
     h0 = h0 + n0
@@ -309,4 +289,9 @@ pub fn poly1305_verify_bytes(key : Bytes, message : Bytes, tag : Bytes) -> Bool 
     bytes_to_uint_array(message),
     bytes_to_uint_array(tag),
   )
+}
+
+///|
+fn load_block32(block : FixedArray[UInt], offset : Int) -> UInt {
+  block[offset] | (block[offset + 1] << 8) | (block[offset + 2] << 16) | (block[offset + 3] << 24)
 }

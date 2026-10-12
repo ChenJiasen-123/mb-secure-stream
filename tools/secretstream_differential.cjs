@@ -24,12 +24,21 @@ const output = cases.map(test => {
   const reader = mb.reader_new(key, bytes(test.header));
   const writer = mb.writer_new(key);
   const frames = [];
+  let rejectedInputs = 0;
+  let incompleteChecks = 0;
   for (const record of test.records) {
     const aad = bytes(record.aad);
     const frame = bytes(record.frame);
     const damaged = Buffer.from(frame);
     damaged[damaged.length - 1] ^= 1;
     assert.throws(() => mb.reader_pull_record(reader, damaged, aad));
+    // Incomplete EOF is an error, and checking it must not consume state.
+    assert.throws(() => mb.reader_finish(reader));
+    incompleteChecks++;
+    for (const rejected of record.rejected) {
+      assert.throws(() => mb.reader_pull_record(reader, bytes(rejected.frame), bytes(rejected.aad)), rejected.kind);
+      rejectedInputs++;
+    }
     // A failed authentication must not change the state needed by the real frame.
     const decoded = mb.reader_pull_record(reader, frame, aad);
     assert.equal(hex(decoded._0), record.message);
@@ -39,6 +48,6 @@ const output = cases.map(test => {
   mb.reader_finish(reader);
   assert.throws(() => mb.reader_pull_record(reader, bytes(test.records.at(-1).frame), bytes(test.records.at(-1).aad)));
   assert.throws(() => mb.writer_push_record(writer, Buffer.alloc(0), Buffer.alloc(0), 0));
-  return {header: hex(mb.writer_header(writer)), frames};
+  return {header: hex(mb.writer_header(writer)), frames, rejectedInputs, incompleteChecks};
 });
 process.stdout.write(JSON.stringify(output));

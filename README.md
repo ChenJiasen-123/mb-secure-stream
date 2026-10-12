@@ -1,474 +1,67 @@
 # mb-secure-stream
 
-[![GitHub CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
+[![CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
+[Mooncakes 0.2.0](https://mooncakes.io/docs/ChenJiasen-123/mb-secure-stream@0.2.0) · [安装与复现](docs/getting-started.md) · [架构](docs/architecture.md) · [来源与许可](docs/attribution.md)
 
-A MoonBit cryptography and JWT gateway project. The current development focus is experimental libsodium-compatible secretstream authenticated encryption, with independent interoperability tests and bounded file I/O.
+用 MoonBit 实现兼容 libsodium secretstream 的流式认证加密，让 MoonBit 应用能与 Python/libsodium 交换分块加密数据。面向加密备份、文件传输和存储组件集成。
 
-## October 2026 development
+**当前为未经安全审计的实验版本。** 已验证协议互通和明确的失败行为；不保证恒定时间、生产安全或性能优势。密钥存储、密码派生、备份恢复策略由应用负责。
 
-The new [secretstream package](crypto/mb-secretstream/README.md) implements libsodium `crypto_secretstream_xchacha20poly1305` frames, including REKEY and FINAL. The [file example](examples/secretstream-file/README.md) demonstrates both directions of interoperability with PyNaCl/libsodium, rejects incomplete streams and publishes plaintext only after complete verification. Its MBSS0001 envelope is project-specific, not a libsodium file format.
+## 它解决什么问题
 
-Public random-header sending uses each backend's CSPRNG provider. JavaScript and Linux Native have passed protocol and random-header tests in CI. A [WasmGC Node Web Crypto host example](examples/secretstream-wasm/README.md) checks random headers and entropy failures. Windows Native, linear-memory Wasm and other WasmGC hosts remain unverified. Further differential testing and security review remain pending. The implementation has not been audited; performance and constant-time behavior are not guaranteed. Existing crypto adaptations and gateway code are historical work, distinct from this new protocol implementation.
+- **跨语言交换数据**：MoonBit 加密可以由 libsodium 解密，反向也有独立验证。
+- **检测不完整传输**：支持显式与计数器溢出的自动重密钥、FINAL 和截断拒绝。
+- **失败不发布恢复文件**：文件示例在完整验证前只写独占临时文件，失败清理，不覆盖已有目标。
 
-## Acknowledgements
+生态已有密码库和分块 AEAD；本项目的重点是 libsodium secretstream 的帧格式、状态行为和可复现互通，而非算法数量。
 
-This project is a **derivative work** based on **[moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto)** (Apache-2.0). The nine cryptographic modules listed below (Sections 1–9) are adapted from that upstream project with modifications for the gateway integration context. See each module's README for detailed change scope.
+## 架构
 
-## License
-
-Licensed under the **Apache License, Version 2.0** (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
-
-<http://www.apache.org/licenses/LICENSE-2.0>
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an **"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-This project contains code adapted from **[moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto)** (commit range `main`), which is also licensed under Apache-2.0.
-
-========================================================================
-
-### Modules Adapted from moonbit-crypto/mb-crypto
-
-The following table lists each cryptographic module, its upstream source, the license (Apache-2.0), and the scope of modifications made in this repository:
-
-| # | Module | Upstream Source | License | Reference / Modification Scope |
-|---|--------|-----------------|---------|-------------------------------|
-| 1 | `crypto/mb-hash` | [moonbit-crypto/mb-crypto/mb-hash](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hash) | Apache-2.0 | SHA-256 and SHA-512 implementation adapted verbatim; added `Sha256::digest_string` and `Sha512::digest_string` convenience methods |
-| 2 | `crypto/mb-hmac` | [moonbit-crypto/mb-crypto/mb-hmac](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hmac) | Apache-2.0 | HMAC-SHA256 and HMAC-SHA512 adapted verbatim; no semantic changes |
-| 3 | `crypto/mb-chacha` | [moonbit-crypto/mb-crypto/mb-chacha](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-chacha) | Apache-2.0 | ChaCha20/XChaCha20 stream ciphers adapted verbatim; added `encrypt_bytes`/`decrypt_bytes` convenience wrappers |
-| 4 | `crypto/mb-poly1305` | [moonbit-crypto/mb-crypto/mb-poly1305](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-poly1305) | Apache-2.0 | Poly1305 one-time MAC adapted verbatim; added `poly1305_mac_bytes` / `poly1305_verify_bytes` Bytes API |
-| 5 | `crypto/mb-aead` | [moonbit-crypto/mb-crypto/mb-aead](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-aead) | Apache-2.0 | ChaCha20-Poly1305 AEAD adapted verbatim; added `aead_encrypt_bytes` / `aead_decrypt_bytes` Bytes API convenience wrappers |
-| 6 | `crypto/mb-p256` | [moonbit-crypto/mb-crypto/mb-p256](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-p256) | Apache-2.0 | ECDSA P-256 adapted verbatim; added `ecdsa_sign_message`/`ecdsa_verify_message` wrappers for JWT integration |
-| 7 | `crypto/mb-hkdf` | [moonbit-crypto/mb-crypto/mb-hkdf](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-hkdf) | Apache-2.0 | HKDF adapted verbatim; added `_bytes` convenience wrappers |
-| 8 | `crypto/mb-getrandom` | [moonbit-crypto/mb-crypto/mb-getrandom](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-getrandom) | Apache-2.0 | OS CSPRNG adapted verbatim; no semantic changes |
-| 9 | `crypto/mb-jwt` | Built on top of `mb-hash`, `mb-hmac`, `mb-p256`, `mb-base64url` from [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto/tree/main/mb-jwt) | Apache-2.0 | JWT sign/verify (HS256, ES256) — original implementation in this repository using upstream crypto primitives; adds signature comparison, `alg:none` rejection, claims validation |
-| 10 | `gateway` | This repository (original) | Apache-2.0 | JWT security filter middleware, flow control (rate limiter, circuit breaker, fair queue, bandwidth shaper, connection pool, backoff, replay protection), stream metrics |
-
-> **Note**: The upstream repository [moonbit-crypto/mb-crypto](https://github.com/moonbit-crypto/mb-crypto) is itself licensed under Apache-2.0. Modifications in this repository are limited to adding convenience wrappers and integration shims; no cryptographic algorithms were changed.
-
-## Project Vision
-
-mb-secure-stream explores security infrastructure for stream processing. Its design goals are:
-
-- **Zero-trust security**: Every request is authenticated and authorized at the edge
-- **High performance**: Sub-millisecond latency with index-based token splitting (no intermediate string allocations)
-- **Edge-native**: Designed for Cloudflare Workers, Fastly Compute, and WASM runtimes
-- **Composable**: Modular design allows picking only what you need
-
-## Why MoonBit?
-
-MoonBit is chosen for this project because of its unique advantages for security-critical, high-performance applications:
-
-### 1. **WASM-First Design**
-- **Build command**: `moon build --target wasm` or `moon build --target wasm-gc`
-- **Test command**: `moon test --target wasm-gc`
-- Compiles to WebAssembly for edge deployment
-- Cold start time <10ms (estimated)
-- Runs on Cloudflare Workers, Fastly Compute, Deno Deploy
-- **Status**: ✅ Production-ready (150/150 tests passing on WASM)
-
-### 2. **Zero GC Pressure**
-- No garbage collector means predictable latency
-- Index-based token parsing reduces memory allocations
-- Suitable for high-throughput stream processing
-
-### 3. **Type Safety**
-- Compile-time error detection prevents entire classes of bugs
-- Pattern matching ensures exhaustive error handling
-- No null pointer exceptions
-
-### 4. **Block-Style Organization**
-- Each type/function is self-contained
-- Easy to refactor and maintain
-- Clear separation of concerns
-
-### 5. **Built-in Testing**
-- White-box and black-box testing support
-- 150/150 tests passing
-- Snapshot testing for complex outputs
-
-## Performance
-
-### Historical JWT benchmark samples
-
-These values predate the secretstream work and were not rerun for 0.2.0.
-They do not measure secretstream, establish timing-attack resistance, or support
-comparisons with libraries on other machines. Reproduce the benchmark commands
-on the intended environment before making deployment decisions.
-
-| Metric | Value | Source |
-|--------|-------|--------|
-| JWT verify (HS256) | **24.09 μs** ± 0.87 μs | `moon bench --target wasm-gc` |
-| JWT sign (HS256) | **19.74 μs** ± 1.51 μs | `moon bench --target wasm-gc` |
-| JWT decode (no verify) | **14.90 μs** ± 0.87 μs | `moon bench --target wasm-gc` |
-| JWT sign (ES256) | **10.61 ms** ± 0.38 ms | `moon bench --target wasm-gc` |
-| JWT verify (ES256) | **20.65 ms** ± 0.47 ms | `moon bench --target wasm-gc` |
-| Base64url encode (11 bytes) | **1.04 μs** ± 0.04 μs | `moon bench --target wasm-gc` |
-| Base64url decode (8 bytes) | **590 ns** ± 14 ns | `moon bench --target wasm-gc` |
-| Security filter execute | **25.03 μs** ± 0.56 μs | `moon bench --target wasm-gc` |
-| Rate limiter (try_consume) | **13.37 ns** ± 2.06 ns | `moon bench --target wasm-gc` |
-| Replay protector (check_nonce) | **56.66 ns** ± 10.03 ns | `moon bench --target wasm-gc` |
-| Fair queue (dequeue) | **14.76 ns** ± 1.53 ns | `moon bench --target wasm-gc` |
-| Circuit breaker (allow_request) | **24.01 ns** ± 5.97 ns | `moon bench --target wasm-gc` |
-| Bandwidth shaper (try_consume) | **15.64 ns** ± 2.44 ns | `moon bench --target wasm-gc` |
-| Connection pool (acquire) | **17.77 ns** ± 2.97 ns | `moon bench --target wasm-gc` |
-| Stream metrics (record_request) | **9.71 μs** ± 3.88 μs | `moon bench --target wasm-gc` |
-| Backoff (next_delay) | **17.79 ns** ± 2.07 ns | `moon bench --target wasm-gc` |
-| Memory allocation | Minimal (no intermediate strings in token splitting) | Design characteristic |
-| Current test result | 156/156 tests passing | `moon test --deny-warn` |
-
-> **Note**: All performance metrics are measured using `moon bench --target wasm-gc` on the local development machine. Actual performance may vary depending on the target deployment environment (Cloudflare Workers, Fastly Compute, etc.). See `crypto/mb-jwt/src/jwt_bench.mbt` and `gateway/src/gateway_bench.mbt` for the full benchmark suite.
-
-No controlled cross-library comparison or GC-pause measurement is provided.
-
-## Security Features
-
-### Cryptographic Security
-- **Signature comparison**: Equal-length authentication values use an accumulator comparison; compiled constant-time behavior and timing-attack resistance are not established.
-- **Algorithm enforcement**: Rejects `alg:none` to prevent signature bypass (CVE-2016-5431)
-- **Algorithm confusion prevention**: Strict algorithm matching prevents HS256/ES256 confusion attacks
-- **Index-based token splitting**: Efficient token parsing via direct string indexing (avoids `to_array()` allocations)
-
-### Gateway Security
-- **JWT verification**: HS256 (HMAC-SHA256) and ES256 (ECDSA P-256)
-- **Claims validation**: exp, nbf, iss, aud checking with current time binding
-- **Replay protection**: Nonce-based sliding window (configurable)
-- **Rate limiting**: Token bucket algorithm for request rate control
-- **Bandwidth shaping**: Byte-level token bucket for bandwidth management
-- **Circuit breaker**: Failure isolation with automatic recovery
-- **Connection pooling**: Upstream connection limits
-
-### Design Principles
-- **Stateless**: No external dependencies, suitable for edge deployment
-- **Input validation**: Comprehensive bounds checking and type validation
-- **Fail-safe**: Always verify before using decrypted data
-- **Security review**: Implementation-level checks do not replace platform-specific side-channel analysis or an independent audit.
-
-## Use Cases
-
-### 1. API Security Gateway
-Microservices architecture unified entry point for identity and access management.
-
-```moonbit
-let ctx = new_stream_context(jwt_token)
-execute_security_filter(ctx, jwt_key, current_time)
-if ctx.is_allowed {
-  // Forward to upstream with user context
-  // ctx.user_sub is populated from the JWT "sub" claim
-  // ctx.user_role is populated from the JWT "role" claim (or "guest" if absent)
-  forward_request(ctx.user_sub, ctx.user_role)
-}
+```mermaid
+flowchart LR
+    Source[合成文件 / 应用数据] --> Adapter[有界 I/O 与应用分帧]
+    Adapter --> Moon[MoonBit secretstream]
+    Moon --> Encrypted[分块认证密文]
+    Encrypted --> MoonReader[MoonBit 接收端]
+    Encrypted --> Sodium[Python / libsodium 接收端]
+    MoonReader --> Gate[完整 FINAL 和 EOF 检查]
+    Gate --> Restore[发布恢复文件]
 ```
 
-### 2. WebSocket/Streaming Proxy
-Real-time data streams with JWT authentication and flow control.
+密码计算在 MoonBit 内完成；Node 负责文件读写和输出发布，Python 提供独立参考。文件示例的 MBSS0001 容器是项目自定义封装，其内部帧与 libsodium secretstream 兼容。[查看组件分工、恢复流程与信任边界](docs/architecture.md)。
 
-```moonbit
-let fq = new_fair_queue()
-let rl = new_rate_limiter(1000L, 100L)
+## 开始体验
 
-// Authenticate once, then rate-limit each message
-if ctx.is_allowed && rl.try_consume(current_time) {
-  fq.enqueue(ctx.user_sub, Priority::Normal, byte_size, timestamp)
-}
-```
+| 目的 | 入口 |
+|---|---|
+| 安装已发布库或从源码构建 | [安装与复现](docs/getting-started.md) |
+| 加密并恢复合成文件 | [文件 CLI 示例](examples/secretstream-file/README.md) |
+| 复现双向互通、篡改和截断拒绝 | [独立验证说明](docs/getting-started.md#独立互通与异常输入) |
+| 了解 WasmGC 宿主接入 | [Node Web Crypto 宿主示例](examples/secretstream-wasm/README.md) |
+| 集成到自己的程序 | [独立接口指南](docs/secretstream-api.md) |
 
-### 3. Edge Computing / Zero-Trust Network
-Resource-constrained edge nodes with high security requirements.
+## 已有证据与限制
 
-```moonbit
-// Stateless, no external dependencies
-let cb = new_circuit_breaker(5L, 30_000L)
-let rp = new_replay_protector(300L)
+- 全仓 156 项 MoonBit 测试、secretstream JS 5 项测试；CLI 启动与写入故障回归纳入修复分支 CI。精确结果以对应提交的 CI 为准。
+- 独立差分默认验证 32 条流 / 800 帧，逐字节比较密文及明文/tag，检查 5,536 次畸形输入拒绝和 800 次提前完成检查后的恢复。
+- 文件验证包含双向哈希匹配、八类损坏输入、临时文件清理及已有输出保护；重复测量工具保存各轮原始结果和运行参数。
+- JS、Linux Native 和 Node Web Crypto WasmGC 有运行证据。Windows Native、其他 WasmGC 宿主及线性内存 Wasm 尚未验证。
+- 文件默认分块 64 KiB。总进程 RSS 包含运行时、JIT 和 GC，不等于算法工作内存；目前仍有较明显分配开销。
 
-if cb.allow_request(current_time) && rp.check_nonce(nonce, current_time) {
-  // Process request
-}
-```
+[验证代码与工具](tools/) · [CI 记录](https://github.com/ChenJiasen-123/mb-secure-stream/actions) · [版本记录](CHANGELOG.md)
 
-## Modules
+## 本期工作与历史代码
 
-| Module | Description |
-|--------|-------------|
-| `crypto/mb-jwt` | JWT sign/verify (HS256, ES256) with signature and claims validation |
-| `crypto/mb-hmac` | HMAC-SHA256 and HMAC-SHA512 |
-| `crypto/mb-hash` | SHA-2 family (SHA-256, SHA-512) |
-| `crypto/mb-chacha` | ChaCha20 and XChaCha20 stream ciphers (RFC 8439) |
-| `crypto/mb-aead` | ChaCha20-Poly1305 AEAD (RFC 8439) |
-| `crypto/mb-poly1305` | Poly1305 one-time authenticator (RFC 7539) |
-| `crypto/mb-p256` | ECDSA P-256 (secp256r1) signatures |
-| `crypto/mb-hkdf` | HKDF key derivation (RFC 5869) |
-| `crypto/mb-getrandom` | Secure random bytes (OS CSPRNG) |
-| `gateway` | JWT security filter middleware |
+本期重点是 secretstream 状态机、Bytes 封装、安全随机发送工厂、跨语言向量与差分验证、文件完整性和失败发布语义。仓库中已有 JWT、网关和基础密码模块属于历史工作，不能将其全部计为本期新增。
 
-## API Reference
+基础密码模块源自 moonbit-crypto/mb-crypto；secretstream 参考 libsodium，保留对应来源及许可。[详细衍生关系](docs/attribution.md) · [历史 JWT/网关接口](docs/gateway-api.md)。
 
-### JWT API
+## 贡献与反馈
 
-#### Core Functions
+欢迎报告可复现问题、平台验证和接入体验。[提交 Issue](https://github.com/ChenJiasen-123/mb-secure-stream/issues)，附工具链版本、操作系统、完整命令和经过脱敏的错误信息。请使用合成文件复现，不提交私钥、凭据或私人明文。
 
-| Function | Input | Output | Description |
-|----------|-------|--------|-------------|
-| `sign(payload, key)` | `payload: String` (JSON), `key: JwtKey` | `Result[String, JWTError]` | Create signed JWT token |
-| `verify(token, key)` | `token: String`, `key: JwtKey` | `Result[String, JWTError]` | Verify JWT and return payload JSON |
-| `decode(token)` | `token: String` | `Result[String, JWTError]` | Decode without verification |
-| `decode_header(token)` | `token: String` | `Result[String, JWTError]` | Decode header without verification |
-| `validate_claims(payload, current_time, expected_iss, expected_aud)` | `payload: JWTPayload`, `current_time: Int64`, `expected_iss: String?`, `expected_aud: String?` | `Result[Unit, JWTError]` | Validate exp, nbf, iss, aud |
+后续重点：完整安全恢复应用示例、类型化标签与错误、分配分析和优化、外部试用反馈。已有验证不能替代独立安全审查。
 
-#### Key Types
+## 许可证
 
-```moonbit
-enum JwtKey {
-  HS256(String)           // HMAC-SHA256 secret key
-  ES256(Array[UInt])      // ECDSA P-256 private key (32 bytes)
-}
-```
-
-#### Data Structures
-
-```moonbit
-struct JWTPayload {
-  iss: Option[String]  // Issuer
-  sub: Option[String]  // Subject (user ID)
-  aud: Option[String]  // Audience
-  exp: Option[Int64]   // Expiration time (Unix timestamp)
-  nbf: Option[Int64]   // Not before (Unix timestamp)
-  iat: Option[Int64]   // Issued at (Unix timestamp)
-  jti: Option[String]  // JWT ID
-}
-```
-
-#### Usage Example
-
-```moonbit
-// Sign
-let key = JwtKey::HS256("my-secret")
-let payload = "{\"sub\":\"user123\",\"exp\":2000000000,\"role\":\"admin\"}"
-let token = sign(payload, key)?  // Returns: "header.payload.signature"
-
-// Verify
-match verify(token, key) {
-  Ok(payload_json) => {
-    // Success: payload_json is the decoded JSON string
-    println("Valid token: \{payload_json}")
-  }
-  Err(InvalidSignature) => println("Invalid signature")
-  Err(TokenExpired(_, _)) => println("Token expired")
-  Err(e) => println("Error: \{e}")
-}
-```
-
-### Gateway API
-
-#### Core Functions
-
-| Function | Input | Output | Description |
-|----------|-------|--------|-------------|
-| `new_stream_context(token)` | `token: String` | `StreamContext` | Create security context |
-| `execute_security_filter(ctx, key, time)` | `ctx: StreamContext`, `key: JwtKey`, `time: Int64` | `Unit` | Validate JWT and populate context |
-
-#### Data Structures
-
-```moonbit
-struct StreamContext {
-  token: String           // Input: JWT token
-  mut is_allowed: Bool    // Output: true if valid
-  mut error_message: String // Output: error reason if invalid
-  mut user_sub: String    // Output: JWT "sub" claim (user ID)
-  mut user_role: String   // Output: JWT "role" claim ("admin", "guest", etc.)
-}
-```
-
-#### Usage Example
-
-```moonbit
-// Create context with JWT token
-let ctx = new_stream_context("eyJhbGciOiJIUzI1NiJ9...")
-
-// Execute security filter
-let jwt_key = JwtKey::HS256("my-secret")
-let current_time = 1700000000
-execute_security_filter(ctx, jwt_key, current_time)
-
-// Check result
-if ctx.is_allowed {
-  // Success: access granted
-  println("Access allowed, sub: \{ctx.user_sub}, role: \{ctx.user_role}")
-  // Forward request with user context
-  forward_request(ctx.user_sub, ctx.user_role)
-} else {
-  // Failure: access denied
-  println("Access denied: \{ctx.error_message}")
-  // Return 401/403 error
-}
-```
-
-#### Error Messages
-
-| Error Type | error_message | HTTP Status |
-|------------|---------------|-------------|
-| Invalid signature | "Crypto Blocked: Invalid signature" | 401 |
-| Malformed token | "Crypto Blocked: Malformed token format" | 401 |
-| Algorithm mismatch | "Crypto Blocked: Algorithm mismatch" | 401 |
-| Token expired | "Gateway Blocked: Token has expired" | 401 |
-| Not yet valid | "Gateway Blocked: Token is not yet valid (nbf)" | 401 |
-| Invalid issuer | "Gateway Blocked: Invalid issuer" | 403 |
-| Invalid audience | "Gateway Blocked: Invalid audience" | 403 |
-
-## Quick Start
-
-```bash
-# Install MoonBit
-curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
-
-# Workspace check and full test suite
-moon check -d
-moon fmt --check crypto/mb-aead crypto/mb-chacha \
-  crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
-  crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
-  crypto/mb-poly1305 gateway
-moon info
-moon test
-
-# Module-level smoke tests
-cd crypto/mb-jwt && moon test
-cd ../../gateway && moon test
-```
-
-## Examples
-
-### Cloudflare Worker Example
-
-A JWT gateway (reverse proxy) example for Cloudflare Workers. The current example uses TypeScript and Web Crypto; it does not establish production readiness or a deployed MoonBit gateway.
-
-**What it does**:
-1. **JWT Authentication**: Verifies `Authorization: Bearer <token>` using HMAC-SHA256
-2. **CORS Handling**: Manages cross-origin requests with configurable allowed origins
-3. **Request Forwarding**: Proxies authenticated requests to upstream server (`ORIGIN_URL`)
-4. **User Context Injection**: Adds `X-User-ID` and `X-User-Role` headers to upstream requests
-5. **Security Headers**: Adds HSTS and CORS headers to responses
-
-**Implementation**: Currently in TypeScript using Web Crypto API. The MoonBit library in this repo can be compiled to WASM (`moon build --target wasm-gc`) for similar edge deployments.
-
-See `examples/cloudflare-worker/README.md` for deployment instructions.
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Client Request                       │
-│                    (JWT Token in Header)                    │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Security Filter                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   verify()  │→ │ parse_claims│→ │  validate_claims()  │  │
-│  │ (HMAC/ECDSA)│  │  (JSON)     │  │  (exp/nbf/iss/aud)  │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Stream Context                           │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────────┐   │
-│  │is_allowed│  │user_role │  │      user_sub            │   │
-│  └──────────┘  └──────────┘  └──────────────────────────┘   │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Flow Control                             │
-│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐   │
-│  │RateLimiter │  │FairQueue   │  │  BandwidthShaper     │   │
-│  └────────────┘  └────────────┘  └──────────────────────┘   │
-│  ┌────────────┐  ┌────────────┐  ┌──────────────────────┐   │
-│  │CircuitBrkr │  │Backoff     │  │  ConnectionPool      │   │
-│  └────────────┘  └────────────┘  └──────────────────────┘   │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Upstream Service                         │
-│                  (with user context)                        │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Test Coverage
-
-```bash
-# Run all tests
-moon test
-
-# Coverage: 150/150 tests passing
-# - JWT sign/verify (HS256, ES256)
-# - Security attacks (alg:none, algorithm confusion, signature tampering)
-# - Claims validation (exp, nbf, iss, aud)
-# - Flow control (rate limiting, fair queue, circuit breaker)
-# - Bandwidth shaping and connection pooling
-# - Metrics and observability
-```
-
-### Official Test Sources
-
-This project's test suite is based on the following official standards and test vectors:
-
-#### Cryptographic Standards
-- **RFC 8439** — ChaCha20 and Poly1305 for IETF Protocols
-  - ChaCha20 block cipher test vectors (Section 2.3.2)
-  - ChaCha20-Poly1305 AEAD test vectors (Section 2.8.2)
-  - Poly1305 one-time authenticator test vectors (Section 2.5.2)
-  
-- **RFC 7539** — ChaCha20 and Poly1305 for TLS (superseded by RFC 8439)
-
-- **RFC 4231** — Identifiers and Test Vectors for HMAC-SHA-224/256/384/512
-  - HMAC-SHA256 test cases 1-3
-  - HMAC-SHA512 test cases 1-2
-
-- **RFC 5869** — HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
-  - HKDF-SHA256 test cases from Appendix A (Test Case 1, Test Case 3)
-
-- **RFC 7518** — JSON Web Algorithms (JWA)
-  - ES256 (ECDSA P-256 with SHA-256) compliance
-
-- **RFC 7519** — JSON Web Token (JWT)
-  - Claims validation: exp, nbf, iss, aud (Sections 4.1.4, 4.1.5, 4.1.1, 4.1.3)
-  - Security considerations (Section 7.2)
-
-- **RFC 4648** §5 — Base64url encoding (no padding, URL-safe alphabet)
-
-- **RFC 2104** — HMAC: Keyed-Hashing for Message Authentication
-
-#### JWT Test Vectors
-- **jwt.io** — Standard JWT test vector (HS256 with "your-256-bit-secret")
-  - Header: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
-  - Payload: `{"sub":"1234567890","name":"John Doe","iat":1516239022}`
-
-#### Security Vulnerability Test Suites
-- **OWASP WSTG-CRYP-04** — JWT Vulnerability Matrix
-  - alg:none attack (CVE-2016-5431)
-  - Algorithm confusion / key confusion attacks
-  - Signature stripping attacks
-  - Payload tampering
-  - Header injection (kid manipulation)
-  - Weak secret brute-force resistance
-  - Cross-token signature replay
-
-- **jwt_tool** — Known CVE and attack test cases
-  - Truncated tokens (missing segments)
-  - Empty signature rejection
-  - Dots-only / malformed structure
-  - ES256 degenerate signatures (all-zero r/s)
-  - ES256 truncated signatures
-  - Base64url parser differential attacks
-
-#### P-256 (ECDSA) Tests
-- **SEC 1** — Elliptic Curve Cryptography
-  - Key generation (generator point verification)
-  - Sign/verify roundtrip
-  - ECDH key exchange
-  - Tampered message rejection
-
-## License
-
-Apache 2.0
+主体为 [Apache-2.0](LICENSE)，libsodium 参考部分保留 ISC 版权许可。见 [来源说明](docs/attribution.md) 与 [secretstream NOTICE](crypto/mb-secretstream/NOTICE)。

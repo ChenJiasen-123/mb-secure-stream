@@ -55,20 +55,21 @@
       "iteration": 1,
       "chunkBytes": 1048576,
       "rawFile": "\u5206\u914d\u4f18\u5316\u524d\u91cd\u590d\u6d4b\u91cf-chunk1048576-run1.json",
-      "sha256": "aa4cd49f23371c8664bd8366115f70c8daaec0bf3f310b0cd48d82c975e94210"
+      "sha256": "0bcdcb4c5cc957f741e475a9c59abbced3dd3d3294d99fbbaccd7455dde802e6"
     },
     {
       "iteration": 2,
       "chunkBytes": 1048576,
       "rawFile": "\u5206\u914d\u4f18\u5316\u524d\u91cd\u590d\u6d4b\u91cf-chunk1048576-run2.json",
-      "sha256": "3a27ca2dc8695f49cfb79ea08785394204c6fe37812627d33234f9b520fd43aa"
+      "sha256": "839e4740facd36af008e60859d0384a3133530c296a5312ade6fb9600ec67a7b"
     },
     {
       "iteration": 3,
       "chunkBytes": 1048576,
       "rawFile": "\u5206\u914d\u4f18\u5316\u524d\u91cd\u590d\u6d4b\u91cf-chunk1048576-run3.json",
-      "sha256": "55462a2b26bdd9fbcd8a305ef3efe1fa3051803dd7d1b9f5b7f20cfd9dd616c1"
+      "sha256": "dfb054d5c18b065228237a3e3ac321212cb7b8864d534bc8acfd3e39c4358cc8"
     }
   ],
-  "notes": "Alternating chunk order; fresh Node process per operation; synthetic repeated-byte input; total process peak RSS including V8/JIT/GC. Min/median/max are descriptive only. Do not compare different NODE_OPTIONS as identical configurations."
+  "notes": "Alternating chunk order; fresh Node process per operation; synthetic repeated-byte input; total process peak RSS including V8/JIT/GC. Min/median/max are descriptive only. Do not compare different NODE_OPTIONS as identical configurations.",
+  "rawFileEncodingNote": "Published raw JSON normalized to LF; hashes refer to these repository copies. Measurement values unchanged."
 }

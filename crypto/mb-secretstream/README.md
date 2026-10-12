@@ -19,7 +19,9 @@ Never reuse a key/header pair. The same factory uses the existing OS entropy
 shim on Native; Linux Native protocol and random-header tests pass in CI.
 Windows Native remains unverified: this Windows checkout has only MinGW,
 whereas MoonBit requires an MSVC-compatible Windows toolchain.
-Wasm uses mb-getrandom's host crypto imports and remains unverified. A host
+WasmGC uses mb-getrandom's host crypto imports and is tested under the
+[Node Web Crypto host example](../../examples/secretstream-wasm/README.md).
+Other hosts and linear-memory Wasm remain unverified. A host
 exception traps the operation before a writer is returned; applications must
 handle host instantiation/call failures. No weak entropy fallback is provided.
 

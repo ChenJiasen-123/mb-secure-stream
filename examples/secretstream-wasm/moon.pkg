@@ -1,0 +1,7 @@
+import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src" @stream,
+}
+
+supported_targets = "wasm-gc"
+
+pkgtype(kind: "executable")

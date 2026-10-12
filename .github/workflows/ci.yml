@@ -34,7 +34,7 @@ jobs:
           moon fmt --check crypto/mb-aead crypto/mb-chacha \
             crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
             crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
-            crypto/mb-poly1305 crypto/mb-secretstream gateway examples/secretstream-file/bridge
+            crypto/mb-poly1305 crypto/mb-secretstream gateway examples/secretstream-file/bridge examples/secretstream-wasm
 
       - name: moon info
         shell: bash
@@ -63,6 +63,12 @@ jobs:
 
       - name: Secretstream Native protocol and OS entropy tests
         run: moon test crypto/mb-secretstream/src --target native
+
+      - name: WasmGC Web Crypto host integration
+        run: |
+          moon build --target wasm-gc examples/secretstream-wasm
+          mkdir -p verification
+          node tools/verify_secretstream_wasm.cjs verification/wasm-host.json
 
       - name: Independent libsodium file interoperability
         run: |

@@ -8,7 +8,7 @@ A MoonBit cryptography and JWT gateway project. The current development focus is
 
 The new [secretstream package](crypto/mb-secretstream/README.md) implements libsodium `crypto_secretstream_xchacha20poly1305` frames, including REKEY and FINAL. The [file example](examples/secretstream-file/README.md) demonstrates both directions of interoperability with PyNaCl/libsodium, rejects incomplete streams and publishes plaintext only after complete verification. Its MBSS0001 envelope is project-specific, not a libsodium file format.
 
-Public random-header sending uses each backend's CSPRNG provider. JavaScript and Linux Native have passed protocol and random-header tests in CI. Windows Native and Wasm host integration remain unverified; Wasm requires the documented crypto imports. Further differential testing and security review remain pending. The implementation has not been audited; performance and constant-time behavior are not guaranteed. Existing crypto adaptations and gateway code are historical work, distinct from this new protocol implementation.
+Public random-header sending uses each backend's CSPRNG provider. JavaScript and Linux Native have passed protocol and random-header tests in CI. A [WasmGC Node Web Crypto host example](examples/secretstream-wasm/README.md) checks random headers and entropy failures. Windows Native, linear-memory Wasm and other WasmGC hosts remain unverified. Further differential testing and security review remain pending. The implementation has not been audited; performance and constant-time behavior are not guaranteed. Existing crypto adaptations and gateway code are historical work, distinct from this new protocol implementation.
 
 ## Acknowledgements
 

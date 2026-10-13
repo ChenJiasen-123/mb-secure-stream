@@ -91,6 +91,7 @@ jobs:
       - name: Independent libsodium file interoperability
         run: |
           python -m pip install -r tools/requirements-dev.txt
+          python tools/test_file_reference.py
           mkdir -p verification
           python tools/generate_poly1305_boundary_vectors.py
           moon fmt crypto/mb-poly1305

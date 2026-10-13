@@ -8,6 +8,32 @@ const USAGE = 'Usage: node examples/secretstream-file/cli.cjs seal|open INPUT OU
 const MAGIC = Buffer.from('MBSS0001');
 const MAX = 1024 * 1024;
 
+function openRegular(filename, description) {
+  // O_NONBLOCK prevents a FIFO from hanging before fstat can reject it on POSIX.
+  const fd = fs.openSync(filename, fs.constants.O_RDONLY | (fs.constants.O_NONBLOCK || 0));
+  try {
+    if (!fs.fstatSync(fd).isFile()) throw new Error(`${description} must be a regular file`);
+    return fd;
+  } catch (error) { fs.closeSync(fd); throw error; }
+}
+
+function readKey(filename) {
+  const fd = openRegular(filename, 'Key');
+  try {
+    if (fs.fstatSync(fd).size !== 32) throw new Error('Key file must contain exactly 32 binary bytes');
+    // The extra byte also rejects growth after fstat without an unbounded read.
+    const buffer = Buffer.alloc(33);
+    let count = 0;
+    while (count < buffer.length) {
+      const n = fs.readSync(fd, buffer, count, buffer.length - count, null);
+      if (!n) break;
+      count += n;
+    }
+    if (count !== 32) throw new Error('Key file must contain exactly 32 binary bytes');
+    return buffer.subarray(0, 32);
+  } finally { fs.closeSync(fd); }
+}
+
 function exact(fd, length, eofAllowed = false) {
   const bytes = Buffer.alloc(length);
   let offset = 0;
@@ -44,16 +70,17 @@ function run(mode, input, output, keyFile, chunk = 65536) {
   if (!fs.existsSync(BRIDGE))
     throw new Error('MoonBit JS bridge is not built. From the repository root run: moon build --target js examples/secretstream-file/bridge');
   const mb = require(BRIDGE);
-  const key = fs.readFileSync(keyFile);
-  if (key.length !== 32) throw new Error('Key file must contain exactly 32 binary bytes');
+  const key = readKey(keyFile);
   if (fs.existsSync(output)) throw new Error('Output already exists');
   const temporary = output + '.part-' + crypto.randomBytes(12).toString('hex');
   let source, sink;
+  let temporaryOwned = false;
   let inputBytes = 0, outputBytes = 0, frames = 0, maxPlaintextFrameBytes = 0;
   const started = performance.now();
   try {
-    source = fs.openSync(input, 'r');
+    source = openRegular(input, 'Input');
     sink = fs.openSync(temporary, 'wx', 0o600);
+    temporaryOwned = true;
     if (mode === 'seal') {
       const writer = mb.writer_new(new Uint8Array(key));
       writeAll(sink, MAGIC);
@@ -116,7 +143,7 @@ function run(mode, input, output, keyFile, chunk = 65536) {
         try { fs.closeSync(fd); } catch (cleanup) { cleanupWarnings.push(cleanup.message); }
       }
     }
-    try { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); }
+    try { if (temporaryOwned) fs.unlinkSync(temporary); }
     catch (cleanup) { cleanupWarnings.push(`Retained temporary file ${temporary}: ${cleanup.message}`); }
     if (cleanupWarnings.length) error.cleanupWarnings = cleanupWarnings;
     throw error;

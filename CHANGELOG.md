@@ -3,6 +3,7 @@
 ## Unreleased (main and pending fixes; not on Mooncakes)
 
 - Harden the independent TypeScript Worker example: bind HS256/issuer/audience, validate claims and CORS, strip bearer credentials, prevent automatic redirects and identity-response caching; add locked dependencies, tests, type checks and dry-run bundling.
+- File adapters only remove temporary paths they successfully created; bound key reads, reject non-regular inputs without blocking on FIFOs, and create private Python reference outputs.
 
 - Strict review fixes (#10–#19): reject negative bandwidth consumption, enforce optional issuer/audience policy, strictly parse claims, admit one half-open probe, use weighted request round robin, bound/expire replay caches, saturate backoff, chunk Web Crypto entropy, report post-commit cleanup warnings, and synchronize main/source documentation.
 - Compatibility: legacy auth filter remains issuer/audience-unconstrained; backoff normalizes invalid configuration. Queue service changes from strict priority to 8:4:2:1 request shares; malformed optional gateway claims now fail closed.

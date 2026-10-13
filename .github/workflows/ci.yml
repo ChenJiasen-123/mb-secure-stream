@@ -52,6 +52,16 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Worker gateway checks (no deployment)
+        working-directory: examples/cloudflare-worker
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          npm run check
+          npm run build
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

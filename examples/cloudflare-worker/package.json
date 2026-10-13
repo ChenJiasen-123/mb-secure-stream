@@ -1,11 +1,16 @@
 {
   "name": "mb-secure-stream-gateway",
   "scripts": {
-    "build": "cd ../../ && moon build --target wasm-gc --release",
+    "build": "wrangler deploy --dry-run",
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test": "node --test worker.test.mjs",
+    "check": "tsc --noEmit"
   },
   "devDependencies": {
-    "wrangler": "^4"
-  }
+    "wrangler": "^4",
+    "typescript": "^5",
+    "@cloudflare/workers-types": "^5.20261006.1"
+  },
+  "type": "module"
 }

@@ -197,3 +197,5 @@ cd gateway && moon test
 - Backoff remains deterministic (no jitter). Legacy constructor values are normalized to `0 <= initial <= max`; doubling saturates before overflow. Zero delay means callers must supply their own retry budget.
 - Gateway claims accept integral NumericDate values within ±(2^53−1). Present malformed optional claims are rejected, including null. Audience is a string; arrays are explicitly unsupported and rejected.
 - With a configured issuer or audience, a missing claim is an error. The unconstrained legacy filter is retained for compatibility and must not be used to enforce tenant or service isolation.
+
+Both request and byte token buckets require nonnegative, nondecreasing timestamps in seconds; equal timestamps are allowed for burst traffic. Negative or backward time is rejected without changing the bucket. Supply a monotonic elapsed-time clock, not a wall clock that can move backward. Invalid negative capacity/rate disables admission of positive work. Refilling saturates at capacity before multiplication/addition can overflow, including Int64 boundary values.

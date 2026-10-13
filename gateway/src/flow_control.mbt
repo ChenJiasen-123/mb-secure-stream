@@ -35,7 +35,7 @@ pub struct QueueEntry {
 pub struct FairQueue {
   mut entries : Array[QueueEntry]
   mut bytes_scheduled : Int64
-  priv mut next_slot : Int
+  priv mut next_slot : Int32
 }
 
 ///|

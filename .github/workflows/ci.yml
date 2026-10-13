@@ -35,6 +35,7 @@ jobs:
             crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
             crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
             crypto/mb-poly1305 crypto/mb-secretstream gateway examples/secretstream-file/bridge examples/secretstream-wasm examples/secretstream-typed
+          moon fmt --check gateway/src
 
       - name: moon info
         shell: bash
@@ -51,6 +52,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+
+      - name: Worker gateway checks (no deployment)
+        working-directory: examples/cloudflare-worker
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          npm run check
+          npm run build
 
       - uses: actions/setup-python@v5
         with:
@@ -93,6 +104,7 @@ jobs:
           python tools/verify_secretstream_files.py verification/interop-4k.json 1 --chunk-bytes 4096
           python tools/verify_secretstream_files.py verification/interop-64k.json 1 --chunk-bytes 65536
           python examples/secure-backup/demo.py verification/backup-demo.json
+          python tools/test_sqlite_backup.py --report verification/sqlite-backup.json
 
       - name: Published Mooncakes consumer installation
         run: python tools/verify_published_install.py verification/published-consumer.json

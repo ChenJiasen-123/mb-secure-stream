@@ -5,6 +5,7 @@
 - Add a SQLite snapshot backup/restore application using the compiled MoonBit file adapter; validate restored database integrity before publication and reject existing targets/sidecars.
 
 - File adapters only remove temporary paths they successfully created; bound key reads, reject non-regular inputs without blocking on FIFOs, and create private Python reference outputs.
+- Request and byte token buckets share overflow-safe refill arithmetic and reject negative/backward clocks without consuming credit; invalid request-limiter configuration disables admission.
 
 - Strict review fixes (#10–#19): reject negative bandwidth consumption, enforce optional issuer/audience policy, strictly parse claims, admit one half-open probe, use weighted request round robin, bound/expire replay caches, saturate backoff, chunk Web Crypto entropy, report post-commit cleanup warnings, and synchronize main/source documentation.
 - Compatibility: legacy auth filter remains issuer/audience-unconstrained; backoff normalizes invalid configuration. Queue service changes from strict priority to 8:4:2:1 request shares; malformed optional gateway claims now fail closed.

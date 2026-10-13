@@ -29,22 +29,19 @@ pub fn BandwidthShaper::try_consume(
   byte_count : Int64,
   current_time : Int64,
 ) -> Bool {
-  if byte_count < 0L || current_time < 0L || byte_count > self.burst_bytes {
+  if byte_count < 0L ||
+    current_time < self.last_refill_time ||
+    byte_count > self.burst_bytes {
     return false
   }
-  if current_time > self.last_refill_time {
-    let elapsed = current_time - self.last_refill_time
-    let room = self.burst_bytes - self.tokens
-    if self.rate_bps > 0L && room > 0L {
-      // Compare before multiplying: elapsed * rate may overflow Int64.
-      if elapsed > room / self.rate_bps {
-        self.tokens = self.burst_bytes
-      } else {
-        self.tokens = self.tokens + elapsed * self.rate_bps
-      }
-    }
-    self.last_refill_time = current_time
-  }
+  let elapsed = current_time - self.last_refill_time
+  self.tokens = refill_bucket(
+    self.tokens,
+    self.burst_bytes,
+    self.rate_bps,
+    elapsed,
+  )
+  self.last_refill_time = current_time
   if self.tokens >= byte_count {
     self.tokens = self.tokens - byte_count
     true
@@ -185,12 +182,12 @@ pub struct StreamMetrics {
   mut total_auth_failures : Int64
   mut request_durations_ms : Array[Int64]
   mut peak_concurrent : Int64
-  max_samples : Int
+  max_samples : Int32
 }
 
 ///|
 /// Creates a new stream metrics collector.
-pub fn new_stream_metrics(max_samples : Int) -> StreamMetrics {
+pub fn new_stream_metrics(max_samples : Int32) -> StreamMetrics {
   {
     total_requests: 0L,
     total_bytes_in: 0L,

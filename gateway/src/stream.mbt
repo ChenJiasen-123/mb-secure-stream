@@ -11,6 +11,10 @@ pub struct RateLimiter {
 /// Creates a new rate limiter with the given capacity and refill rate.
 /// `max_tokens` is the burst capacity, `refill_rate` is the steady-state rate (tokens/second).
 pub fn new_rate_limiter(max_tokens : Int64, refill_rate : Int64) -> RateLimiter {
+  // Disable invalid legacy configurations instead of creating negative state.
+  let valid = max_tokens >= 0L && refill_rate >= 0L
+  let max_tokens = if valid { max_tokens } else { 0L }
+  let refill_rate = if valid { refill_rate } else { 0L }
   { max_tokens, refill_rate, tokens: max_tokens, last_refill_time: 0L, }
 }
 
@@ -21,13 +25,17 @@ pub fn RateLimiter::try_consume(
   self : RateLimiter,
   current_time : Int64,
 ) -> Bool {
-  // Refill tokens based on elapsed time
-  let elapsed = current_time - self.last_refill_time
-  if elapsed > 0L {
-    let refill = elapsed * self.refill_rate
-    self.tokens = (self.tokens + refill).min(self.max_tokens)
-    self.last_refill_time = current_time
+  if current_time < self.last_refill_time {
+    return false
   }
+  let elapsed = current_time - self.last_refill_time
+  self.tokens = refill_bucket(
+    self.tokens,
+    self.max_tokens,
+    self.refill_rate,
+    elapsed,
+  )
+  self.last_refill_time = current_time
   if self.tokens > 0L {
     self.tokens = self.tokens - 1L
     true
@@ -37,11 +45,31 @@ pub fn RateLimiter::try_consume(
 }
 
 ///|
+// Both callers maintain 0 <= tokens <= capacity and nonnegative rate/elapsed.
+// Compare with remaining capacity before multiplication or addition can overflow.
+fn refill_bucket(
+  tokens : Int64,
+  capacity : Int64,
+  rate : Int64,
+  elapsed : Int64,
+) -> Int64 {
+  let room = capacity - tokens
+  if room == 0L || rate == 0L || elapsed == 0L {
+    return tokens
+  }
+  if elapsed > room / rate {
+    capacity
+  } else {
+    tokens + elapsed * rate
+  }
+}
+
+///|
 /// Nonce-based replay protection using a sliding window.
 pub struct ReplayProtector {
   seen_nonces : Map[String, Int64] // nonce -> expiry timestamp
   window_size : Int64 // how long a nonce remains valid (in seconds)
-  capacity : Int
+  capacity : Int32
   priv mut last_time : Int64
 }
 
@@ -62,7 +90,7 @@ pub fn new_replay_protector(window_size : Int64) -> ReplayProtector {
 /// Reject new nonces at capacity; never evict still-live replay evidence.
 pub fn new_replay_protector_with_capacity(
   window_size : Int64,
-  capacity : Int,
+  capacity : Int32,
 ) -> Result[ReplayProtector, String] {
   if window_size <= 0L || capacity <= 0 {
     return Err("Replay window and capacity must be positive")

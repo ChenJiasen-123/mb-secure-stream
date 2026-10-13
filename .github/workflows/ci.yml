@@ -35,6 +35,7 @@ jobs:
             crypto/mb-getrandom crypto/mb-hash crypto/mb-hkdf \
             crypto/mb-hmac crypto/mb-jwt crypto/mb-p256 \
             crypto/mb-poly1305 crypto/mb-secretstream gateway examples/secretstream-file/bridge examples/secretstream-wasm examples/secretstream-typed
+          moon fmt --check gateway/src
 
       - name: moon info
         shell: bash

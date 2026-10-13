@@ -2,6 +2,8 @@
 
 ## Unreleased (main and pending fixes; not on Mooncakes)
 
+- Add a SQLite snapshot backup/restore application using the compiled MoonBit file adapter; validate restored database integrity before publication and reject existing targets/sidecars.
+
 - File adapters only remove temporary paths they successfully created; bound key reads, reject non-regular inputs without blocking on FIFOs, and create private Python reference outputs.
 
 - Strict review fixes (#10–#19): reject negative bandwidth consumption, enforce optional issuer/audience policy, strictly parse claims, admit one half-open probe, use weighted request round robin, bound/expire replay caches, saturate backoff, chunk Web Crypto entropy, report post-commit cleanup warnings, and synchronize main/source documentation.

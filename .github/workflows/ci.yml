@@ -93,6 +93,7 @@ jobs:
           python tools/verify_secretstream_files.py verification/interop-4k.json 1 --chunk-bytes 4096
           python tools/verify_secretstream_files.py verification/interop-64k.json 1 --chunk-bytes 65536
           python examples/secure-backup/demo.py verification/backup-demo.json
+          python tools/test_sqlite_backup.py --report verification/sqlite-backup.json
 
       - name: Published Mooncakes consumer installation
         run: python tools/verify_published_install.py verification/published-consumer.json

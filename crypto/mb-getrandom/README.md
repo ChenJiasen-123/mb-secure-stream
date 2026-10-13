@@ -38,3 +38,4 @@ cd crypto/mb-getrandom && moon test
 - Statistical randomness (basic)
 - Error handling
 - Various lengths
+Web Crypto backends split positive requests into calls of at most 65536 bytes. JS returns an error on host failure; Wasm host failure can still trap. Splitting removes the deterministic per-call quota failure, not arbitrary host failures.

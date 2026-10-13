@@ -7,7 +7,7 @@ libsodium reference for integration testing.
 
 ## Build and run
 
-Requires MoonBit 0.10.14 (tested), Node 24 (tested), and a filesystem supporting
+Requires MoonBit 0.10.15 (tested), Node 24 (tested), and a filesystem supporting
 same-directory hard links. The optional reference tests require Python 3.12 and
 `python -m pip install -r tools/requirements-dev.txt` in an isolated environment.
 
@@ -98,3 +98,9 @@ uses record lengths from its input and reports `chunkBytes: null`; both modes
 report `maxPlaintextFrameBytes` actually processed. Earlier versions reported
 the unused default CLI chunk value during decryption, so use the harness's
 top-level `chunkBytes` to interpret those historical measurement files.
+
+## 发布提交点与清理警告
+
+同目录硬链接创建最终输出成功即为提交点。成功报告含 `outputCommitted: true` 和 `cleanupWarnings`。之后临时链接删除失败时，命令仍成功返回，但警告给出需要清理的临时路径；最终输出已存在且可使用，不应盲目重试加解密。输出始终不覆盖已有文件。
+
+提交前失败仍抛出原始错误；关闭或删除临时文件也失败时附带清理警告，不覆盖原始错误。文件 fsync 和原子发布不构成跨文件系统或断电后的目录持久性保证。

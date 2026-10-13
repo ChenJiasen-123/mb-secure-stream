@@ -1,5 +1,10 @@
 ///|
 fn main {
+  for length in [65535, 65536, 65537, 131073] {
+    if @random.getrandom(length).unwrap().length() != length {
+      abort("Random boundary length mismatch")
+    }
+  }
   // Synthetic demonstration key only. The sender header still uses host CSPRNG.
   let key = Bytes::make(32, b'\x42')
   let writer = @stream.init_push(key).unwrap()

@@ -5,6 +5,7 @@ options(
     "getrandom_js.mbt": [ "js" ],
     "getrandom_wasm.mbt": [ "wasm", "wasm-gc" ],
     "getrandom_test.mbt": [ "native" ],
+    "boundaries_test.mbt": [ "js", "native" ],
   },
   "native-stub": [ "getrandom_stub.c" ],
 )

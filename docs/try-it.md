@@ -5,10 +5,10 @@
 ## 选择版本
 
 - 已发布库：Mooncakes 0.2.0，运行 [独立消费者](../examples/published-consumer/README.md)。
-- 新演示、类型化接口和优化：开发分支 `docs/reviewer-feedback`，尚未合并或发布。记录实际 `git rev-parse HEAD`，不要把它当作 0.2.0。
+- 新演示、类型化接口和优化：main 源码，已合并但新增接口和优化尚未发布到 Mooncakes。记录实际 `git rev-parse HEAD`，不要把它当作 0.2.0。
 
 ```sh
-git clone --branch docs/reviewer-feedback https://github.com/ChenJiasen-123/mb-secure-stream.git
+git clone --branch main https://github.com/ChenJiasen-123/mb-secure-stream.git
 cd mb-secure-stream
 git rev-parse HEAD
 moon build --target js examples/secretstream-file/bridge
@@ -22,7 +22,7 @@ moon run examples/secretstream-typed --target js
 python tools/verify_published_install.py trial-install.json
 ```
 
-最后一条需网络，并独立安装 0.2.0；另外两条运行开发源码。输出路径必须不存在，重复试用换用新报告名。
+最后一条需网络，并独立安装 0.2.0；另外两条运行 main 源码。输出路径必须不存在，重复试用换用新报告名。
 
 ## 预期结果
 

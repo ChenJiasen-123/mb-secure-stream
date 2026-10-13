@@ -1,6 +1,6 @@
 # secretstream 接口指南
 
-包路径：`ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src`。以下先说明开发分支新增接口，再保留 0.2.0 兼容接口。新接口尚未发布到 Mooncakes，不能在安装 0.2.0 后直接使用。
+包路径：`ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src`。以下先说明 main 新增接口，再保留 0.2.0 兼容接口。新接口尚未发布到 Mooncakes，不能在安装 0.2.0 后直接使用。
 
 在调用包的 `moon.pkg` 中导入：
 

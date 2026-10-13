@@ -116,3 +116,11 @@ if ctx.is_allowed {
 | Invalid issuer | "Gateway Blocked: Invalid issuer" | 403 |
 | Invalid audience | "Gateway Blocked: Invalid audience" | 403 |
 
+
+## Authentication policy and strict claims
+
+Use `execute_security_filter_with_policy(ctx, key, current_time, expected_iss, expected_aud)` with explicit expected values to bind tokens to an issuer and service. `execute_security_filter` retains the historical unconstrained issuer/audience behavior. Signature verification alone does not validate claims.
+
+When an expected issuer/audience is provided, a missing or mismatched claim is rejected. Gateway `aud` currently accepts only a string; arrays are rejected. Present malformed `nbf`, `iss`, `aud`, or `role` values (including null) are rejected. `exp` and `nbf` support integral NumericDate values within ±(2^53−1); fractional/out-of-range values are rejected.
+
+These strict-review fixes are in the corresponding development PR until merged; they are not part of Mooncakes 0.2.0.

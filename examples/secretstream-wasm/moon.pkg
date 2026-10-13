@@ -1,4 +1,5 @@
 import {
+  "ChenJiasen-123/mb-secure-stream/crypto/mb-getrandom/src/lib" @random,
   "ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src" @stream,
 }
 

@@ -6,7 +6,9 @@ extern "js" fn js_crypto_get_random_values(buf : Bytes, len : Int) -> Int =
   #|   try {
   #|     if (typeof globalThis !== 'undefined' && globalThis.crypto) {
   #|       const view = new Uint8Array(buf.buffer, buf.byteOffset, len);
-  #|       globalThis.crypto.getRandomValues(view);
+  #|       for (let offset = 0; offset < len; offset += 65536) {
+  #|         globalThis.crypto.getRandomValues(view.subarray(offset, Math.min(offset + 65536, len)));
+  #|       }
   #|       return 0;
   #|     } else if (typeof require !== 'undefined') {
   #|       const crypto = require('crypto');

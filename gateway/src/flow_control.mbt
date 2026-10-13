@@ -35,12 +35,13 @@ pub struct QueueEntry {
 pub struct FairQueue {
   mut entries : Array[QueueEntry]
   mut bytes_scheduled : Int64
+  priv mut next_slot : Int
 }
 
 ///|
 /// Creates a new fair queue scheduler.
 pub fn new_fair_queue() -> FairQueue {
-  { entries: [], bytes_scheduled: 0L, }
+  { entries: [], bytes_scheduled: 0L, next_slot: 0, }
 }
 
 ///|
@@ -63,52 +64,39 @@ pub fn FairQueue::enqueue(
 }
 
 ///|
-/// Dequeues the highest priority entry.
-/// Returns `None` if the queue is empty.
+/// Dequeue using weighted request round robin: Critical:High:Normal:Low = 8:4:2:1.
+/// FIFO within each class. A continuously queued class is visited in at most 15 calls.
 pub fn FairQueue::dequeue(self : FairQueue) -> QueueEntry? {
   if self.entries.length() == 0 {
     return None
   }
-  // Find the highest priority entry
-  let mut best_idx = 0
-  let mut best_priority = self.entries[0].priority
-  let mut idx = 1
-  while idx < self.entries.length() {
-    let p = self.entries[idx].priority
-    if is_higher_priority(p, best_priority) {
-      best_idx = idx
-      best_priority = p
+  for _ in 0..<15 {
+    let target_weight = if self.next_slot < 8 {
+      8L
+    } else if self.next_slot < 12 {
+      4L
+    } else if self.next_slot < 14 {
+      2L
+    } else {
+      1L
     }
-    idx = idx + 1
-  }
-  let entry = self.entries[best_idx]
-  // Remove the entry
-  let mut new_entries : Array[QueueEntry] = []
-  let mut i = 0
-  while i < self.entries.length() {
-    if i != best_idx {
-      new_entries = new_entries + [self.entries[i]]
+    self.next_slot = (self.next_slot + 1) % 15
+    for index in 0..<self.entries.length() {
+      let entry = self.entries[index]
+      if entry.weight == target_weight {
+        let remaining : Array[QueueEntry] = []
+        for i in 0..<self.entries.length() {
+          if i != index {
+            remaining.push(self.entries[i])
+          }
+        }
+        self.entries = remaining
+        self.bytes_scheduled = self.bytes_scheduled + entry.byte_size
+        return Some(entry)
+      }
     }
-    i = i + 1
   }
-  self.entries = new_entries
-  self.bytes_scheduled = self.bytes_scheduled + entry.byte_size
-  Some(entry)
-}
-
-///|
-fn priority_value(p : Priority) -> Int64 {
-  match p {
-    Low => 1L
-    Normal => 2L
-    High => 3L
-    Critical => 4L
-  }
-}
-
-///|
-fn is_higher_priority(a : Priority, b : Priority) -> Bool {
-  priority_value(a) > priority_value(b)
+  None
 }
 
 ///|
@@ -124,16 +112,25 @@ pub struct BackoffState {
 /// Creates a new backoff state.
 /// `initial_delay` in ms, `max_delay` in ms.
 pub fn new_backoff(initial_delay : Int64, max_delay : Int64) -> BackoffState {
+  // Preserve the legacy constructor; normalize to 0 <= initial <= max.
+  let max_delay = max_delay.max(0L)
+  let initial_delay = initial_delay.max(0L).min(max_delay)
   { initial_delay, max_delay, attempt: 0L, current_delay: initial_delay, }
 }
 
 ///|
-/// Returns the current delay and advances the backoff (exponential with jitter).
+/// Returns the current delay and advances the backoff (deterministic capped exponential; no jitter).
 pub fn BackoffState::next_delay(self : BackoffState) -> Int64 {
   let delay = self.current_delay
-  self.attempt = self.attempt + 1L
+  if self.attempt < 9223372036854775807L {
+    self.attempt = self.attempt + 1L
+  }
   // Exponential: double each attempt, cap at max_delay
-  let next = (self.current_delay * 2L).min(self.max_delay)
+  let next = if self.current_delay > self.max_delay / 2L {
+    self.max_delay
+  } else {
+    self.current_delay * 2L
+  }
   self.current_delay = next
   delay
 }
@@ -171,8 +168,8 @@ pub fn new_circuit_breaker(
 ) -> CircuitBreaker {
   {
     state: Closed,
-    failure_threshold,
-    recovery_timeout,
+    failure_threshold: failure_threshold.max(1L),
+    recovery_timeout: recovery_timeout.max(0L),
     failure_count: 0L,
     last_failure_time: 0L,
   }
@@ -191,7 +188,9 @@ pub fn CircuitBreaker::record_failure(
   self : CircuitBreaker,
   current_time : Int64,
 ) -> Unit {
-  self.failure_count = self.failure_count + 1L
+  if self.failure_count < self.failure_threshold {
+    self.failure_count = self.failure_count + 1L
+  }
   self.last_failure_time = current_time
   if self.failure_count >= self.failure_threshold {
     self.state = Open
@@ -207,13 +206,16 @@ pub fn CircuitBreaker::allow_request(
   match self.state {
     Closed => true
     Open =>
-      if current_time - self.last_failure_time >= self.recovery_timeout {
+      if current_time >= 0L &&
+        self.last_failure_time >= 0L &&
+        current_time >= self.last_failure_time &&
+        current_time - self.last_failure_time >= self.recovery_timeout {
         self.state = HalfOpen
         true
       } else {
         false
       }
-    HalfOpen => true // probe request allowed
+    HalfOpen => false // One probe is in flight; caller must report success/failure (including timeout).
   }
 }
 

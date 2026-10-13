@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased (development branches; not on Mooncakes)
+## Unreleased (main and pending fixes; not on Mooncakes)
+
+- Strict review fixes (#10–#19): reject negative bandwidth consumption, enforce optional issuer/audience policy, strictly parse claims, admit one half-open probe, use weighted request round robin, bound/expire replay caches, saturate backoff, chunk Web Crypto entropy, report post-commit cleanup warnings, and synchronize main/source documentation.
+- Compatibility: legacy auth filter remains issuer/audience-unconstrained; backoff normalizes invalid configuration. Queue service changes from strict priority to 8:4:2:1 request shares; malformed optional gateway claims now fail closed.
+
 
 - Add automatic counter-wrap rekey vectors and malformed-stream differential checks.
 - Fix CLI startup/help and MoonBit 0.10.15 bridge formatting.
@@ -11,7 +15,7 @@
   raw repeated measurements. Peak process RSS is not claimed to improve.
 - Keep homepage free of API code and move integration details to dedicated docs.
 
-Some items are still in dependent PRs; see docs/contributions.md for merge state.
+API/optimization baseline is merged into main; strict-review fixes remain in their PR until merged. See docs/contributions.md for the contribution record.
 
 ## 0.2.0
 

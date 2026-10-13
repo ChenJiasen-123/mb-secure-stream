@@ -4,6 +4,8 @@ package "ChenJiasen-123/mb-secure-stream/gateway/src"
 // Values
 pub fn execute_security_filter(StreamContext, @ChenJiasen-123/mb-secure-stream/crypto/mb-jwt/src.JwtKey, Int64) -> Unit
 
+pub fn execute_security_filter_with_policy(StreamContext, @ChenJiasen-123/mb-secure-stream/crypto/mb-jwt/src.JwtKey, Int64, String?, String?) -> Unit
+
 pub fn new_backoff(Int64, Int64) -> BackoffState
 
 pub fn new_bandwidth_shaper(Int64, Int64) -> BandwidthShaper
@@ -19,6 +21,8 @@ pub fn new_pool_entry(String, Int64, Int64) -> PoolEntry
 pub fn new_rate_limiter(Int64, Int64) -> RateLimiter
 
 pub fn new_replay_protector(Int64) -> ReplayProtector
+
+pub fn new_replay_protector_with_capacity(Int64, Int) -> Result[ReplayProtector, String]
 
 pub fn new_stream_context(String) -> StreamContext
 
@@ -78,6 +82,7 @@ pub fn ConnectionPool::release(Self, String, Int64) -> Unit
 pub struct FairQueue {
   mut entries : Array[QueueEntry]
   mut bytes_scheduled : Int64
+  // private fields
 }
 pub fn FairQueue::dequeue(Self) -> QueueEntry?
 pub fn FairQueue::enqueue(Self, String, Priority, Int64, Int64) -> Unit
@@ -87,6 +92,7 @@ pub struct GatewayClaims {
   exp : Int64
   nbf : Int64?
   iss : String?
+  aud : String?
   role : String?
 }
 
@@ -125,6 +131,8 @@ pub fn RateLimiter::try_consume(Self, Int64) -> Bool
 pub struct ReplayProtector {
   seen_nonces : Map[String, Int64]
   window_size : Int64
+  capacity : Int
+  // private fields
 }
 pub fn ReplayProtector::check_nonce(Self, String, Int64) -> Bool
 pub fn ReplayProtector::evict_expired(Self, Int64) -> Unit

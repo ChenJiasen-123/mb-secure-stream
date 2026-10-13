@@ -22,6 +22,18 @@ pub fn execute_security_filter(
   key : @mb_jwt.JwtKey,
   current_time : Int64,
 ) -> Unit {
+  execute_security_filter_with_policy(ctx, key, current_time, None, None)
+}
+
+///|
+/// Use explicit issuer/audience constraints when keys are shared across services.
+pub fn execute_security_filter_with_policy(
+  ctx : StreamContext,
+  key : @mb_jwt.JwtKey,
+  current_time : Int64,
+  expected_iss : String?,
+  expected_aud : String?,
+) -> Unit {
   // Revalidation must never retain identity or errors from a previous result.
   ctx.is_allowed = false
   ctx.error_message = ""
@@ -54,14 +66,17 @@ pub fn execute_security_filter(
   let jwt_payload = @mb_jwt.new_jwt_payload(
     claims.iss,
     Some(claims.sub),
-    None,
+    claims.aud,
     Some(claims.exp),
     claims.nbf,
     None,
     None,
   )
 
-  match @mb_jwt.validate_claims(jwt_payload, current_time, None, None) {
+  match
+    @mb_jwt.validate_claims(
+      jwt_payload, current_time, expected_iss, expected_aud,
+    ) {
     Err(e) => {
       ctx.is_allowed = false
       ctx.error_message = match e {

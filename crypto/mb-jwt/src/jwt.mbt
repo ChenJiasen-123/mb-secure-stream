@@ -313,6 +313,7 @@ pub fn validate_claims(
       if actual != expected {
         return Err(InvalidIssuer(actual))
       }
+    (None, Some(_)) => return Err(InvalidIssuer("Missing iss"))
     _ => ()
   }
 
@@ -322,6 +323,7 @@ pub fn validate_claims(
       if actual != expected {
         return Err(InvalidAudience(actual))
       }
+    (None, Some(_)) => return Err(InvalidAudience("Missing aud"))
     _ => ()
   }
 

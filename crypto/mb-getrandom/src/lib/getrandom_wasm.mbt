@@ -32,13 +32,17 @@ pub fn getrandom(len : Int) -> Result[Bytes, String] {
   if len <= 0 {
     return Err("Length must be positive")
   }
-  let buf = js_new_uint8array(len)
-  js_get_random_values(buf)
   let bytes_arr : Array[Byte] = []
-  let mut i = 0
-  while i < len {
-    bytes_arr.push(js_read_byte(buf, i).to_byte())
-    i = i + 1
+  let mut remaining = len
+  while remaining > 0 {
+    // Web Crypto limits each call to 65536 bytes, independent of total request size.
+    let chunk = remaining.min(65536)
+    let buf = js_new_uint8array(chunk)
+    js_get_random_values(buf)
+    for i in 0..<chunk {
+      bytes_arr.push(js_read_byte(buf, i).to_byte())
+    }
+    remaining = remaining - chunk
   }
   Ok(Bytes::from_array(bytes_arr))
 }

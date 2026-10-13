@@ -41,13 +41,33 @@ pub fn RateLimiter::try_consume(
 pub struct ReplayProtector {
   seen_nonces : Map[String, Int64] // nonce -> expiry timestamp
   window_size : Int64 // how long a nonce remains valid (in seconds)
+  capacity : Int
+  priv mut last_time : Int64
 }
 
 ///|
 /// Creates a new replay protector with the given window size.
 /// `window_size` is how long a nonce should be remembered (in seconds).
 pub fn new_replay_protector(window_size : Int64) -> ReplayProtector {
-  { seen_nonces: Map([], capacity=0), window_size, }
+  // Invalid legacy windows disable admission instead of wrapping expiry.
+  {
+    seen_nonces: Map([], capacity=0),
+    window_size,
+    capacity: 4096,
+    last_time: 0L,
+  }
+}
+
+///|
+/// Reject new nonces at capacity; never evict still-live replay evidence.
+pub fn new_replay_protector_with_capacity(
+  window_size : Int64,
+  capacity : Int,
+) -> Result[ReplayProtector, String] {
+  if window_size <= 0L || capacity <= 0 {
+    return Err("Replay window and capacity must be positive")
+  }
+  Ok({ seen_nonces: Map([], capacity=0), window_size, capacity, last_time: 0L, })
 }
 
 ///|
@@ -58,8 +78,18 @@ pub fn ReplayProtector::check_nonce(
   nonce : String,
   current_time : Int64,
 ) -> Bool {
-  if self.seen_nonces.contains(nonce) {
-    return false // replay detected
+  // Bound retained identifiers as well as entry count. Caller supplies a monotonic clock.
+  if self.window_size <= 0L ||
+    current_time < self.last_time ||
+    self.window_size > 9223372036854775807L - current_time ||
+    nonce.length() == 0 ||
+    nonce.length() > 1024 {
+    return false
+  }
+  self.evict_expired(current_time)
+  if self.seen_nonces.contains(nonce) ||
+    self.seen_nonces.length() >= self.capacity {
+    return false
   }
   self.seen_nonces[nonce] = current_time + self.window_size
   true
@@ -71,6 +101,10 @@ pub fn ReplayProtector::evict_expired(
   self : ReplayProtector,
   current_time : Int64,
 ) -> Unit {
+  if current_time < self.last_time {
+    return
+  }
+  self.last_time = current_time
   let expired : Array[String] = []
   for key in self.seen_nonces.keys() {
     match self.seen_nonces.get(key) {

@@ -8,8 +8,8 @@
 | 计数器溢出、七类畸形输入恢复、文件指标修正 | [PR #3](https://github.com/ChenJiasen-123/mb-secure-stream/pull/3)，已合并 | 计数器边界向量重生成、32 流/800 帧差分、重复测量 |
 | MoonBit 0.10.15 CLI 格式与启动/写入修复 | [PR #4](https://github.com/ChenJiasen-123/mb-secure-stream/pull/4)，已随 #4 合入 main | 格式门禁、CLI 帮助/缺少构建、零进度写入清理 |
 | 首页、架构图、安全恢复应用 | [PR #5](https://github.com/ChenJiasen-123/mb-secure-stream/pull/5)，已随 #4 合入 main | 干净源码构建、10,000 条记录双向恢复、截断拒绝和已有文件保护 |
-| 类型化标签/错误、公开读写接口 | [PR #6](https://github.com/ChenJiasen-123/mb-secure-stream/pull/6)，待合入 main | 158 项全仓、8 项 JS、公开应用、恢复及 FINAL 生命周期 |
-| Poly1305 分配优化 | [PR #7](https://github.com/ChenJiasen-123/mb-secure-stream/pull/7)，已合入 #6 分支，尚未进入 main | 86 个独立大整数向量、全仓159项、前后三轮数据与原始哈希 |
+| 类型化标签/错误、公开读写接口 | [PR #6](https://github.com/ChenJiasen-123/mb-secure-stream/pull/6)，已合入 main | 158 项全仓、8 项 JS、公开应用、恢复及 FINAL 生命周期 |
+| Poly1305 分配优化 | [PR #7](https://github.com/ChenJiasen-123/mb-secure-stream/pull/7)，随 #6 已合入 main | 86 个独立大整数向量、全仓159项、前后三轮数据与原始哈希 |
 
 PR #7 最终提交 `1336728a21271a45832353873b381a29ad431959` 的 [CI](https://github.com/ChenJiasen-123/mb-secure-stream/actions/runs/38246752776) 全部通过。测试数说明特定开发状态，不代表审计、独立用户人数或完整安全证明。
 
@@ -17,4 +17,4 @@ PR #7 最终提交 `1336728a21271a45832353873b381a29ad431959` 的 [CI](https://g
 
 尚未取得真实外部试用反馈，不虚构使用者、评价或获奖结果。后续真实反馈应记录公开链接、测试版本、问题及修复结果；未经同意不公开他人个人信息。
 
-试用材料 PR #8 已合入 #7，再随 #7 进入 #6 分支；这不等于已进入 main。后续文档修正和结构化反馈模板另行提交。外部记录规则见 [外部反馈](external-feedback.md)。
+试用材料 PR #8 已合入 #7，再随 #7 进入 #6 分支；#6 随后已合入 main；文档修正和结构化反馈模板通过 #9 合入 main。外部记录规则见 [外部反馈](external-feedback.md)。

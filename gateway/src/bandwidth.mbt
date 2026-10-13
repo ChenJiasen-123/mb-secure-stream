@@ -14,6 +14,10 @@ pub fn new_bandwidth_shaper(
   rate_bps : Int64,
   burst_bytes : Int64,
 ) -> BandwidthShaper {
+  // Invalid configurations are disabled, preserving the legacy constructor type.
+  let valid = rate_bps >= 0L && burst_bytes >= 0L
+  let rate_bps = if valid { rate_bps } else { 0L }
+  let burst_bytes = if valid { burst_bytes } else { 0L }
   { rate_bps, burst_bytes, tokens: burst_bytes, last_refill_time: 0L, }
 }
 
@@ -25,11 +29,20 @@ pub fn BandwidthShaper::try_consume(
   byte_count : Int64,
   current_time : Int64,
 ) -> Bool {
-  // Refill tokens based on elapsed time
-  let elapsed = current_time - self.last_refill_time
-  if elapsed > 0L {
-    let refill = elapsed * self.rate_bps
-    self.tokens = (self.tokens + refill).min(self.burst_bytes)
+  if byte_count < 0L || current_time < 0L || byte_count > self.burst_bytes {
+    return false
+  }
+  if current_time > self.last_refill_time {
+    let elapsed = current_time - self.last_refill_time
+    let room = self.burst_bytes - self.tokens
+    if self.rate_bps > 0L && room > 0L {
+      // Compare before multiplying: elapsed * rate may overflow Int64.
+      if elapsed > room / self.rate_bps {
+        self.tokens = self.burst_bytes
+      } else {
+        self.tokens = self.tokens + elapsed * self.rate_bps
+      }
+    }
     self.last_refill_time = current_time
   }
   if self.tokens >= byte_count {

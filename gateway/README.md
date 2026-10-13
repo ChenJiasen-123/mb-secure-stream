@@ -20,7 +20,7 @@ No reproducible per-operation benchmark is published for this module. See the re
 
 - **JWT verification**: Constant-time signature comparison prevents timing attacks
 - **Algorithm enforcement**: Rejects `alg:none` and algorithm confusion (CVE-2016-5431)
-- **Claims validation**: Strict exp/nbf/iss/aud checking with current time binding
+- **Claims validation**: exp/nbf are checked; issuer/audience constraints require `execute_security_filter_with_policy`. The legacy entry point has no issuer/audience constraints.
 - **Replay protection**: Nonce-based sliding window prevents token replay
 
 ## Architecture
@@ -78,7 +78,7 @@ if bw.try_consume(packet_size, current_time) {
 ```
 
 ### Fair Queue
-Priority-based weighted fair queuing for stream arbitration.
+Weighted request round robin (Critical:High:Normal:Low = 8:4:2:1), FIFO within each class. Weights measure requests, not bytes; every continuously queued class is visited within 15 dequeues.
 
 ```moonbit
 let fq = new_fair_queue()
@@ -92,15 +92,16 @@ match fq.dequeue() {
 ```
 
 ### Circuit Breaker
-Failure isolation with automatic recovery.
+Failure isolation with a single half-open probe. Callers must report its success or failure, including a timeout, before another probe can be admitted. Calls and completion callbacks must be serialized; the component is not a concurrency primitive.
 
 ```moonbit
 let cb = new_circuit_breaker(5L, 30_000L)  // 5 failures, 30s recovery
 if cb.allow_request(current_time) {
   // forward to upstream
+  // When the admitted request completes, report its actual outcome.
   cb.record_success()
 } else {
-  cb.record_failure(current_time)
+  // Rejected requests do not count as upstream failures.
   // return cached response
 }
 ```
@@ -126,7 +127,7 @@ bo.reset()  // after success
 ```
 
 ### Replay Protection
-Nonce-based sliding window replay detection.
+Nonce-based sliding window replay detection. The default cache holds at most 4096 identifiers, each 1..1024 UTF-16 code units. Expired entries are removed automatically; at capacity new identifiers are rejected without evicting live evidence. Use `new_replay_protector_with_capacity` for a checked custom limit. Supply monotonically increasing nonnegative seconds; clock rollback is rejected.
 
 ```moonbit
 let rp = new_replay_protector(300L)  // 5 minute window
@@ -165,7 +166,7 @@ let avg_latency = sm.avg_duration_ms()
 ```moonbit
 let key = @mb_jwt.JwtKey::HS256("secret")
 let ctx = new_stream_context(token)
-execute_security_filter(ctx, key, current_time)
+execute_security_filter_with_policy(ctx, key, current_time, Some("expected-issuer"), Some("this-service"))
 if ctx.is_allowed {
   println("role: " + ctx.user_role)
 }
@@ -190,3 +191,9 @@ cd gateway && moon test
 - Stream metrics (basic, errors, average, peak, rolling window)
 - Replay protector (basic, expiry, eviction)
 - Stream session (basic, packet recording, expiry)
+## Boundary and policy contracts
+
+- Bandwidth consumption rejects negative sizes and times. Invalid rate/burst configuration disables positive-byte admission; zero-byte consumption has no effect. Refill saturates without multiplying beyond Int64.
+- Backoff remains deterministic (no jitter). Legacy constructor values are normalized to `0 <= initial <= max`; doubling saturates before overflow. Zero delay means callers must supply their own retry budget.
+- Gateway claims accept integral NumericDate values within ±(2^53−1). Present malformed optional claims are rejected, including null. Audience is a string; arrays are explicitly unsupported and rejected.
+- With a configured issuer or audience, a missing claim is an error. The unconstrained legacy filter is retained for compatibility and must not be used to enforce tenant or service isolation.

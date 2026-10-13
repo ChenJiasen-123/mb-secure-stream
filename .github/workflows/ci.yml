@@ -59,12 +59,18 @@ jobs:
       - name: Secretstream JS tests and bridge
         run: |
           moon test crypto/mb-secretstream/src --target js
+          moon test gateway/src --target js
+          moon test crypto/mb-jwt/src --target js
+          moon test crypto/mb-getrandom/src/lib --target js
           moon build --target js examples/secretstream-file/bridge
           node --test tools/test_secretstream_cli.cjs
           moon run examples/secretstream-typed --target js
 
       - name: Secretstream Native protocol and OS entropy tests
-        run: moon test crypto/mb-secretstream/src --target native
+        run: |
+          moon test crypto/mb-secretstream/src --target native
+          moon test gateway/src --target native
+          moon test crypto/mb-getrandom/src/lib --target native
 
       - name: WasmGC Web Crypto host integration
         run: |

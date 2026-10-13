@@ -98,17 +98,27 @@ function run(mode, input, output, keyFile, chunk = 65536) {
     fs.closeSync(source); source = undefined;
     // Same-directory hard link publishes a verified file without overwriting.
     fs.linkSync(temporary, output);
-    fs.unlinkSync(temporary);
+    // linkSync is the commit point. A later cleanup failure cannot undo publication.
+    const cleanupWarnings = [];
+    try { fs.unlinkSync(temporary); }
+    catch (error) { cleanupWarnings.push(`Output committed; remove retained temporary file ${temporary}: ${error.message}`); }
     // Decryption follows input record lengths, not the CLI's chunk argument.
-    return {mode, inputBytes, outputBytes, frames, chunkBytes: mode === 'seal' ? chunk : null,
+    return {mode, outputCommitted: true, cleanupWarnings, inputBytes, outputBytes, frames, chunkBytes: mode === 'seal' ? chunk : null,
       maxPlaintextFrameBytes,
       elapsedSeconds: (performance.now() - started) / 1000,
       peakRssMiB: process.resourceUsage().maxRSS / 1024,
       node: process.version};
   } catch (error) {
-    if (sink !== undefined) fs.closeSync(sink);
-    if (source !== undefined) fs.closeSync(source);
-    if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+    // Preserve the primary failure even if closing or removing also fails.
+    const cleanupWarnings = [];
+    for (const fd of [sink, source]) {
+      if (fd !== undefined) {
+        try { fs.closeSync(fd); } catch (cleanup) { cleanupWarnings.push(cleanup.message); }
+      }
+    }
+    try { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); }
+    catch (cleanup) { cleanupWarnings.push(`Retained temporary file ${temporary}: ${cleanup.message}`); }
+    if (cleanupWarnings.length) error.cleanupWarnings = cleanupWarnings;
     throw error;
   }
 }
@@ -126,6 +136,7 @@ if (require.main === module) {
     }
   } catch (error) {
     console.error(error.message || String(error));
+    if (error.cleanupWarnings) for (const warning of error.cleanupWarnings) console.error(warning);
     process.exitCode = 1;
   }
 }

@@ -10,6 +10,6 @@
 | 2:00—2:30 | `moon run examples/secretstream-typed --target js` | 类型化标签、可区分错误、AAD 失败后的恢复；接口代码不放首页 |
 | 2:30—3:00 | 分配分析与限制 | 展示前后三轮原始证据：耗时与累计分配减少，RSS 没有同步下降；未经安全审计 |
 
-以上时间是讲解安排，不是对运行耗时的保证。不要用剪辑隐藏失败；网络安装提前完成，再展示独立安装报告。结束时说明 0.2.0 已发布，开发 API/优化仍待合并和发布。
+以上时间是讲解安排，不是对运行耗时的保证。不要用剪辑隐藏失败；网络安装提前完成，再展示独立安装报告。结束时说明 0.2.0 已发布，main 已包含新 API/优化，但这些增量尚未发布到 Mooncakes。
 
 证据入口：[贡献记录](contributions.md)、[测量与限制](allocation-optimization.md)、[架构](architecture.md)、[独立消费者](../examples/published-consumer/README.md)。

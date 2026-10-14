@@ -23,3 +23,6 @@ The following table lists each cryptographic module, its upstream source, the li
 
 
 来源范围应以具体模块 README 和源码注释为准。历史改造和本期 secretstream 实现分开说明。
+
+
+OpenSeek 集成消费者固定依赖 `moonbitlang/openseek@0.6.2`（Apache-2.0）；公开 JSONL 测试日志的固定提交与 SHA-256 见 [OpenSeek 示例](../examples/openseek-archive/README.md#attribution)。上游日志保持原始字节，未将其计为本项目原创实现。

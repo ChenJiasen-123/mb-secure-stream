@@ -106,6 +106,12 @@ jobs:
           python examples/secure-backup/demo.py verification/backup-demo.json
           python tools/test_sqlite_backup.py --report verification/sqlite-backup.json
 
+      - name: OpenSeek offline archive and real CLI lifecycle
+        run: |
+          (cd examples/openseek-archive/consumer && moon update && moon build reader --target js --deny-warn && moon fmt --check reader)
+          node tools/verify_openseek_archive.cjs verification/openseek-archive.json
+          node tools/verify_openseek_lifecycle.cjs verification/openseek-lifecycle.json
+
       - name: Published Mooncakes consumer installation
         run: python tools/verify_published_install.py verification/published-consumer.json
 

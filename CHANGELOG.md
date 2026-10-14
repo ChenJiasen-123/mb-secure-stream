@@ -2,6 +2,8 @@
 
 ## Unreleased (main; not on Mooncakes)
 
+- Add an isolated OpenSeek 0.6.2 consumer, authenticated offline session archives, automatic post-run backup and restore into a new SessionStore; verify actual CLI continuation against a loopback model provider.
+
 - Add a SQLite snapshot backup/restore application using the compiled MoonBit file adapter; validate restored database integrity before publication and reject existing targets/sidecars.
 
 - File adapters only remove temporary paths they successfully created; bound key reads, reject non-regular inputs without blocking on FIFOs, and create private Python reference outputs.

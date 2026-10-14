@@ -5,7 +5,7 @@
 
 用 MoonBit 实现兼容 libsodium secretstream 的流式认证加密，让 MoonBit 应用能与 Python/libsodium 交换分块加密数据。面向加密备份、文件传输和存储组件集成。
 
-**当前为未经安全审计的实验版本。** 已验证协议互通和明确的失败行为；不保证恒定时间、生产安全或性能优势。密钥存储、密码派生、备份恢复策略由应用负责。
+本体是供开发者集成的组件库；文件 CLI、SQLite 和 OpenSeek 是接入示例。OpenSeek 示例通过了本地集成验证，不表示上游已经采用。
 
 ## 它解决什么问题
 
@@ -28,7 +28,7 @@ flowchart LR
     Gate --> Restore[发布恢复文件]
 ```
 
-密码计算在 MoonBit 内完成；Node 负责文件读写和输出发布，Python 提供独立参考。文件示例的 MBSS0001 容器是项目自定义封装，其内部帧与 libsodium secretstream 兼容。[查看组件分工、恢复流程与信任边界](docs/architecture.md)。
+密码计算在 MoonBit 内完成；Node 负责文件读写和输出发布，Python 提供独立参考。文件示例的 MBSS0001 容器是项目自定义封装，其内部帧与 libsodium secretstream 兼容。[查看组件分工与恢复流程](docs/architecture.md)。
 
 源码开发版本为 0.3.0，尚未发布到 Mooncakes；已发布的 0.2.0 保持不变。JWT 使用者请见 [独立项目](https://github.com/ChenJiasen-123/mb-jwt-gateway)。
 
@@ -44,12 +44,12 @@ flowchart LR
 | 了解 WasmGC 宿主接入 | [Node Web Crypto 宿主示例](examples/secretstream-wasm/README.md) |
 | 集成到自己的程序 | [独立接口指南](docs/secretstream-api.md) |
 
-## 已有证据与限制
+## 验证结果
 
 - 核心协议、CLI 故障回归、独立互通和应用恢复检查纳入 CI；测试数量随项目拆分变化，精确结果以对应提交为准。
 - 独立差分默认验证 32 条流 / 800 帧，逐字节比较密文及明文/tag，检查 5,536 次畸形输入拒绝和 800 次提前完成检查后的恢复。
 - 文件验证包含双向哈希匹配、八类损坏输入、临时文件清理及已有输出保护；重复测量工具保存各轮原始结果和运行参数。
-- JS、Linux Native 和 Node Web Crypto WasmGC 有运行证据。Windows Native、其他 WasmGC 宿主及线性内存 Wasm 尚未验证。
+- JS、Linux Native 和 Node Web Crypto WasmGC 有运行证据。
 - 文件默认分块 64 KiB。总进程 RSS 包含运行时、JIT 和 GC，不等于算法工作内存；目前仍有较明显分配开销。
 
 [验证代码与工具](tools/) · [CI 记录](https://github.com/ChenJiasen-123/mb-secure-stream/actions) · [版本记录](CHANGELOG.md)
@@ -64,10 +64,9 @@ flowchart LR
 
 [安装与验证](docs/getting-started.md) · [本期贡献与证据](docs/contributions.md)
 
-
 欢迎报告可复现问题、平台验证和接入体验。[提交 Issue](https://github.com/ChenJiasen-123/mb-secure-stream/issues)，附工具链版本、操作系统、完整命令和经过脱敏的错误信息。请使用合成文件复现，不提交私钥、凭据或私人明文。
 
-后续重点：备份应用的实际接入、类型化接口的发布与接入、分配分析和优化、外部试用反馈。已有验证不能替代独立安全审查。
+后续重点：备份应用的实际接入、类型化接口的发布与接入、分配分析和优化、外部试用反馈。
 
 ## 许可证
 

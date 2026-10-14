@@ -25,7 +25,7 @@ moon build --target js examples/secretstream-file/bridge
 node examples/secretstream-file/cli.cjs --help
 ```
 
-文件操作、合成演示密钥生成和恢复安全边界见 [文件示例](../examples/secretstream-file/README.md)。只对自行创建的合成文件演示；自行保管密钥，密钥丢失不能恢复文件。
+文件操作、合成演示密钥生成和恢复流程见 [文件示例](../examples/secretstream-file/README.md)。只对自行创建的合成文件演示；自行保管密钥，密钥丢失不能恢复文件。
 
 ## 独立互通与异常输入
 
@@ -38,7 +38,7 @@ python tools/verify_secretstream_differential.py differential.json --streams 32
 node --test tools/test_secretstream_cli.cjs
 ```
 
-第一条验证命令比较双方解密文件哈希，检查八类损坏输入、失败清理和已有输出保护。第二条对比 800 帧密文/明文/tag，并检查畸形输入拒绝后的恢复。结果是测试证据，不是安全审计。
+第一条验证命令比较双方解密文件哈希，检查八类损坏输入、失败清理和已有输出保护。第二条对比 800 帧密文/明文/tag，并检查畸形输入拒绝后的恢复。结果保存为 JSON 报告。
 
 常见问题：缺少 bridge 时先执行构建；已有输出必须换用新路径；缺少 FINAL 表示文件未完整接收；不支持硬链接的文件系统会拒绝发布，不能以覆盖写入绕过。
 
@@ -46,7 +46,7 @@ node --test tools/test_secretstream_cli.cjs
 
 文件加解密统一使用 [文件 CLI](../examples/secretstream-file/README.md)。需要真实数据格式的应用示例，选择 [SQLite 一致性备份](../examples/sqlite-backup/README.md) 或 [OpenSeek 会话归档与续接](../examples/openseek-archive/README.md)。各示例仅补充自身特有的步骤，不重复通用安装流程。
 
-试用报告请包含提交或发布版本、系统和工具链、完整复现命令及错误信息。使用合成数据，不上传私钥、凭据或私人明文。报告路径必须不存在。独立试用不等于安全审计，见 [反馈记录规则](external-feedback.md)。
+试用报告请包含提交或发布版本、系统和工具链、完整复现命令及错误信息。使用合成数据，不上传私钥、凭据或私人明文。报告路径必须不存在。反馈格式见 [反馈记录规则](external-feedback.md)。
 
 0.3.0 开发源码已收缩模块范围；JWT/网关使用者见 [迁移说明](migration-0.3.md)。历史合成备份演示的互通、截断与已有文件保护检查由上面的统一验证入口覆盖。
 

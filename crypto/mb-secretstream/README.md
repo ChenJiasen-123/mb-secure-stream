@@ -64,7 +64,7 @@ its state; MoonBit must reject all candidates and then recover the correct
 plaintext/tag from the original frame. Calling `finish()` before each valid
 frame must reject incomplete input without preventing later recovery.
 At the default 32 streams this checks 5,536 malformed inputs and 800 early
-completion checks. Change `--seed` for additional cases; this bounded mutation
+completion checks. Change `--seed` for additional cases.
 
 Counter-wrap regression vectors in fixtures/counter-wrap.json use independent
 PyNaCl/libsodium ciphertext and next-state values. The test positions the internal

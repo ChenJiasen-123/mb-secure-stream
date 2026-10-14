@@ -9,18 +9,18 @@ const assert = require('node:assert/strict');
 const {spawn} = require('node:child_process');
 const {randomBytes, createHash} = require('node:crypto');
 const archive = require('../examples/openseek-archive/archive.cjs');
-const lifecycle = require('../examples/openseek-archive/lifecycle.cjs');
+const lifecycleCLI = path.resolve(__dirname, '../examples/openseek-archive/lifecycle.cjs');
 
 function cleanEnvironment() {
   return Object.fromEntries(Object.entries(process.env).filter(([key]) =>
     !/^(DEEPSEEK|KIMI|GLM|OPENSEEK_)/i.test(key)));
 }
 
-function cli(args, cwd) {
+function launch(command, args, cwd) {
   return new Promise((resolve, reject) => {
     // Explicitly remove inherited provider configuration and MCP/skills inputs.
     const env = cleanEnvironment();
-    const child = spawn(process.env.MBSS_MOONX || 'moonx', ['moonbitlang/openseek@0.6.2', ...args],
+    const child = spawn(command, args,
       {cwd, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
     let stdout = '', stderr = '';
     const timer = setTimeout(() => child.kill(), 90000);
@@ -29,10 +29,18 @@ function cli(args, cwd) {
     child.on('error', error => { clearTimeout(timer); reject(error); });
     child.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) reject(new Error(`OpenSeek exited ${code}: ${stderr}`));
+      if (code !== 0) reject(new Error(`Command exited ${code}: ${stderr}`));
       else resolve({stdout, stderr});
     });
   });
+}
+
+function cli(args, cwd) {
+  return launch(process.env.MBSS_MOONX || 'moonx', ['moonbitlang/openseek@0.6.2', ...args], cwd);
+}
+
+function lifecycle(args, cwd) {
+  return launch(process.execPath, [lifecycleCLI, ...args], cwd);
 }
 
 async function main() {
@@ -82,13 +90,11 @@ async function main() {
     const result1 = path.join(root, 'first-result.json');
     const result2 = path.join(root, 'second-result.json');
     const base = ['--api-key', 'synthetic-local-key', '--api-url', `http://127.0.0.1:${server.address().port}/chat/completions`,
-      '--retry-attempts', '1', '--max-steps', '3', '--session', id];
-    const runArgs = (store, result, task) => [...base, '--session-root', store, 'run', '--dir', workspace,
+      '--retry-attempts', '1', '--max-steps', '3'];
+    const runArgs = (store, encrypted, result, task) => ['run', store, id, encrypted, key, '--', ...base, '--dir', workspace,
       '--global-skills-dir', skills, '--system-prompt-file', prompt, '--result-file', result, task];
     const ciphertext = path.join(root, 'session.mbss');
-    const wrapperArgs = runArgs(original, result1, firstPrompt).slice(base.length + 3);
-    await lifecycle.runAndArchive(original, id, ciphertext, key,
-      [...base.slice(0, -2), ...wrapperArgs], {env: cleanEnvironment(), stdio: 'ignore'});
+    await lifecycle(runArgs(original, ciphertext, result1, firstPrompt), workspace);
     assert.ifError(serverFailure);
     const first = JSON.parse(fs.readFileSync(result1, 'utf8'));
     assert.equal(first.status, 'completed');
@@ -100,15 +106,16 @@ async function main() {
     // Remove only this verifier's own source store: continuation must use recovery.
     fs.rmSync(original, {recursive: true});
     const destination = path.join(restored, sessionRelative);
-    lifecycle.restoreStore(restored, id, ciphertext, key);
-    assert.throws(() => lifecycle.restoreStore(restored, id, ciphertext, key), /exist/i);
+    await lifecycle(['restore', restored, id, ciphertext, key], workspace);
+    await assert.rejects(lifecycle(['restore', restored, id, ciphertext, key], workspace), /exist/i);
     const wrongRoot = path.join(root, 'wrong-id');
-    assert.throws(() => lifecycle.restoreStore(wrongRoot, 'unexpected-id', ciphertext, key), /Unexpected session ID/);
+    await assert.rejects(lifecycle(['restore', wrongRoot, 'unexpected-id', ciphertext, key], workspace), /Unexpected session ID/);
     assert.equal(fs.existsSync(wrongRoot), false);
     assert.deepEqual(fs.readFileSync(destination), before);
     const shown = await cli(['--session-root', restored, 'sessions', 'show', id, '--dir', workspace], workspace);
     assert.ok(shown.stdout.includes(firstAnswer));
-    await cli(runArgs(restored, result2, secondPrompt), workspace);
+    const secondArchive = path.join(root, 'resumed.mbss');
+    await lifecycle(runArgs(restored, secondArchive, result2, secondPrompt), workspace);
     assert.ifError(serverFailure);
     const second = JSON.parse(fs.readFileSync(result2, 'utf8'));
     assert.equal(second.status, 'completed');
@@ -118,10 +125,14 @@ async function main() {
     assert.deepEqual(after.subarray(0, before.length), before, 'resume must preserve original durable bytes');
     const summary2 = archive.inspectSession(destination, id);
     assert.ok(summary2.events > summary1.events);
+    const secondRestored = path.join(root, 'resumed.jsonl');
+    archive.run('restore', secondArchive, secondRestored, key, {expectedId: id});
+    assert.deepEqual(fs.readFileSync(secondRestored), after);
     report = {upstream: 'moonbitlang/openseek@0.6.2 published CLI via moonx',
       provider: 'deterministic loopback SSE; no real model call',
       firstStatus: first.status, resumedStatus: second.status,
       firstSession: summary1, resumedSession: summary2,
+      documentedLifecycleCLIExercised: true, resumedTurnAutomaticallyArchived: true,
       automaticArchiveAfterCLIExit: true, existingStoreProtected: true, failedRestoreRootRemoved: true,
       originalStoreRemovedBeforeRestore: !fs.existsSync(original), byteExactRecovery: true,
       upstreamSessionStoreShowPassed: true, restoredHistoryInActualModelRequest: true,

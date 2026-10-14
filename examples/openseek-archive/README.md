@@ -89,11 +89,13 @@ Reproduce without any model account or paid API call:
 node tools/verify_openseek_lifecycle.cjs NEW_RESULTS.json
 ```
 
-This invokes the real published CLI and filesystem SessionStore against a local
-deterministic SSE provider. It automatically archives a completed turn, removes
+This invokes the documented `lifecycle.cjs` command entry points and the real
+published OpenSeek CLI and filesystem SessionStore against a local deterministic
+SSE provider. It automatically archives a completed turn, removes
 only its own temporary source store, restores into a new root, calls upstream
 `sessions show`, and resumes a second turn. Assertions inspect the actual model
-request for restored history and check original event bytes remain unchanged.
+request for restored history, check original event bytes remain unchanged, and
+decrypt the automatically archived second turn to confirm its exact contents.
 It proves storage and continuation integration, not real-model answer quality.
 
 ## Attribution

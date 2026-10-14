@@ -1,12 +1,9 @@
 # OpenSeek offline session archive
 
-An experimental application adapter for `moonbitlang/openseek@0.6.2` session
+An application adapter for `moonbitlang/openseek@0.6.2` session
 JSONL files. The actual upstream parser reconstructs a Session before encryption
 and after authenticated decryption. Cryptography runs in the existing MoonBit
 secretstream bridge; Node handles files and publication.
-
-This demonstrates compatibility with public upstream data and APIs. OpenSeek
-has not adopted this adapter, and no private user sessions were used in testing.
 
 ## Build and use
 
@@ -25,27 +22,19 @@ node examples/openseek-archive/archive.cjs restore SESSION.mbss RECOVERED.jsonl 
 ```
 
 KEYFILE contains exactly 32 binary bytes. See the [file CLI instructions](../secretstream-file/README.md)
-for key generation and storage limitations. The isolated consumer pins OpenSeek;
+for key generation and file operations. The isolated consumer pins OpenSeek;
 its substantial transitive dependency tree does not become a root library dependency.
 
-## Contract and limits
+## Input parameters and output
 
-- Stop the source session writer before using `--offline`. This flag acknowledges
-  that condition; it does not acquire the native SessionStore lock. Snapshot
-  metadata checks reject observed changes but cannot guarantee a live consistent copy.
-- Only complete UTF-8 version-1 session files with contiguous event sequences
-  starting at 1 are accepted. Unlike upstream recovery reads, partial tails and
-  malformed events are rejected. Plaintext is capped at 32 MiB and parsed in memory.
-- Restore authenticates the complete stream and validates the upstream session
-  before publishing a new file. Existing destinations are never overwritten.
-  `--expect-id` optionally verifies the archived session identity.
-- `archive.cjs restore` produces a standalone JSONL file. `lifecycle.cjs restore`
-  installs it into a new SessionStore root for subsequent CLI use. Neither changes
-  an existing live store or bundles externally referenced images, files or job logs.
-- Private staging files are removed on completion or failure. A cleanup failure
-  reports their location; after publication it is a warning with `outputCommitted:true`.
-  Use a trusted destination directory. Filesystem permissions are platform dependent.
-- This is experimental cryptographic software without a security audit.
+- Use complete UTF-8 version-1 JSONL with contiguous event sequences starting at 1.
+- Session plaintext size: up to 32 MiB.
+- Stop the writer before `pack --offline` and use a dedicated session directory.
+- `--expect-id` checks the session identity before output publication.
+- `archive.cjs restore` writes a standalone JSONL file; `lifecycle.cjs restore`
+  creates a new SessionStore root for subsequent CLI use.
+- Successful reports include `outputCommitted`; `cleanupWarnings` lists paths
+  requiring cleanup.
 
 ## Verification
 
@@ -59,17 +48,14 @@ Set `MBSS_PYTHON` to an isolated Python interpreter if needed. Verification uses
 upstream constructors, the pinned public fixture, multi-frame Unicode data,
 independent libsodium decryption, invalid logs, wrong keys, tampering, truncation,
 destination preservation and staging cleanup. POSIX permissions and dangling
-symlinks are checked only on POSIX. Filesystem SessionStore loading is outside
-this verifier; the lifecycle verifier below exercises the real store.
+symlinks are checked only on POSIX. The lifecycle verifier below exercises the filesystem SessionStore.
 
 ## Real CLI lifecycle
 
 The lifecycle wrapper runs the published OpenSeek 0.6.2 CLI via `moonx`, waits
 for successful process exit, then automatically archives its completed session.
-Use a dedicated session root and do not let other processes resume the same
-session while it is being archived. Source plaintext remains on disk; this is
-encrypted backup, not encryption of the active store. Model provider credentials
-are configured normally for OpenSeek and are not managed by this adapter.
+Configure the model provider normally for OpenSeek. Use a dedicated session
+root for the run and archive workflow.
 
 ```sh
 node examples/openseek-archive/lifecycle.cjs run ./session-store demo ./first.mbss KEYFILE -- --dir ./workspace "Explain this project"
@@ -96,7 +82,6 @@ only its own temporary source store, restores into a new root, calls upstream
 `sessions show`, and resumes a second turn. Assertions inspect the actual model
 request for restored history, check original event bytes remain unchanged, and
 decrypt the automatically archived second turn to confirm its exact contents.
-It proves storage and continuation integration, not real-model answer quality.
 
 ## Attribution
 

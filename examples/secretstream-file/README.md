@@ -1,6 +1,5 @@
 # Cross-implementation streamed file example
 
-Experimental example, not a security-audited file encryption product.
 MoonBit implements all cryptography; the Node adapter only performs bounded
 file I/O and publishes completed output. Python/PyNaCl provides an independent
 libsodium reference for integration testing.
@@ -30,12 +29,6 @@ generate a key with the OS CSPRNG, for example:
 node -e "require('node:fs').writeFileSync('demo.key',require('node:crypto').randomBytes(32),{flag:'wx',mode:0o600})"
 ```
 
-Never use the checked-in test-vector key for private data. This example does
-not implement password-based key derivation, key storage, backup or recovery.
-Avoid sharing key files and ciphertext together. No keys are embedded in the
-container or printed in the metrics. OS permissions and JavaScript GC do not
-provide guaranteed secret-memory erasure.
-
 Each encryption calls the MoonBit JavaScript sender factory, which obtains a
 fresh 24-byte header through the existing CSPRNG provider. Entropy failure is
 an error. The public sender has no fixed-header constructor. Reader and writer
@@ -43,9 +36,8 @@ types are separate and internal state is not exposed through the MoonBit API.
 
 ## Example envelope
 
-This project-specific envelope is **not** a libsodium-defined file format.
-Its individual ciphertext records use the compatible libsodium secretstream
-wire representation. Both example adapters implement this same framing:
+The MBSS0001 envelope contains ciphertext records compatible with libsodium
+secretstream. Both example adapters implement this same framing:
 
 1. Eight ASCII bytes `MBSS0001`.
 2. The 24-byte secretstream header.
@@ -55,17 +47,12 @@ wire representation. Both example adapters implement this same framing:
 Default data chunks are 64 KiB, configurable up to 1 MiB. Ciphertext overhead
 is 17 bytes per record, plus the four-byte length. Reader allocation is capped
 before reading a record. No whole-file array is retained by the Node adapter.
-The format intentionally does not store a filename or restore filesystem
-metadata. Do not confuse per-frame authenticated output with whole-file
-completion: the final marker and EOF must both be checked.
-
 Decryption writes only to a newly created temporary file until every frame,
 FINAL and EOF have been verified. An error removes this temporary file.
 Successful output is published via an exclusive hard link; an existing
-destination is never overwritten. This example fails on filesystems that do
-not support this operation instead of silently weakening that behavior.
+destination is never overwritten.
 
-## Evidence and limits
+## Verification and measurements
 
 The verification harness checks MoonBit encryption → libsodium decryption and
 libsodium encryption → MoonBit decryption, comparing SHA-256 of all outputs.
@@ -73,12 +60,8 @@ It also checks eight classes of damaged/truncated containers, absence of
 published/temporary plaintext on failure, and preservation of an existing
 destination. Inputs are synthetic, with no user files or credentials involved.
 
-Metrics use a fresh Node process per operation and report total process peak
-RSS, including V8, JIT and GC; this is not just algorithm working memory.
-When setting `NODE_OPTIONS=--max-old-space-size=64`, that option is recorded in
-the results and applies to V8 old-space, not a 64 MiB total RSS limit. Report
-unrestricted measurements separately. No measured results imply an audit,
-constant-time machine code, production readiness, or superiority to native C.
+Metrics use a fresh Node process per operation and record total process peak
+RSS, runtime, platform and NODE_OPTIONS in JSON reports.
 
 For repeated measurements with separate raw JSON files and descriptive
 min/median/max summaries:
@@ -88,10 +71,9 @@ python tools/measure_secretstream_repeated.py repeated.json --repeats 3 --sizes 
 ```
 
 Chunk order alternates between rounds. Each round also reruns both directions
-of interoperability and the negative cases; this is not an isolated primitive
-benchmark. The summary records the runtime, platform, `NODE_OPTIONS` and source
+of interoperability and the negative cases. The report includes both file I/O and cryptographic processing. The summary records the runtime, platform, `NODE_OPTIONS` and source
 hashes. Run a different output prefix when changing heap options; keep the raw
-files with the summary. Three samples do not establish a confidence interval.
+files with the summary.
 
 CLI metrics report the configured `chunkBytes` only for encryption. Decryption
 uses record lengths from its input and reports `chunkBytes: null`; both modes
@@ -103,12 +85,12 @@ top-level `chunkBytes` to interpret those historical measurement files.
 
 同目录硬链接创建最终输出成功即为提交点。成功报告含 `outputCommitted: true` 和 `cleanupWarnings`。之后临时链接删除失败时，命令仍成功返回，但警告给出需要清理的临时路径；最终输出已存在且可使用，不应盲目重试加解密。输出始终不覆盖已有文件。
 
-提交前失败仍抛出原始错误；关闭或删除临时文件也失败时附带清理警告，不覆盖原始错误。文件 fsync 和原子发布不构成跨文件系统或断电后的目录持久性保证。
+提交前失败仍抛出原始错误；关闭或删除临时文件也失败时附带清理警告，不覆盖原始错误。
 
-## 文件输入与目录边界
+## 文件输入与输出管理
 
 Node CLI 与 Python 参考实现只接受普通文件作为输入和密钥，拒绝 FIFO、设备和目录。密钥长度检查使用已打开文件的元数据，并且最多读取 33 字节以检测读取期间的增长，不会整份读取错误的大文件。
 
 临时路径只有在本次独占创建成功后才允许清理；碰撞、输入打开失败不会删除其他操作留下的文件。Python 参考实现与 Node 相同，使用 0600 创建输出临时文件，并在提交后的清理失败时返回警告。
 
-输入、密钥和输出父目录必须由可信用户控制；允许指向普通文件的符号链接，但不防御其他进程替换父目录或临时路径。备份前应停止写入或使用文件系统快照；边读边修改的文件不提供一致性快照保证。强制终止进程可能留下 0600 临时文件，需由拥有者确认并清理。
+备份前停止源文件写入或创建文件系统快照。输入和密钥使用普通文件，输出选择新的文件路径。按 cleanupWarnings 中给出的路径完成清理。

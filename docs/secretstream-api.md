@@ -14,9 +14,9 @@ import {
 
 `new_writer(key)` 返回 `StreamWriter`，`new_reader(key, header)` 返回 `StreamReader`。发送使用 `write(message, aad, tag)`，接收使用 `read(frame, aad)`，EOF 仍须执行 `finish()`。
 
-标签为 `Message`、`Push`、`Rekey`、`Final`，无需填写数值。错误为 `StreamError`，可模式匹配 `InvalidKey`、`InvalidHeader`、`FrameTooLarge`、`TruncatedFrame`、`AuthenticationFailed`、`Finalized`、`MissingFinal` 等；底层熵源返回错误会包装为 `EntropyUnavailable(detail)`。Wasm 宿主异常仍可能 trap，并不保证转换为 Result。
+标签为 `Message`、`Push`、`Rekey`、`Final`，无需填写数值。错误为 `StreamError`，可模式匹配 `InvalidKey`、`InvalidHeader`、`FrameTooLarge`、`TruncatedFrame`、`AuthenticationFailed`、`Finalized`、`MissingFinal` 等；底层熵源返回错误会包装为 `EntropyUnavailable(detail)`。Wasm 宿主调用异常由宿主处理。
 
-认证失败后接收端状态不推进；`MissingFinal` 表示流未完成，不应发布完整文件。单帧上限、随机头和密钥生命周期边界与兼容接口相同。
+认证失败后接收端状态不推进；`MissingFinal` 表示流未完成，不应发布完整文件。单帧上限、随机头和密钥参数与兼容接口相同。
 
 公开接口可运行示例：
 

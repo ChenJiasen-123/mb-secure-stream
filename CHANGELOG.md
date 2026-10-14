@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased (main; not on Mooncakes)
+## Unreleased 0.3.0 (breaking scope cleanup; not on Mooncakes)
+
+- Move JWT/authentication middleware into the standalone mb-jwt-gateway project; remove Worker, unrelated gateway flow-control and unused AEAD/HKDF modules from this repository.
+- Consolidate overlapping trial/demo instructions into getting-started and the existing file interoperability verifiers. Retain immutable 0.2.0 compatibility through the published package and document migration.
 
 - Add an isolated OpenSeek 0.6.2 consumer, authenticated offline session archives, automatic post-run backup and restore into a new SessionStore; verify actual CLI continuation against a loopback model provider.
 

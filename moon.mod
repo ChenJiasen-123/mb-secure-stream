@@ -1,6 +1,6 @@
 name = "ChenJiasen-123/mb-secure-stream"
 
-version = "0.2.0"
+version = "0.3.0"
 
 readme = "README.md"
 
@@ -8,6 +8,6 @@ repository = "https://github.com/ChenJiasen-123/mb-secure-stream"
 
 license = "Apache-2.0"
 
-keywords = [ "jwt", "crypto", "gateway", "security" ]
+keywords = [ "secretstream", "encryption", "libsodium", "streaming" ]
 
-description = "MoonBit cryptography and JWT gateway with experimental libsodium-compatible secretstream authenticated encryption and independent interoperability tests."
+description = "Experimental libsodium-compatible streaming authenticated encryption for MoonBit, with independent interoperability tests."

@@ -2,7 +2,7 @@
 
 目前尚无已核实的外部试用反馈。邀请草稿、候选名单和维护者自测不计为外部反馈。
 
-试用者可使用 [结构化反馈表](https://github.com/ChenJiasen-123/mb-secure-stream/issues/new?template=external-trial.yml)；模板进入默认分支后生效。此前可按 [试用指南](try-it.md) 在普通 Issue 中填写同样信息。
+试用者可使用 [结构化反馈表](https://github.com/ChenJiasen-123/mb-secure-stream/issues/new?template=external-trial.yml)；模板进入默认分支后生效。此前可按 [安装与验证](getting-started.md) 在普通 Issue 中填写同样信息。
 
 收到真实反馈后，每条记录应包含：公开 Issue 链接、测试提交或发布版本、环境、独立完成情况、复现命令、问题对应的修复 PR，以及试用者是否复验。没有复验时写“维护者验证”，不能写“用户确认解决”。
 

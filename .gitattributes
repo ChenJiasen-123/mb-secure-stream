@@ -1,2 +1,4 @@
 # Preserve published raw measurement hashes on Windows and Unix checkouts.
 docs/measurements/*.json text eol=lf
+
+examples/openseek-archive/fixtures/*.jsonl text eol=lf

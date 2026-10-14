@@ -1,0 +1,7 @@
+{
+  "license": "Apache-2.0",
+  "path": "agent_session/store/testdata/session-v1.jsonl",
+  "commit": "17a35d963acc43ab2fc4a7de0a7cae3364a89019",
+  "repository": "https://github.com/moonbitlang/openseek",
+  "sha256": "b236798ee12b27849daa9cc3836f262bdd6dc23325ed384691500d89c070daa7"
+}

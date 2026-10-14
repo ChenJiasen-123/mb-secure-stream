@@ -1,0 +1,10 @@
+import {
+  "moonbitlang/openseek/agent_session/log",
+  "moonbitlang/openseek/agent_session" @session,
+}
+
+supported_targets = "js"
+
+options(
+  link: { "js": { "exports": [ "inspect", "make_demo" ], "format": "cjs" } },
+)

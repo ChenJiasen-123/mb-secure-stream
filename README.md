@@ -36,6 +36,7 @@ flowchart LR
 |---|---|
 | 安装已发布库或从源码构建 | [安装与复现](docs/getting-started.md) |
 | 对 SQLite 数据库做一致性加密备份与恢复 | [SQLite 应用](examples/sqlite-backup/README.md) |
+| OpenSeek 会话自动归档、恢复并继续运行 | [OpenSeek 应用](examples/openseek-archive/README.md) |
 | 加密并恢复合成文件 | [安全恢复演示](examples/secure-backup/README.md) / [文件 CLI](examples/secretstream-file/README.md) |
 | 复现双向互通、篡改和截断拒绝 | [独立验证说明](docs/getting-started.md#独立互通与异常输入) |
 | 了解 WasmGC 宿主接入 | [Node Web Crypto 宿主示例](examples/secretstream-wasm/README.md) |

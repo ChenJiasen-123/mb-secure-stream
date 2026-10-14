@@ -16,9 +16,9 @@ No reproducible per-operation benchmark is published for this module. See the re
 
 ## Security Considerations
 
-- **Cryptographically secure**: Uses OS-level CSPRNG (/dev/urandom, getrandom(), CryptGenRandom)
+- **Cryptographically secure**: Uses OS-level CSPRNG (/dev/urandom, getrandom(), BCryptGenRandom)
 - **No userland PRNG**: Avoids weak userland random number generators
-- **Fail-safe**: Returns error if OS random source unavailable
+- **Failure behavior**: JS/Native return errors; Wasm host import failures may trap.
 
 ## API
 
@@ -29,7 +29,7 @@ JS uses host crypto facilities and native uses the platform shim. Wasm requires 
 ## Tests
 
 ```bash
-cd crypto/mb-getrandom && moon test
+moon test crypto/mb-getrandom/src/lib --target js
 ```
 
 ### Test Coverage

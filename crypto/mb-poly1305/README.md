@@ -34,24 +34,22 @@ No validated portable performance guarantee. See [allocation optimization eviden
 
 ## Usage
 
-```moonbit
-let key = Bytes::make(32, 0x42)
-let msg = Bytes::of_string("hello")
-let tag = poly1305_mac_bytes(key, msg)
-let ok = poly1305_verify_bytes(key, msg, tag)
-```
+This is a low-level one-time MAC primitive. For authenticated streams use the
+[secretstream interface](../../docs/secretstream-api.md), which manages the
+protocol state and per-message authentication keys. Exact primitive signatures
+are in `src/pkg.generated.mbti`; callers must never reuse a Poly1305 key.
 
 ## Tests
 
 ```bash
-cd crypto/mb-poly1305 && moon test
+moon test crypto/mb-poly1305/src
 ```
 
 ### Test Coverage
 
 - Poly1305 MAC computation
 - Poly1305 verification
-- Constant-time comparison
+- Signature comparison correctness (runtime constant-time behavior unverified)
 - Wrong key rejection
 - Tampered message rejection
 - RFC 7539 test vectors

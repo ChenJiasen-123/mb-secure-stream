@@ -47,7 +47,7 @@ Constructors return a Result. Supply a 32-byte key and a 12-byte ChaCha20 nonce 
 ## Tests
 
 ```bash
-cd crypto/mb-chacha && moon test
+moon test crypto/mb-chacha/src
 ```
 
 ### Test Coverage

@@ -37,15 +37,18 @@ plaintext/tag across empty, boundary-sized, AAD, REKEY and FINAL frames.
 Negative tests cover corruption, wrong AAD/key, replay, reordering,
 truncation, finalization and malformed/oversized inputs.
 
-Run `moon test -p crypto/mb-secretstream/src` from the repository root.
+Run `moon test crypto/mb-secretstream/src` from the repository root.
 To regenerate independent fixtures, install `tools/requirements-dev.txt` in
 an isolated Python environment and run `python tools/generate_secretstream_vectors.py`.
 Regeneration chooses a fresh random header and updates both the JSON fixture
 and generated tests. Keep the checked-in pair together for repeatable tests.
 
-Bytes APIs and a bounded file I/O integration are now available; see
-`examples/secretstream-file`. Before any release: more independent vectors and
-fuzzing, verified Native/Wasm sender support, security review and documented key lifecycle.
+Bytes APIs and a bounded file I/O integration are available; see
+[the file adapter](../../examples/secretstream-file/README.md). Mooncakes 0.2.0
+is an experimental release; main contains the unpublished 0.3.0 development
+source. Linux Native and the documented Node Web Crypto WasmGC host are tested.
+Broader host validation, fuzzing, independent security review and application
+key lifecycle design remain necessary before production use.
 
 Randomized differential checks use the public random-header JS sender and
 independent PyNaCl/libsodium, comparing exact ciphertext, plaintext and tags:

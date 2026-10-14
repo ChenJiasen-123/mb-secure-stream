@@ -10,6 +10,10 @@
 - Add a SQLite snapshot backup/restore application using the compiled MoonBit file adapter; validate restored database integrity before publication and reject existing targets/sidecars.
 
 - File adapters only remove temporary paths they successfully created; bound key reads, reject non-regular inputs without blocking on FIFOs, and create private Python reference outputs.
+### Historical development before the scope cleanup
+
+The entries below record pre-split work. Gateway/Worker features and removed demos are historical contributions, not functionality shipped in the current 0.3.0 source tree.
+
 - Request and byte token buckets share overflow-safe refill arithmetic and reject negative/backward clocks without consuming credit; invalid request-limiter configuration disables admission.
 - Harden the independent TypeScript Worker example: bind HS256/issuer/audience, validate claims and CORS, strip bearer credentials, prevent automatic redirects and identity-response caching; add locked dependencies, tests, type checks and dry-run bundling.
 

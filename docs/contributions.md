@@ -13,7 +13,7 @@
 
 PR #7 最终提交 `1336728a21271a45832353873b381a29ad431959` 的 [CI](https://github.com/ChenJiasen-123/mb-secure-stream/actions/runs/38246752776) 全部通过。测试数说明特定开发状态，不代表审计、独立用户人数或完整安全证明。
 
-复现入口：[安装与验证](getting-started.md)、[试用指南](try-it.md)、[演示提纲](demo-script.md)。优化原始报告与文件校验值位于 [measurements](measurements/)；不要只展示有利指标，RSS 未显著改善也需说明。
+复现入口：[安装与验证](getting-started.md)。优化原始报告与文件校验值位于 [measurements](measurements/)；不要只展示有利指标，RSS 未显著改善也需说明。
 
 尚未取得真实外部试用反馈，不虚构使用者、评价或获奖结果。后续真实反馈应记录公开链接、测试版本、问题及修复结果；未经同意不公开他人个人信息。
 

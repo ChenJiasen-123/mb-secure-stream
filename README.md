@@ -30,6 +30,8 @@ flowchart LR
 
 密码计算在 MoonBit 内完成；Node 负责文件读写和输出发布，Python 提供独立参考。文件示例的 MBSS0001 容器是项目自定义封装，其内部帧与 libsodium secretstream 兼容。[查看组件分工、恢复流程与信任边界](docs/architecture.md)。
 
+源码开发版本为 0.3.0，尚未发布到 Mooncakes；已发布的 0.2.0 保持不变。JWT 使用者请见 [独立项目](https://github.com/ChenJiasen-123/mb-jwt-gateway)。
+
 ## 开始体验
 
 | 目的 | 入口 |
@@ -37,14 +39,14 @@ flowchart LR
 | 安装已发布库或从源码构建 | [安装与复现](docs/getting-started.md) |
 | 对 SQLite 数据库做一致性加密备份与恢复 | [SQLite 应用](examples/sqlite-backup/README.md) |
 | OpenSeek 会话自动归档、恢复并继续运行 | [OpenSeek 应用](examples/openseek-archive/README.md) |
-| 加密并恢复合成文件 | [安全恢复演示](examples/secure-backup/README.md) / [文件 CLI](examples/secretstream-file/README.md) |
+| 加密并恢复合成文件 | [文件 CLI](examples/secretstream-file/README.md) |
 | 复现双向互通、篡改和截断拒绝 | [独立验证说明](docs/getting-started.md#独立互通与异常输入) |
 | 了解 WasmGC 宿主接入 | [Node Web Crypto 宿主示例](examples/secretstream-wasm/README.md) |
 | 集成到自己的程序 | [独立接口指南](docs/secretstream-api.md) |
 
 ## 已有证据与限制
 
-- main 已合入的 API/优化基线有 159 项 MoonBit 测试、secretstream JS 8 项测试；CLI 启动与写入故障回归已纳入 main CI。精确结果以对应提交的 CI 为准。
+- 核心协议、CLI 故障回归、独立互通和应用恢复检查纳入 CI；测试数量随项目拆分变化，精确结果以对应提交为准。
 - 独立差分默认验证 32 条流 / 800 帧，逐字节比较密文及明文/tag，检查 5,536 次畸形输入拒绝和 800 次提前完成检查后的恢复。
 - 文件验证包含双向哈希匹配、八类损坏输入、临时文件清理及已有输出保护；重复测量工具保存各轮原始结果和运行参数。
 - JS、Linux Native 和 Node Web Crypto WasmGC 有运行证据。Windows Native、其他 WasmGC 宿主及线性内存 Wasm 尚未验证。
@@ -54,13 +56,13 @@ flowchart LR
 
 ## 本期工作与历史代码
 
-本期重点是 secretstream 状态机、Bytes 封装、安全随机发送工厂、跨语言向量与差分验证、文件完整性和失败发布语义。仓库中已有 JWT、网关和基础密码模块属于历史工作，不能将其全部计为本期新增。
+本期重点是 secretstream 状态机、Bytes 封装、安全随机发送工厂、跨语言向量与差分验证、文件完整性和失败发布语义。JWT 和鉴权中间件已拆到独立项目；Worker 与流控等无关功能不再随本库维护。历史密码基础不能全部计为本期原创。
 
-基础密码模块源自 moonbit-crypto/mb-crypto；secretstream 参考 libsodium，保留对应来源及许可。[详细衍生关系](docs/attribution.md) · [历史 JWT/网关接口](docs/gateway-api.md)。
+基础密码模块源自 moonbit-crypto/mb-crypto；secretstream 参考 libsodium，保留对应来源及许可。[详细衍生关系](docs/attribution.md) · [拆分与版本迁移](docs/migration-0.3.md)。
 
 ## 贡献与反馈
 
-[十分钟试用](docs/try-it.md) · [三分钟演示](docs/demo-script.md) · [本期贡献与证据](docs/contributions.md)
+[安装与验证](docs/getting-started.md) · [本期贡献与证据](docs/contributions.md)
 
 
 欢迎报告可复现问题、平台验证和接入体验。[提交 Issue](https://github.com/ChenJiasen-123/mb-secure-stream/issues)，附工具链版本、操作系统、完整命令和经过脱敏的错误信息。请使用合成文件复现，不提交私钥、凭据或私人明文。

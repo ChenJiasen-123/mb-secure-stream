@@ -40,9 +40,8 @@ Regeneration chooses a fresh random header and updates both the JSON fixture
 and generated tests. Keep the checked-in pair together for repeatable tests.
 
 Bytes APIs and a bounded file I/O integration are available; see
-[the file adapter](../../examples/secretstream-file/README.md). Mooncakes 0.2.0
-is an experimental release; main contains the unpublished 0.3.0 development
-source. Linux Native and the documented Node Web Crypto WasmGC host are tested.
+[the file adapter](../../examples/secretstream-file/README.md). Mooncakes 0.3.0 includes the typed public API and current toolchain updates;
+0.2.0 retains the compatibility API. Linux Native and the documented Node Web Crypto WasmGC host are tested.
 
 Randomized differential checks use the public random-header JS sender and
 independent PyNaCl/libsodium, comparing exact ciphertext, plaintext and tags:

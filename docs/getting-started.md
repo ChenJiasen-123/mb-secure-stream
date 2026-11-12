@@ -2,17 +2,17 @@
 
 ## 使用已发布库
 
-发布版本为 [Mooncakes 0.2.0](https://mooncakes.io/docs/ChenJiasen-123/mb-secure-stream@0.2.0)。在自己的 MoonBit 工程根目录执行：
+发布版本为 [Mooncakes 0.3.0](https://mooncakes.io/docs/ChenJiasen-123/mb-secure-stream@0.3.0)。在自己的 MoonBit 工程根目录执行：
 
 ```sh
-moon add ChenJiasen-123/mb-secure-stream@0.2.0
+moon add ChenJiasen-123/mb-secure-stream@0.3.0
 ```
 
-具体包路径、导入和完整流生命周期见 [secretstream 接口指南](secretstream-api.md)。发布包与 GitHub 开发分支可能不同；安装 0.2.0 不会得到尚未发布的改动。
+具体包路径、导入和完整流生命周期见 [secretstream 接口指南](secretstream-api.md)。类型化接口随 0.3.0 发布；历史 0.2.0 使用兼容接口。
 
 ## 从开发源码运行文件示例
 
-以下从 main 构建；main 已包含文件恢复示例、类型化 API 和分配优化。安装 0.2.0 与运行开发分支是不同路径。
+以下从 main 构建；main 已包含文件恢复示例、类型化 API 和分配优化。安装发布包与运行 main 源码是两种构建方式。
 
 需要 MoonBit 0.10.20、Node 24，以及支持同目录硬链接的文件系统。Python 只用于独立互通验证，依赖建议安装到虚拟环境。
 
@@ -48,6 +48,6 @@ node --test tools/test_secretstream_cli.cjs
 
 试用报告请包含提交或发布版本、系统和工具链、完整复现命令及错误信息。使用合成数据，不上传私钥、凭据或私人明文。报告路径必须不存在。反馈格式见 [反馈记录规则](external-feedback.md)。
 
-0.3.0 开发源码已收缩模块范围；JWT/网关使用者见 [迁移说明](migration-0.3.md)。历史合成备份演示的互通、截断与已有文件保护检查由上面的统一验证入口覆盖。
+0.3.0 已收缩模块范围；JWT/网关使用者见 [迁移说明](migration-0.3.md)。历史合成备份演示的互通、截断与已有文件保护检查由上面的统一验证入口覆盖。
 
 全新发布包消费者的详细命令见 [独立消费者教程](../examples/published-consumer/README.md)。

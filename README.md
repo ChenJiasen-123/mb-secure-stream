@@ -1,7 +1,7 @@
 # mb-secure-stream
 
 [![CI](https://github.com/ChenJiasen-123/mb-secure-stream/workflows/CI/badge.svg)](https://github.com/ChenJiasen-123/mb-secure-stream/actions)
-[Mooncakes 0.2.0](https://mooncakes.io/docs/ChenJiasen-123/mb-secure-stream@0.2.0) · [安装与复现](docs/getting-started.md) · [架构](docs/architecture.md) · [来源与许可](docs/attribution.md)
+[Mooncakes 0.3.0](https://mooncakes.io/docs/ChenJiasen-123/mb-secure-stream@0.3.0) · [安装与复现](docs/getting-started.md) · [架构](docs/architecture.md) · [来源与许可](docs/attribution.md)
 
 用 MoonBit 实现兼容 libsodium secretstream 的流式认证加密，让 MoonBit 应用能与 Python/libsodium 交换分块加密数据。面向加密备份、文件传输和存储组件集成。
 
@@ -30,7 +30,7 @@ flowchart LR
 
 密码计算在 MoonBit 内完成；Node 负责文件读写和输出发布，Python 提供独立参考。文件示例的 MBSS0001 容器是项目自定义封装，其内部帧与 libsodium secretstream 兼容。[查看组件分工与恢复流程](docs/architecture.md)。
 
-源码开发版本为 0.3.0，尚未发布到 Mooncakes；已发布的 0.2.0 保持不变。JWT 使用者请见 [独立项目](https://github.com/ChenJiasen-123/mb-jwt-gateway)。
+当前发布版本为 0.3.0；历史版本 0.2.0 保持可用。JWT 使用者请见 [独立项目](https://github.com/ChenJiasen-123/mb-jwt-gateway)。
 
 ## 当前工具链验证
 

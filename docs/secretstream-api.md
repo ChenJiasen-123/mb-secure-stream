@@ -1,6 +1,6 @@
 # secretstream 接口指南
 
-包路径：`ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src`。以下先说明 main 新增接口，再保留 0.2.0 兼容接口。新接口尚未发布到 Mooncakes，不能在安装 0.2.0 后直接使用。
+包路径：`ChenJiasen-123/mb-secure-stream/crypto/mb-secretstream/src`。以下先说明 0.3.0 类型化接口，再保留 0.2.0 兼容接口。
 
 在调用包的 `moon.pkg` 中导入：
 
@@ -10,7 +10,7 @@ import {
 }
 ```
 
-## 开发分支：类型化接口
+## 0.3.0：类型化接口
 
 `new_writer(key)` 返回 `StreamWriter`，`new_reader(key, header)` 返回 `StreamReader`。发送使用 `write(message, aad, tag)`，接收使用 `read(frame, aad)`，EOF 仍须执行 `finish()`。
 

@@ -4,7 +4,7 @@ This synthetic example checks the public random-header factory under a Node
 Web Crypto host, repeated REKEY/PUSH/FINAL handling, and failure when the host
 CSPRNG throws or its imports are missing.
 
-From the repository root (Node 24 and tested MoonBit 0.10.14):
+From the repository root (Node 24 and tested MoonBit 0.10.20):
 
 ```sh
 moon build --target wasm-gc examples/secretstream-wasm

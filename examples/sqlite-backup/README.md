@@ -4,7 +4,7 @@
 
 ## 构建与验证
 
-需要 MoonBit 0.10.15、Node 24、Python 3.12，以及支持同目录硬链接的可信本地文件系统。在仓库根目录执行：
+需要 MoonBit 0.10.20、Node 24、Python 3.12，以及支持同目录硬链接的可信本地文件系统。在仓库根目录执行：
 
 ```sh
 moon build --target js examples/secretstream-file/bridge

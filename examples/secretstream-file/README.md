@@ -6,7 +6,7 @@ libsodium reference for integration testing.
 
 ## Build and run
 
-Requires MoonBit 0.10.15 (tested), Node 24 (tested), and a filesystem supporting
+Requires MoonBit 0.10.20 (tested), Node 24 (tested), and a filesystem supporting
 same-directory hard links. The optional reference tests require Python 3.12 and
 `python -m pip install -r tools/requirements-dev.txt` in an isolated environment.
 

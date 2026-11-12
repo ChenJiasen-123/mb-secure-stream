@@ -32,6 +32,10 @@ flowchart LR
 
 源码开发版本为 0.3.0，尚未发布到 Mooncakes；已发布的 0.2.0 保持不变。JWT 使用者请见 [独立项目](https://github.com/ChenJiasen-123/mb-jwt-gateway)。
 
+## 当前工具链验证
+
+2026-11-12 已使用官方当前工具链验证：`moonc v0.10.20+65efd5b93`、`moon/ moonrun 0.1.20261104`。默认后端、JS 及 Node Web Crypto WasmGC 示例均通过；Linux Native 由 CI 检查。Windows Native 构建需要 MSVC C++ 工具与 Windows SDK。CI 通过 `moon version --all` 保存实际版本。
+
 ## 开始体验
 
 | 目的 | 入口 |

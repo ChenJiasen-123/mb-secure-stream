@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn init_pull(Array[UInt], Array[UInt]) -> Result[SecretStream, String]
+pub fn init_pull(Array[UInt32], Array[UInt32]) -> Result[SecretStream, String]
 
 pub fn init_pull_bytes(Bytes, Bytes) -> Result[SecretStream, String]
 
@@ -23,15 +23,16 @@ pub struct SecretStream {
   // private fields
 }
 pub fn SecretStream::finish(Self) -> Result[Unit, String]
-pub fn SecretStream::pull(Self, Array[UInt], Array[UInt]) -> Result[(Array[UInt], UInt), String]
-pub fn SecretStream::pull_bytes(Self, Bytes, Bytes) -> Result[(Bytes, UInt), String]
+pub fn SecretStream::pull(Self, Array[UInt32], Array[UInt32]) -> Result[(Array[UInt32], UInt32), String]
+pub fn SecretStream::pull_bytes(Self, Bytes, Bytes) -> Result[(Bytes, UInt32), String]
 
 pub struct SecretStreamWriter {
   // private fields
 }
 pub fn SecretStreamWriter::header(Self) -> Bytes
-pub fn SecretStreamWriter::push(Self, Bytes, Bytes, UInt) -> Result[Bytes, String]
+pub fn SecretStreamWriter::push(Self, Bytes, Bytes, UInt32) -> Result[Bytes, String]
 
+#derive(Eq, @debug.Debug)
 pub(all) enum StreamError {
   InvalidKey
   InvalidHeader
@@ -43,7 +44,7 @@ pub(all) enum StreamError {
   Finalized
   MissingFinal
   EntropyUnavailable(String)
-} derive(Eq, @debug.Debug)
+}
 pub fn StreamError::equal(Self, Self) -> Bool
 pub fn StreamError::not_equal(Self, Self) -> Bool
 pub fn StreamError::to_repr(Self) -> @debug.Repr
@@ -54,12 +55,13 @@ pub struct StreamReader {
 pub fn StreamReader::finish(Self) -> Result[Unit, StreamError]
 pub fn StreamReader::read(Self, Bytes, Bytes) -> Result[(Bytes, StreamTag), StreamError]
 
+#derive(Eq, @debug.Debug)
 pub(all) enum StreamTag {
   Message
   Push
   Rekey
   Final
-} derive(Eq, @debug.Debug)
+}
 pub fn StreamTag::equal(Self, Self) -> Bool
 pub fn StreamTag::not_equal(Self, Self) -> Bool
 pub fn StreamTag::to_repr(Self) -> @debug.Repr

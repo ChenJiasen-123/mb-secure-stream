@@ -14,7 +14,7 @@ moon add ChenJiasen-123/mb-secure-stream@0.2.0
 
 以下从 main 构建；main 已包含文件恢复示例、类型化 API 和分配优化。安装 0.2.0 与运行开发分支是不同路径。
 
-需要 MoonBit 0.10.15、Node 24，以及支持同目录硬链接的文件系统。Python 只用于独立互通验证，依赖建议安装到虚拟环境。
+需要 MoonBit 0.10.20、Node 24，以及支持同目录硬链接的文件系统。Python 只用于独立互通验证，依赖建议安装到虚拟环境。
 
 ```sh
 git clone --branch main https://github.com/ChenJiasen-123/mb-secure-stream.git

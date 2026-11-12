@@ -1,10 +1,11 @@
 ///|
+#derive(Eq, Debug)
 pub(all) enum StreamTag {
   Message
   Push
   Rekey
   Final
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend StreamTag with Eq::{equal, not_equal}
@@ -13,6 +14,7 @@ pub extend StreamTag with Eq::{equal, not_equal}
 pub extend StreamTag with Debug::{to_repr}
 
 ///|
+#derive(Eq, Debug)
 pub(all) enum StreamError {
   InvalidKey
   InvalidHeader
@@ -24,7 +26,7 @@ pub(all) enum StreamError {
   Finalized
   MissingFinal
   EntropyUnavailable(String)
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend StreamError with Eq::{equal, not_equal}

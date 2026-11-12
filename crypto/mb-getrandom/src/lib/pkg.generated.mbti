@@ -2,7 +2,7 @@
 package "ChenJiasen-123/mb-secure-stream/crypto/mb-getrandom/src/lib"
 
 // Values
-pub fn getrandom(Int) -> Result[Bytes, String]
+pub fn getrandom(Int32) -> Result[Bytes, String]
 
 // Errors
 

@@ -7,7 +7,7 @@ secretstream bridge; Node handles files and publication.
 
 ## Build and use
 
-Tested with MoonBit 0.10.15 and Node 24. The destination filesystem must support
+Tested with MoonBit 0.10.20 and Node 24. The destination filesystem must support
 hard links. Build from the repository root:
 
 ```sh

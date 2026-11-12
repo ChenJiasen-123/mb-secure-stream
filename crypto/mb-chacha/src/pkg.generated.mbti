@@ -2,41 +2,41 @@
 package "ChenJiasen-123/mb-secure-stream/crypto/mb-chacha/src"
 
 // Values
-pub fn hchacha20(FixedArray[UInt], FixedArray[UInt]) -> FixedArray[UInt]
+pub fn hchacha20(FixedArray[UInt32], FixedArray[UInt32]) -> FixedArray[UInt32]
 
 // Errors
 
 // Types and methods
 pub struct ChaCha20 {
-  key_words : FixedArray[UInt]
-  nonce_words : FixedArray[UInt]
-  mut counter : UInt
+  key_words : FixedArray[UInt32]
+  nonce_words : FixedArray[UInt32]
+  mut counter : UInt32
 }
-pub fn ChaCha20::apply_keystream(Self, Array[UInt]) -> Array[UInt]
+pub fn ChaCha20::apply_keystream(Self, Array[UInt32]) -> Array[UInt32]
 pub fn ChaCha20::apply_keystream_bytes(Self, Bytes) -> Bytes
-pub fn ChaCha20::decrypt(Self, Array[UInt]) -> Array[UInt]
+pub fn ChaCha20::decrypt(Self, Array[UInt32]) -> Array[UInt32]
 pub fn ChaCha20::decrypt_bytes(Self, Bytes) -> Bytes
-pub fn ChaCha20::encrypt(Self, Array[UInt]) -> Array[UInt]
+pub fn ChaCha20::encrypt(Self, Array[UInt32]) -> Array[UInt32]
 pub fn ChaCha20::encrypt_bytes(Self, Bytes) -> Bytes
-pub fn ChaCha20::generate_block(Self) -> FixedArray[UInt]
-pub fn ChaCha20::get_counter(Self) -> UInt
+pub fn ChaCha20::generate_block(Self) -> FixedArray[UInt32]
+pub fn ChaCha20::get_counter(Self) -> UInt32
 pub fn ChaCha20::new(Bytes, Bytes) -> Result[Self, String]
-pub fn ChaCha20::new_from_uints(Array[UInt], Array[UInt]) -> Result[Self, String]
-pub fn ChaCha20::new_from_uints_with_counter(Array[UInt], Array[UInt], UInt) -> Result[Self, String]
-pub fn ChaCha20::new_with_counter(Bytes, Bytes, UInt) -> Result[Self, String]
-pub fn ChaCha20::set_counter(Self, UInt) -> Unit
+pub fn ChaCha20::new_from_uints(Array[UInt32], Array[UInt32]) -> Result[Self, String]
+pub fn ChaCha20::new_from_uints_with_counter(Array[UInt32], Array[UInt32], UInt32) -> Result[Self, String]
+pub fn ChaCha20::new_with_counter(Bytes, Bytes, UInt32) -> Result[Self, String]
+pub fn ChaCha20::set_counter(Self, UInt32) -> Unit
 
 pub struct XChaCha20 {
   inner : ChaCha20
 }
-pub fn XChaCha20::apply_keystream(Self, Array[UInt]) -> Array[UInt]
+pub fn XChaCha20::apply_keystream(Self, Array[UInt32]) -> Array[UInt32]
 pub fn XChaCha20::apply_keystream_bytes(Self, Bytes) -> Bytes
-pub fn XChaCha20::decrypt(Self, Array[UInt]) -> Array[UInt]
+pub fn XChaCha20::decrypt(Self, Array[UInt32]) -> Array[UInt32]
 pub fn XChaCha20::decrypt_bytes(Self, Bytes) -> Bytes
-pub fn XChaCha20::encrypt(Self, Array[UInt]) -> Array[UInt]
+pub fn XChaCha20::encrypt(Self, Array[UInt32]) -> Array[UInt32]
 pub fn XChaCha20::encrypt_bytes(Self, Bytes) -> Bytes
 pub fn XChaCha20::new(Bytes, Bytes) -> Result[Self, String]
-pub fn XChaCha20::new_with_counter(Bytes, Bytes, UInt) -> Result[Self, String]
+pub fn XChaCha20::new_with_counter(Bytes, Bytes, UInt32) -> Result[Self, String]
 
 // Type aliases
 

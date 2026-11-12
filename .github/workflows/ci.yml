@@ -19,7 +19,8 @@ jobs:
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
           echo "✅ MoonBit installed, PATH updated"
           export PATH="$HOME/.moon/bin:$PATH"
-          moon version
+          mkdir -p verification
+          moon version --all | tee verification/toolchain.txt
 
       - name: moon check -d
         shell: bash
@@ -100,4 +101,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: secretstream-interoperability
-          path: verification/*.json
+          path: verification/*

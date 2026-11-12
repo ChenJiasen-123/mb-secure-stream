@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased 0.3.0 (breaking scope cleanup; not on Mooncakes)
+## 0.3.0 — 2026-11-12
+
+- Adapt enum derivation syntax and generated interfaces to MoonBit 0.10.20; record full toolchain versions in CI artifacts.
 
 - Move JWT/authentication middleware into the standalone mb-jwt-gateway project; remove Worker, unrelated gateway flow-control and unused AEAD/HKDF modules from this repository.
 - Consolidate overlapping trial/demo instructions into getting-started and the existing file interoperability verifiers. Retain immutable 0.2.0 compatibility through the published package and document migration.
